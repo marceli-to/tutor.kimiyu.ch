@@ -75,6 +75,7 @@ export default defineConfig({
             '.github/**',
             'docs/**',
             'claude-code-prompt-lernseiten-app.md',
+            'public/build/**',
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',

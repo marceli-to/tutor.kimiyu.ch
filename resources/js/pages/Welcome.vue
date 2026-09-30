@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 
 const steps = [
     {
@@ -72,9 +72,6 @@ const steps = [
                     </Button>
                     <template v-else>
                         <Button as-child size="lg">
-                            <Link :href="register()">Konto erstellen</Link>
-                        </Button>
-                        <Button as-child size="lg" variant="outline">
                             <Link :href="login()">Anmelden</Link>
                         </Button>
                     </template>

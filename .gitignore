@@ -1,7 +1,8 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/public/build
+# Build-Dateien werden committet, auf Hostpoint gibt es kein Node
+# /public/build
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
@@ -42,3 +43,6 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+
+# Deploy-Einstellungen (Host, Pfad)
+/.deploy
