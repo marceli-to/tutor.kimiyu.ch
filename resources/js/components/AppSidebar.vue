@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ImagePlus, LayoutGrid, ShieldCheck, Users } from '@lucide/vue';
+import {
+    ImagePlus,
+    LayoutGrid,
+    Receipt,
+    ShieldCheck,
+    Users,
+} from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -14,7 +20,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard, privacy } from '@/routes';
+import { costs, dashboard, privacy } from '@/routes';
 import { index as childrenIndex } from '@/routes/children';
 import { create } from '@/routes/lessons';
 import type { NavItem } from '@/types';
@@ -34,6 +40,11 @@ const mainNavItems: NavItem[] = [
         title: 'Kinder',
         href: childrenIndex(),
         icon: Users,
+    },
+    {
+        title: 'Kosten',
+        href: costs(),
+        icon: Receipt,
     },
 ];
 

@@ -7,8 +7,11 @@ use App\Lessons\Ai\ClaudeLanguageModel;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\LanguageModel;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -40,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        RateLimiter::for('answers', fn (Request $request) => Limit::perMinute(240)->by($request->ip()));
     }
 
     /**

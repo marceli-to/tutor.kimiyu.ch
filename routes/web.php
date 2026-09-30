@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChildController;
+use App\Http\Controllers\CostController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonContentController;
 use App\Http\Controllers\LessonController;
@@ -12,12 +13,14 @@ Route::inertia('datenschutz', 'Privacy')->name('privacy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('kosten', CostController::class)->name('costs');
 
     Route::get('kinder', [ChildController::class, 'index'])->name('children.index');
     Route::post('kinder', [ChildController::class, 'store'])->name('children.store');
     Route::patch('kinder/{child}', [ChildController::class, 'update'])->name('children.update');
     Route::delete('kinder/{child}', [ChildController::class, 'destroy'])->name('children.destroy');
     Route::post('kinder/{child}/neuer-link', [ChildController::class, 'renewLink'])->name('children.renew-link');
+    Route::get('kinder/{child}/lernstand', [ChildController::class, 'progress'])->name('children.progress');
 
     Route::get('lernseiten/neu', [LessonController::class, 'create'])->name('lessons.create');
     Route::post('lernseiten', [LessonController::class, 'store'])->name('lessons.store');
@@ -43,6 +46,11 @@ Route::middleware(['noindex', 'throttle:60,1'])->group(function () {
     Route::get('k/{token}', [SharedLessonController::class, 'index'])->name('shared.index');
     Route::get('k/{token}/{lesson}', [SharedLessonController::class, 'show'])->name('shared.show');
 });
+
+// Antworten für den Lernstand: eigenes, höheres Limit, weil ein Sortierspiel viele Antworten schickt
+Route::post('k/{token}/{lesson}/antwort', [SharedLessonController::class, 'answer'])
+    ->middleware(['noindex', 'throttle:answers'])
+    ->name('shared.answer');
 
 if (app()->isLocal()) {
     Route::get('vorschau/lernseiten/{lesson}', [LessonController::class, 'preview'])->name('lessons.preview');

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import CopyLink from '@/components/CopyLink.vue';
 import Heading from '@/components/Heading.vue';
@@ -17,7 +17,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { destroy, index, renewLink, store, update } from '@/routes/children';
+import {
+    destroy,
+    index,
+    progress,
+    renewLink,
+    store,
+    update,
+} from '@/routes/children';
 
 defineOptions({
     layout: {
@@ -131,6 +138,10 @@ const editing = ref<number | null>(null);
                     class="mt-4 flex flex-wrap items-center gap-2 border-t pt-4"
                 >
                     <CopyLink :url="child.shareUrl" />
+
+                    <Button variant="outline" size="sm" as-child>
+                        <Link :href="progress(child.id)">Lernstand</Link>
+                    </Button>
 
                     <Dialog>
                         <DialogTrigger as-child>

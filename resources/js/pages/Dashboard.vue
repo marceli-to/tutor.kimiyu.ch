@@ -5,6 +5,7 @@ import CopyLink from '@/components/CopyLink.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
+import { progress } from '@/routes/children';
 import { create, show } from '@/routes/lessons';
 
 defineOptions({
@@ -85,10 +86,15 @@ const badgeVariant = {
                         · {{ child.level }}
                     </span>
                 </h2>
-                <CopyLink
-                    :url="child.shareUrl"
-                    :label="`Link für ${child.name} kopieren`"
-                />
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" as-child>
+                        <Link :href="progress(child.id)">Lernstand</Link>
+                    </Button>
+                    <CopyLink
+                        :url="child.shareUrl"
+                        :label="`Link für ${child.name} kopieren`"
+                    />
+                </div>
             </div>
 
             <p

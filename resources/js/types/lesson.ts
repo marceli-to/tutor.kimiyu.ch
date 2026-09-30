@@ -100,5 +100,8 @@ export type LessonHero = {
 export type ModuleAnswer = {
     module: 'quiz' | 'sortieren' | 'lueckentext';
     itemId: string;
+    // Gewählte Option (Quiz), gewählter Korb (Sortieren) oder Eingabe (Lückentext);
+    // der Server prüft selbst, ob sie stimmt
+    answer: number | string;
     correct: boolean;
 };

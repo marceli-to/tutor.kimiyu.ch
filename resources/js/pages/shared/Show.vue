@@ -2,10 +2,11 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import LessonPage from '@/components/lesson/LessonPage.vue';
-import { index } from '@/routes/shared';
-import type { LessonContent, LessonHero, Palette } from '@/types';
+import { saveAnswer } from '@/lib/saveAnswer';
+import { answer as answerRoute, index } from '@/routes/shared';
+import type { LessonContent, LessonHero, ModuleAnswer, Palette } from '@/types';
 
-defineProps<{
+const props = defineProps<{
     token: string;
     lesson: {
         id: number;
@@ -16,6 +17,10 @@ defineProps<{
         hero: LessonHero | null;
     };
 }>();
+
+function onAnswer(answer: ModuleAnswer) {
+    saveAnswer(answerRoute([props.token, props.lesson.id]).url, answer);
+}
 </script>
 
 <template>
@@ -29,6 +34,7 @@ defineProps<{
         :hero="lesson.hero"
         :subject="lesson.subject"
         :level="lesson.level"
+        @answer="onAnswer"
     >
         <template #before>
             <Link

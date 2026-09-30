@@ -41,6 +41,7 @@ function check() {
     emit('answer', {
         module: 'quiz',
         itemId: question.value.id,
+        answer: selected.value,
         correct: isCorrect.value,
     });
 }

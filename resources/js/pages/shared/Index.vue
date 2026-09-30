@@ -12,6 +12,7 @@ defineProps<{
             title: string;
             emoji: string | null;
             kernidee: string | null;
+            progress: { sitzt: number; total: number };
         }[];
     }[];
 }>();
@@ -73,6 +74,24 @@ defineProps<{
                                     class="mt-1 block text-base text-ls-muted"
                                 >
                                     {{ lesson.kernidee }}
+                                </span>
+                                <span
+                                    v-if="lesson.progress.total"
+                                    class="mt-2 flex items-center gap-3 text-[0.95rem] text-ls-muted"
+                                >
+                                    <span
+                                        class="h-2 w-24 overflow-hidden rounded-full bg-ls-line"
+                                        aria-hidden="true"
+                                    >
+                                        <span
+                                            class="block h-full rounded-full bg-ls-ok"
+                                            :style="{
+                                                width: `${(lesson.progress.sitzt / lesson.progress.total) * 100}%`,
+                                            }"
+                                        />
+                                    </span>
+                                    {{ lesson.progress.sitzt }} von
+                                    {{ lesson.progress.total }} Aufgaben sitzen
                                 </span>
                             </span>
                         </Link>

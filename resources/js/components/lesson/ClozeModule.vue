@@ -49,7 +49,12 @@ function check() {
         }
 
         if (value !== '') {
-            emit('answer', { module: 'lueckentext', itemId: gap.id, correct });
+            emit('answer', {
+                module: 'lueckentext',
+                itemId: gap.id,
+                answer: values[gap.id] ?? '',
+                correct,
+            });
         }
     }
 

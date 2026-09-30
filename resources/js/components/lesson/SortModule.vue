@@ -47,7 +47,12 @@ function choose(category: CategoryId) {
     last.value = { term, correct };
     position.value++;
 
-    emit('answer', { module: 'sortieren', itemId: term.id, correct });
+    emit('answer', {
+        module: 'sortieren',
+        itemId: term.id,
+        answer: category,
+        correct,
+    });
 }
 
 start();
