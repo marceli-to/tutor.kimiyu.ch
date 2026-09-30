@@ -12,6 +12,7 @@ const props = defineProps<{
     step: string | null;
     error: string | null;
     canRetry: boolean;
+    withHero: boolean;
 }>();
 
 const fullSteps = [
@@ -31,7 +32,13 @@ const partSteps: Record<string, { key: string; label: string }[]> = {
 const steps = computed(() => {
     const part = Object.keys(partSteps).find((key) => key === props.step);
 
-    return part ? partSteps[part] : fullSteps;
+    if (part) {
+        return partSteps[part];
+    }
+
+    return props.withHero
+        ? fullSteps
+        : fullSteps.filter((s) => s.key !== 'grafik');
 });
 
 const current = computed(() =>

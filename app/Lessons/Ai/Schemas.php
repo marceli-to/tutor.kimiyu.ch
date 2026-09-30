@@ -27,7 +27,7 @@ class Schemas
                 'problem' => self::nullable(['type' => 'string', 'description' => 'Kurze Erklärung für die Eltern, was mit den Fotos oder dem Thema nicht stimmt']),
             ]),
             'zusammenfassung' => ['type' => 'string', 'description' => 'Neutrale, vollständige Zusammenfassung des Stoffs in eigenen Worten'],
-            'hero_plan' => self::heroPlan(),
+            'hero_plan' => self::nullable(self::heroPlan()),
             'seite' => self::nullable(self::page()),
         ]);
     }
@@ -122,7 +122,7 @@ class Schemas
         return self::object([
             'meta' => self::object([
                 'titel' => ['type' => 'string', 'description' => 'Frage oder Formel, die neugierig macht'],
-                'anleitung' => ['type' => 'string', 'description' => 'Eine Zeile: was man mit der Grafik tun kann'],
+                'anleitung' => ['type' => 'string', 'description' => 'Eine Zeile: was man mit der Grafik tun kann; ohne Grafik: worum es geht'],
                 'thema' => $text,
                 'kernidee' => ['type' => 'string', 'description' => 'Was das Kind nach dem Lernen verstanden haben muss, ein Satz'],
                 'emoji' => $text,

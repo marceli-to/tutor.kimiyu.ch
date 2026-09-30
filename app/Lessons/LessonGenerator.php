@@ -190,8 +190,9 @@ class LessonGenerator
             ]);
         };
 
+        // Kein Plan: Die Eltern haben die Grafik abgewählt oder kein Muster passt zum Stoff
         if ($lesson->hero_plan === null) {
-            $fail('Es gibt keinen Plan für die Grafik.');
+            $lesson->update(['hero' => $keepExisting ? $lesson->hero : null, 'hero_error' => null]);
 
             return;
         }

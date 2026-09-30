@@ -30,7 +30,7 @@ class GenerationPipeline
             }
         }
 
-        if ($lesson->hero === null) {
+        if ($lesson->hero === null && $lesson->with_hero) {
             $jobs[] = new GenerateLessonHero($lesson);
         }
 

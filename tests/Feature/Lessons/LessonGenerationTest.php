@@ -465,3 +465,47 @@ describe('from a topic', function () {
         expect($lesson->fresh()->status)->toBe(LessonStatus::Review);
     });
 });
+
+describe('without a graphic', function () {
+    it('skips the graphic when the parents switch it off', function () {
+        $this->fake->push('analyse', [...analysis(), 'hero_plan' => null]);
+
+        upload(['with_hero' => false]);
+
+        $lesson = Lesson::sole();
+        expect($lesson->with_hero)->toBeFalse()
+            ->and($lesson->status)->toBe(LessonStatus::Review)
+            ->and($lesson->hero)->toBeNull()
+            ->and($lesson->hero_error)->toBeNull()
+            ->and($this->fake->requestsFor('grafik'))->toBe([])
+            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Interaktive Grafik: nein');
+
+        $this->actingAs($this->user)->get(route('lessons.show', $lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.withHero', false)
+                ->where('lesson.hero', null)
+                ->where('parent.canRegenerate.grafik', false)
+            );
+    });
+
+    it('lets the ai leave out the graphic when nothing fits', function () {
+        $this->fake->push('analyse', [...analysis(), 'hero_plan' => null]);
+
+        upload();
+
+        $lesson = Lesson::sole();
+        expect($lesson->with_hero)->toBeTrue()
+            ->and($lesson->hero)->toBeNull()
+            ->and($lesson->hero_error)->toBeNull()
+            ->and($this->fake->requestsFor('grafik'))->toBe([])
+            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Interaktive Grafik: ja')
+            ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
+    });
+
+    it('creates a graphic by default', function () {
+        upload();
+
+        expect(Lesson::sole()->with_hero)->toBeTrue()
+            ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
+    });
+});

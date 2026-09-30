@@ -34,6 +34,7 @@ Manchmal gibt es keine Fotos, sondern nur ein Thema (z. B. «Biodiversität»). 
 
 - **Kernidee in einem Satz** (`meta.kernidee`): Was muss das Kind nach dem Lernen verstanden haben?
 - **Hauptgrafik** (`hero_plan`): Wähle das Muster, das den Kern des Themas sichtbar macht. Die Interaktion muss den Mechanismus zeigen, nicht nur dekorieren.
+    - Setze `hero_plan` auf null, wenn die Eltern die Grafik abgewählt haben («Interaktive Grafik: nein») oder wenn kein Muster den Kern zeigt, z. B. bei reinen Rechenverfahren, Rechtschreib- und Grammatikregeln oder Vokabeln. Lieber keine Grafik als eine, die nur dekoriert. In Mathematik passt oft `rechner` (Werte eingeben, Ergebnis und Rechenweg sehen); prüfe das, bevor du auf die Grafik verzichtest.
 
 | Muster                                                  | Passt für                             | Beispiel                                                                  |
 | ------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
@@ -53,7 +54,7 @@ Beschreibe in `hero_plan.idee` in 3–6 Sätzen: was gezeichnet wird, welche Bed
 ## 4. Seitenaufbau und Felder (`seite`)
 
 - `meta.titel`: eine Frage oder Formel, die neugierig macht («Wie macht ein Blatt Zucker aus Licht?», «Biotop + Biozönose = Ökosystem»). Höchstens 70 Zeichen.
-- `meta.anleitung`: eine Zeile, was man mit der Grafik tun kann («Dreh an den Reglern und schau, was im Blatt passiert.»).
+- `meta.anleitung`: eine Zeile, was man mit der Grafik tun kann («Dreh an den Reglern und schau, was im Blatt passiert.»). Ohne Grafik: ein Satz, der sagt, worum es geht und neugierig macht.
 - `meta.emoji`: ein passendes Emoji.
 - `abschnitte`: 1–3 Abschnitte mit kurzer Überschrift (z. B. «Das Rezept», «Was man wissen muss», «Die drei Begriffe»). Bausteine:
     - `absatz`: kurzer Fliesstext.
@@ -61,7 +62,7 @@ Beschreibe in `hero_plan.idee` in 3–6 Sätzen: was gezeichnet wird, welche Bed
     - `fakten`: 2–4 Fakten mit Titel (oft als Frage: «Wo passiert es?») und kurzem Text.
     - `spalten`: 2–3 Begriffe nebeneinander, jede Spalte mit Kategorie-Farbe.
     - `box`: ein hervorgehobener Kasten mit Titel, z. B. für Beispiele oder die Verbindung der Begriffe.
-- `probieren`: 2–3 konkrete Experimente mit der Hauptgrafik («Stell das Licht auf 100 %, lass aber das CO₂ tief.»), dazu ein Alltagsvergleich. Auf null setzen, wenn die Grafik keine Experimente erlaubt.
+- `probieren`: 2–3 konkrete Experimente mit der Hauptgrafik («Stell das Licht auf 100 %, lass aber das CO₂ tief.»), dazu ein Alltagsvergleich. Auf null setzen, wenn die Grafik keine Experimente erlaubt oder es keine Grafik gibt.
 - `nachdenken.frage`: eine offene Transferfrage ohne Lösung.
 
 ## 5. Sprache

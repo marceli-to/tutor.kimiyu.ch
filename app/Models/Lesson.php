@@ -21,9 +21,10 @@ use Illuminate\Support\Carbon;
  * @property string $level
  * @property string|null $topic
  * @property string|null $notes
+ * @property bool $with_hero
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
- * @property array{muster: string, idee: string}|null $hero_plan
+ * @property array{muster: string, idee: string}|null $hero_plan null: keine Grafik (abgewählt oder kein Muster passt)
  * @property array{muster: string, beschreibung: string, css: string, markup: string, script: string}|null $hero
  * @property string|null $hero_error
  * @property list<array{bereich: string, aenderung: string}>|null $check_notes
@@ -33,7 +34,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'with_hero', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
@@ -43,6 +44,7 @@ class Lesson extends Model
     {
         return [
             'status' => LessonStatus::class,
+            'with_hero' => 'boolean',
             'content' => 'array',
             'hero_plan' => 'array',
             'hero' => 'array',

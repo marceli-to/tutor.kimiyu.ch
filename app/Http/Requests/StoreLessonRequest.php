@@ -22,6 +22,7 @@ class StoreLessonRequest extends FormRequest
             'subject' => ['required', 'string', 'max:60'],
             'level' => ['required', 'string', 'max:60'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'with_hero' => ['boolean'],
             'source' => ['required', Rule::in(['fotos', 'thema'])],
             'topic' => ['exclude_unless:source,thema', 'required', 'string', 'max:120'],
             'images' => ['exclude_unless:source,fotos', 'required', 'array', 'min:1', 'max:'.config('lessons.images.max_count')],

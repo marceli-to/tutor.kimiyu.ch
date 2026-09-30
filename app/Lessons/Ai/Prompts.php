@@ -44,6 +44,7 @@ class Prompts
             '',
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
+            'Interaktive Grafik: '.($lesson->with_hero ? 'ja, wenn ein Muster den Stoff sichtbar macht' : 'nein, von den Eltern abgewählt'),
             $lesson->notes ? "Hinweise der Eltern: {$lesson->notes}" : null,
         ], fn ($line) => $line !== null));
 
@@ -73,7 +74,7 @@ class Prompts
             system: $system,
             prompt: implode("\n\n", [
                 self::context($lesson),
-                "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}",
+                self::heroPlanText($lesson),
                 "Textteil der Lernseite:\n".self::json($page),
             ]),
             schema: Schemas::modulesResult(),
@@ -193,6 +194,13 @@ class Prompts
             schema: Schemas::hero(),
             maxTokens: config('lessons.max_tokens.grafik'),
         );
+    }
+
+    private static function heroPlanText(Lesson $lesson): string
+    {
+        return $lesson->hero_plan
+            ? "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}"
+            : 'Diese Seite hat keine interaktive Grafik. Keine Quizfrage darf sich auf eine Grafik beziehen.';
     }
 
     private static function context(Lesson $lesson): string

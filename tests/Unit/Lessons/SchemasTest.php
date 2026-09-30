@@ -54,7 +54,7 @@ it('lets the analysis report unreadable photos without content', function () {
     $response = [
         'quelle' => ['lesbar' => false, 'problem' => 'Das Foto ist unscharf.'],
         'zusammenfassung' => '',
-        'hero_plan' => ['muster' => 'regler', 'idee' => ''],
+        'hero_plan' => null,
         'seite' => null,
     ];
 

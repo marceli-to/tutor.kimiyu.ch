@@ -22,6 +22,7 @@ const props = defineProps<{
         error: string | null;
         canRetry: boolean;
         fromTopic: boolean;
+        withHero: boolean;
         subject: string;
         level: string;
         content: LessonContent | null;
@@ -61,6 +62,7 @@ watch(generating, (active) => (active ? start() : stop()));
         :step="lesson.step"
         :error="lesson.error"
         :can-retry="lesson.canRetry"
+        :with-hero="lesson.withHero"
     />
 
     <template v-else>

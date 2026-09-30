@@ -64,6 +64,7 @@ class LessonController extends Controller
                 'level' => $request->string('level')->trim()->value(),
                 'topic' => $request->input('source') === 'thema' ? $request->string('topic')->trim()->value() : null,
                 'notes' => $request->string('notes')->trim()->value() ?: null,
+                'with_hero' => $request->boolean('with_hero', true),
             ]);
 
             foreach ($images as $position => $image) {
@@ -201,6 +202,7 @@ class LessonController extends Controller
                 'error' => $lesson->error,
                 'canRetry' => GenerationPipeline::canRetry($lesson),
                 'fromTopic' => $lesson->isFromTopic(),
+                'withHero' => $lesson->with_hero,
                 'heroError' => $lesson->hero_error,
                 'checkNotes' => $lesson->check_notes ?? [],
             ],

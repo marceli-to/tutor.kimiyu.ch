@@ -57,6 +57,7 @@ const form = useForm<{
     subject: string;
     level: string;
     notes: string;
+    with_hero: boolean;
     images: File[];
 }>({
     source: 'fotos',
@@ -66,6 +67,7 @@ const form = useForm<{
     subject: '',
     level: props.children[0]?.level ?? '',
     notes: '',
+    with_hero: true,
     images: [],
 });
 
@@ -325,6 +327,28 @@ onBeforeUnmount(() =>
                         <option v-for="l in levels" :key="l" :value="l" />
                     </datalist>
                     <InputError :message="form.errors.level" />
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <input
+                    id="with_hero"
+                    v-model="form.with_hero"
+                    type="checkbox"
+                    class="mt-0.5 size-4 accent-primary"
+                    aria-describedby="with_hero_hint"
+                />
+                <div class="grid gap-1">
+                    <Label for="with_hero">Interaktive Grafik erstellen</Label>
+                    <p
+                        id="with_hero_hint"
+                        class="text-sm text-muted-foreground"
+                    >
+                        Ohne Grafik ist die Seite schneller fertig und
+                        günstiger. Sinnvoll z. B. bei Rechenverfahren,
+                        Grammatikregeln oder Vokabeln. Passt keine Grafik zum
+                        Stoff, lässt die KI sie auch von sich aus weg.
+                    </p>
                 </div>
             </div>
 
