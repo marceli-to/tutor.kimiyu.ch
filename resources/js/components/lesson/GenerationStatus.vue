@@ -16,7 +16,8 @@ const props = defineProps<{
 
 const steps = [
     { key: 'warteschlange', label: 'Wartet auf den Start' },
-    { key: 'analyse', label: 'Fotos lesen und Inhalt schreiben' },
+    { key: 'analyse', label: 'Stoff lesen und Erklärungen schreiben' },
+    { key: 'module', label: 'Quiz und Übungen erstellen' },
     { key: 'pruefung', label: 'Inhalt nachprüfen' },
     { key: 'grafik', label: 'Interaktive Grafik zeichnen' },
 ];

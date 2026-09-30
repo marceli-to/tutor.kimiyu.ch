@@ -48,6 +48,24 @@ class ContentValidator
     }
 
     /**
+     * Fehler aufgeteilt nach Teil der Seite: «module» (Quiz usw.) und «seite» (alles andere).
+     *
+     * @param  array<string, mixed>  $content
+     * @return array{seite: list<string>, module: list<string>}
+     */
+    public static function errorsByPart(array $content, bool $strict = false): array
+    {
+        $parts = ['seite' => [], 'module' => []];
+
+        foreach (self::make($content, $strict)->errors()->toArray() as $key => $messages) {
+            $part = str_starts_with((string) $key, 'module') ? 'module' : 'seite';
+            array_push($parts[$part], ...$messages);
+        }
+
+        return $parts;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private static function rules(bool $strict): array

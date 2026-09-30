@@ -73,15 +73,19 @@ class FakeLanguageModel implements LanguageModel
         $content = LessonFactory::fixture($fixture);
         $hero = LessonFactory::fixture("$fixture.hero");
 
+        $page = Prompts::page($content);
+
         return match ($step) {
             'analyse' => [
                 'quelle' => ['lesbar' => true, 'problem' => null],
                 'zusammenfassung' => 'Zusammenfassung der Buchseite zum Thema '.$content['meta']['thema'].'.',
                 'hero_plan' => ['muster' => $hero['muster'], 'idee' => $hero['beschreibung']],
-                'inhalt' => $content,
+                'seite' => $page,
             ],
-            'reparatur' => ['inhalt' => $content],
-            'pruefung' => ['aenderungen' => [], 'inhalt' => $content],
+            'module', 'reparatur-module' => ['module' => $content['module']],
+            'reparatur-seite' => ['seite' => $page],
+            'pruefung-seite' => ['aenderungen' => [], 'seite' => $page],
+            'pruefung-module' => ['aenderungen' => [], 'module' => $content['module']],
             'grafik', 'grafik-reparatur' => $hero,
             default => [],
         };

@@ -20,7 +20,8 @@ class LessonGenerator
     public function __construct(private LanguageModel $model) {}
 
     /**
-     * Fotos oder Thema → Inhalt, Zusammenfassung und Plan für die Grafik. Bei Regelverstössen ein Reparatur-Call.
+     * Fotos oder Thema → Zusammenfassung, Plan für die Grafik, Textteil; danach die Module.
+     * Bei Regelverstössen ein Reparatur-Call pro betroffenem Teil.
      *
      * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
      * @throws ModelException bei API-Fehlern
@@ -44,28 +45,40 @@ class LessonGenerator
 
         $data = $this->call($lesson, Prompts::analysis($lesson, $images))->data;
 
-        if (! ($data['quelle']['lesbar'] ?? false) || ! is_array($data['inhalt'] ?? null)) {
+        if (! ($data['quelle']['lesbar'] ?? false) || ! is_array($data['seite'] ?? null)) {
             throw new GenerationFailed(
-                $data['quelle']['problem'] ?? ($lesson->isFromTopic()
+                ($data['quelle']['problem'] ?? null) ?: ($lesson->isFromTopic()
                     ? 'Zu diesem Thema konnte keine Lernseite erstellt werden.'
                     : 'Auf den Fotos war kein Schulstoff zu erkennen.'),
             );
         }
 
-        $content = $data['inhalt'];
-
-        // Zuerst die Zusammenfassung speichern, die Reparatur braucht sie
+        // Zuerst Zusammenfassung und Plan speichern, die nächsten Aufrufe brauchen sie
         $lesson->update([
+            'step' => 'module',
             'source_summary' => (string) ($data['zusammenfassung'] ?? ''),
             'hero_plan' => $data['hero_plan'] ?? null,
         ]);
 
-        $errors = ContentValidator::errors($content, strict: true);
+        // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
+        $page = $data['seite'];
+        $modules = $this->call($lesson, Prompts::modules($lesson, $page))->data['module'] ?? [];
+        $content = self::assemble($page, $modules);
 
-        if ($errors !== []) {
-            $content = $this->call($lesson, Prompts::repair($lesson, $content, $errors))->data['inhalt'] ?? [];
-            $errors = ContentValidator::errors($content, strict: true);
+        // Fehlerhafte Teile einmal reparieren
+        foreach (ContentValidator::errorsByPart($content, strict: true) as $part => $errors) {
+            if ($errors === []) {
+                continue;
+            }
+
+            $repaired = $this->call($lesson, Prompts::repair($lesson, $content, $part, $errors))->data[$part] ?? null;
+
+            if (is_array($repaired)) {
+                $content = $part === 'module' ? self::assemble($content, $repaired) : self::assemble($repaired, $content['module']);
+            }
         }
+
+        $errors = ContentValidator::errors($content, strict: true);
 
         // Nach der Reparatur reichen die normalen Regeln; die Eltern prüfen den Rest
         if ($errors !== [] && ContentValidator::errors($content) !== []) {
@@ -87,34 +100,62 @@ class LessonGenerator
     }
 
     /**
-     * Zweiter Durchgang, der fachliche Fehler korrigiert. Scheitert er, bleibt der Inhalt wie er ist.
+     * Zweiter Durchgang, der fachliche Fehler korrigiert, getrennt für Textteil und Module.
+     * Scheitert ein Teil oder liefert er Ungültiges, bleibt dieser Teil wie er ist.
      */
     public function check(Lesson $lesson): void
     {
-        try {
-            $data = $this->call($lesson, Prompts::check($lesson, $lesson->content))->data;
-        } catch (ModelException $e) {
-            Log::warning('Prüf-Call fehlgeschlagen', ['lesson' => $lesson->id, 'error' => $e->detail ?? $e->getMessage()]);
+        $content = $lesson->content;
+        $notes = [];
 
-            return;
-        }
+        foreach (['seite', 'module'] as $part) {
+            try {
+                $data = $this->call($lesson, Prompts::check($lesson, $content, $part))->data;
+            } catch (ModelException $e) {
+                Log::warning('Prüf-Call fehlgeschlagen', ['lesson' => $lesson->id, 'part' => $part, 'error' => $e->detail ?? $e->getMessage()]);
 
-        $checked = $data['inhalt'] ?? null;
+                continue;
+            }
 
-        if (! is_array($checked) || ($errors = ContentValidator::errors($checked)) !== []) {
-            Log::warning('Prüf-Call lieferte ungültigen Inhalt, Original bleibt', [
-                'lesson' => $lesson->id,
-                'errors' => $errors ?? ['kein Inhalt'],
-            ]);
+            $checked = $data[$part] ?? null;
+            $candidate = is_array($checked)
+                ? ($part === 'module' ? self::assemble($content, $checked) : self::assemble($checked, $content['module']))
+                : null;
 
-            return;
+            if ($candidate === null || ($errors = ContentValidator::errors($candidate)) !== []) {
+                Log::warning('Prüf-Call lieferte ungültigen Inhalt, Original bleibt', [
+                    'lesson' => $lesson->id,
+                    'part' => $part,
+                    'errors' => $errors ?? ['kein Inhalt'],
+                ]);
+
+                continue;
+            }
+
+            $content = $candidate;
+            $notes = [...$notes, ...array_values($data['aenderungen'] ?? [])];
         }
 
         $lesson->update([
-            'title' => $checked['meta']['titel'],
-            'content' => $checked,
-            'check_notes' => array_values($data['aenderungen'] ?? []),
+            'title' => $content['meta']['titel'],
+            'content' => $content,
+            'check_notes' => $notes,
         ]);
+    }
+
+    /**
+     * Setzt Textteil und Module zu einer Seite zusammen, in der Reihenfolge der Fixtures.
+     *
+     * @param  array<string, mixed>  $page  Textteil (oder ganze Seite, deren Module ersetzt werden)
+     * @param  array<string, mixed>  $modules
+     * @return array<string, mixed>
+     */
+    private static function assemble(array $page, array $modules): array
+    {
+        $nachdenken = $page['nachdenken'] ?? null;
+        unset($page['module'], $page['nachdenken']);
+
+        return [...$page, 'module' => $modules, 'nachdenken' => $nachdenken];
     }
 
     /**

@@ -29,14 +29,14 @@ class Prompts
                     'muster' => 'regler',
                     'idee' => 'Ein Blatt im Querschnitt mit Pfeilen für Licht, CO₂ und Wasser (hinein) sowie Sauerstoff und Traubenzucker (hinaus). Drei Regler steuern Licht, CO₂ und Wasser. Die Pfeile hinaus werden so stark wie die knappste Zutat. Eine Anzeige nennt die Leistung und was gerade bremst, ein Satz darunter erklärt es.',
                 ],
-                'inhalt' => LessonFactory::fixture('fotosynthese'),
+                'seite' => self::page(LessonFactory::fixture('fotosynthese')),
             ]),
         ]);
 
         $source = match (true) {
-            $lesson->isFromTopic() => "Erstelle den Inhalt einer Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Thema, keine Fotos»).",
-            count($images) === 1 => 'Erstelle den Inhalt einer Lernseite aus diesem Foto.',
-            default => 'Erstelle den Inhalt einer Lernseite aus diesen '.count($images).' Fotos.',
+            $lesson->isFromTopic() => "Erstelle den Textteil einer Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Thema, keine Fotos»).",
+            count($images) === 1 => 'Erstelle den Textteil einer Lernseite aus diesem Foto.',
+            default => 'Erstelle den Textteil einer Lernseite aus diesen '.count($images).' Fotos.',
         };
 
         $prompt = implode("\n", array_filter([
@@ -58,39 +58,80 @@ class Prompts
     }
 
     /**
+     * Zweiter Schritt: die Lernmodule aus Zusammenfassung und Textteil.
+     *
+     * @param  array<string, mixed>  $page
+     */
+    public static function modules(Lesson $lesson, array $page): ModelRequest
+    {
+        $system = strtr(self::load('module'), [
+            '{{BEISPIEL}}' => self::json(['module' => LessonFactory::fixture('fotosynthese')['module']]),
+        ]);
+
+        return new ModelRequest(
+            step: 'module',
+            system: $system,
+            prompt: implode("\n\n", [
+                self::context($lesson),
+                "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}",
+                "Textteil der Lernseite:\n".self::json($page),
+            ]),
+            schema: Schemas::modulesResult(),
+            maxTokens: config('lessons.max_tokens.module'),
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $content
+     * @param  'seite'|'module'  $part
      * @param  list<string>  $errors
      */
-    public static function repair(Lesson $lesson, array $content, array $errors): ModelRequest
+    public static function repair(Lesson $lesson, array $content, string $part, array $errors): ModelRequest
     {
         return new ModelRequest(
-            step: 'reparatur',
+            step: "reparatur-{$part}",
             system: self::load('reparatur'),
             prompt: implode("\n\n", [
                 self::context($lesson),
+                "Gib diesen Teil korrigiert zurück: {$part}",
                 "Diese Fehler müssen behoben werden:\n- ".implode("\n- ", $errors),
-                "Fehlerhafter Inhalt:\n".self::json($content),
+                "Ganze Lernseite:\n".self::json($content),
             ]),
-            schema: Schemas::repair(),
+            schema: Schemas::part($part),
             maxTokens: config('lessons.max_tokens.reparatur'),
         );
     }
 
     /**
      * @param  array<string, mixed>  $content
+     * @param  'seite'|'module'  $part
      */
-    public static function check(Lesson $lesson, array $content): ModelRequest
+    public static function check(Lesson $lesson, array $content, string $part): ModelRequest
     {
         return new ModelRequest(
-            step: 'pruefung',
+            step: "pruefung-{$part}",
             system: self::load('pruefung'),
             prompt: implode("\n\n", [
                 self::context($lesson),
-                "Inhalt der Lernseite:\n".self::json($content),
+                "Prüfe diesen Teil und gib ihn zurück: {$part}",
+                "Ganze Lernseite:\n".self::json($content),
             ]),
-            schema: Schemas::check(),
+            schema: Schemas::part($part, withChanges: true),
             maxTokens: config('lessons.max_tokens.pruefung'),
         );
+    }
+
+    /**
+     * Textteil einer Seite: alles ausser den Modulen.
+     *
+     * @param  array<string, mixed>  $content
+     * @return array<string, mixed>
+     */
+    public static function page(array $content): array
+    {
+        unset($content['module']);
+
+        return $content;
     }
 
     public static function hero(Lesson $lesson): ModelRequest

@@ -8,6 +8,7 @@ use App\Jobs\GenerateLessonHero;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\ModelRequest;
+use App\Lessons\Ai\Prompts;
 use App\Models\Child;
 use App\Models\Lesson;
 use App\Models\User;
@@ -76,8 +77,8 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->source_summary)->toContain('Fotosynthese')
         ->and($lesson->schema_version)->toBe(1);
 
-    expect($lesson->generations()->pluck('step')->all())->toBe(['analyse', 'pruefung', 'grafik'])
-        ->and($lesson->generations()->where('status', 'ok')->count())->toBe(3);
+    expect($lesson->generations()->pluck('step')->all())->toBe(['analyse', 'module', 'pruefung-seite', 'pruefung-module', 'grafik'])
+        ->and($lesson->generations()->where('status', 'ok')->count())->toBe(5);
 
     $this->actingAs($this->user)->get(route('lessons.show', $lesson))
         ->assertInertia(fn (Assert $page) => $page
@@ -142,7 +143,8 @@ it('skips the check when it is switched off', function () {
 
     upload();
 
-    expect($this->fake->requestsFor('pruefung'))->toBe([])
+    expect($this->fake->requestsFor('pruefung-seite'))->toBe([])
+        ->and($this->fake->requestsFor('pruefung-module'))->toBe([])
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review);
 });
 
@@ -150,9 +152,9 @@ it('stores the corrections of the check', function () {
     $content = LessonFactory::fixture('fotosynthese');
     $content['module']['quiz'][0]['tipp'] = 'Denk an die Zutaten, nicht an das Ergebnis.';
 
-    $this->fake->push('pruefung', [
+    $this->fake->push('pruefung-module', [
         'aenderungen' => [['bereich' => 'Quiz, Frage 1', 'aenderung' => 'Tipp präzisiert.']],
-        'inhalt' => $content,
+        'module' => $content['module'],
     ]);
 
     upload();
@@ -167,7 +169,7 @@ it('keeps the original content when the check returns something invalid', functi
     $broken['module']['quiz'][0]['loesung'] = 3;
     $broken['module']['quiz'][0]['optionen'] = ['A', 'B', 'C'];
 
-    $this->fake->push('pruefung', ['aenderungen' => [], 'inhalt' => $broken]);
+    $this->fake->push('pruefung-module', ['aenderungen' => [], 'module' => $broken['module']]);
 
     upload();
 
@@ -176,25 +178,28 @@ it('keeps the original content when the check returns something invalid', functi
 });
 
 it('keeps going when the check call fails', function () {
-    $this->fake->push('pruefung', new ModelException('Die KI ist gerade ausgelastet.', retryable: false));
+    $this->fake->push('pruefung-seite', new ModelException('Die KI ist gerade ausgelastet.', retryable: false));
 
     upload();
 
     expect(Lesson::sole()->status)->toBe(LessonStatus::Review)
-        ->and(Lesson::sole()->generations()->where('step', 'pruefung')->value('status'))->toBe('error');
+        ->and(Lesson::sole()->generations()->where('step', 'pruefung-seite')->value('status'))->toBe('error')
+        ->and(Lesson::sole()->generations()->where('step', 'pruefung-module')->value('status'))->toBe('ok');
 });
 
 it('repairs invalid content once', function () {
     $broken = LessonFactory::fixture('fotosynthese');
     array_pop($broken['module']['quiz']);
 
-    $this->fake->push('analyse', [...analysis(), 'inhalt' => $broken]);
+    $this->fake->push('module', ['module' => $broken['module']]);
 
     upload();
 
-    $repair = $this->fake->requestsFor('reparatur');
+    $repair = $this->fake->requestsFor('reparatur-module');
     expect($repair)->toHaveCount(1)
+        ->and($this->fake->requestsFor('reparatur-seite'))->toBe([])
         ->and($repair[0]->prompt)->toContain('The module.quiz field must contain 5 items.')
+        ->toContain('Gib diesen Teil korrigiert zurück: module')
         ->toContain('Zusammenfassung des Stoffs:')
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review)
         ->and(Lesson::sole()->content['module']['quiz'])->toHaveCount(5);
@@ -204,8 +209,8 @@ it('fails when the content is still invalid after the repair', function () {
     $broken = LessonFactory::fixture('fotosynthese');
     $broken['meta']['palette'] = 'neonpink';
 
-    $this->fake->push('analyse', analysis(['inhalt' => $broken]));
-    $this->fake->push('reparatur', ['inhalt' => $broken]);
+    $this->fake->push('analyse', [...analysis(), 'seite' => Prompts::page($broken)]);
+    $this->fake->push('reparatur-seite', ['seite' => Prompts::page($broken)]);
 
     upload();
 
@@ -221,8 +226,8 @@ it('accepts content that only breaks the strict rules after the repair', functio
         $question['loesung'] = 1;
     }
 
-    $this->fake->push('analyse', analysis(['inhalt' => $content]));
-    $this->fake->push('reparatur', ['inhalt' => $content]);
+    $this->fake->push('module', ['module' => $content['module']]);
+    $this->fake->push('reparatur-module', ['module' => $content['module']]);
 
     upload();
 
@@ -232,7 +237,7 @@ it('accepts content that only breaks the strict rules after the repair', functio
 it('tells the parents when the photos are unreadable', function () {
     $this->fake->push('analyse', analysis([
         'quelle' => ['lesbar' => false, 'problem' => 'Die Fotos sind zu unscharf.'],
-        'inhalt' => null,
+        'seite' => null,
     ]));
 
     upload();
@@ -446,7 +451,7 @@ describe('from a topic', function () {
     it('explains when the topic does not work', function () {
         $this->fake->push('analyse', analysis([
             'quelle' => ['lesbar' => false, 'problem' => 'Das ist kein Thema aus dem Schulstoff.'],
-            'inhalt' => null,
+            'seite' => null,
         ]));
 
         uploadTopic(['topic' => 'Fussballresultate vom Wochenende']);

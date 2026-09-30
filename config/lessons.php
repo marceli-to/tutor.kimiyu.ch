@@ -23,7 +23,8 @@ return [
     ],
 
     'max_tokens' => [
-        'analyse' => 48000,
+        'analyse' => 32000,
+        'module' => 32000,
         'reparatur' => 32000,
         'pruefung' => 48000,
         'grafik' => 48000,
