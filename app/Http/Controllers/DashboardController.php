@@ -2,32 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Child;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Vorläufige Übersicht für Phase 1. Die richtige Bibliothek pro Kind folgt in Phase 3.
+ * Bibliothek: pro Kind die Lernseiten, nach Fach gruppiert und neueste zuerst.
  */
 class DashboardController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $lessons = Lesson::query()
-            ->whereHas('child', fn ($q) => $q->where('user_id', $request->user()->id))
-            ->with('child:id,name')
-            ->latest()
-            ->get()
-            ->map(fn (Lesson $lesson) => [
-                'id' => $lesson->id,
-                'title' => $lesson->title ?? 'Neue Lernseite',
-                'subject' => $lesson->subject,
-                'child' => $lesson->child->name,
-                'emoji' => $lesson->content['meta']['emoji'] ?? null,
-                'status' => $lesson->status->label(),
-            ]);
+        $children = $request->user()->children()
+            ->with(['lessons' => fn ($q) => $q->latest()])
+            ->orderBy('name')
+            ->get();
 
-        return Inertia::render('Dashboard', ['lessons' => $lessons]);
+        return Inertia::render('Dashboard', [
+            'children' => $children->map(fn (Child $child) => [
+                'id' => $child->id,
+                'name' => $child->name,
+                'level' => $child->level,
+                'shareUrl' => route('shared.index', $child->share_token),
+                'subjects' => $child->lessons
+                    ->groupBy('subject')
+                    ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
+                    ->map(fn ($lessons, string $subject) => [
+                        'name' => $subject,
+                        'lessons' => $lessons->map(fn (Lesson $lesson) => [
+                            'id' => $lesson->id,
+                            'title' => $lesson->title ?? ($lesson->topic ?? 'Neue Lernseite'),
+                            'emoji' => $lesson->content['meta']['emoji'] ?? null,
+                            'status' => $lesson->status->value,
+                            'statusLabel' => $lesson->status->label(),
+                            'date' => $lesson->created_at?->translatedFormat('j. F Y'),
+                        ])->values(),
+                    ])
+                    ->values(),
+            ]),
+        ]);
     }
 }

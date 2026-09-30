@@ -198,7 +198,7 @@ it('repairs invalid content once', function () {
     $repair = $this->fake->requestsFor('reparatur-module');
     expect($repair)->toHaveCount(1)
         ->and($this->fake->requestsFor('reparatur-seite'))->toBe([])
-        ->and($repair[0]->prompt)->toContain('The module.quiz field must contain 5 items.')
+        ->and($repair[0]->prompt)->toContain('Das Feld module.quiz muss 5 Elemente enthalten.')
         ->toContain('Gib diesen Teil korrigiert zurück: module')
         ->toContain('Zusammenfassung des Stoffs:')
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review)

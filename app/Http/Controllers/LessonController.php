@@ -7,7 +7,8 @@ use App\Http\Requests\StoreLessonRequest;
 use App\Lessons\GenerationPipeline;
 use App\Lessons\HeroDocument;
 use App\Lessons\ImageProcessor;
-use App\Lessons\Palettes;
+use App\Lessons\LessonGenerator;
+use App\Lessons\LessonView;
 use App\Models\Child;
 use App\Models\Lesson;
 use Illuminate\Http\RedirectResponse;
@@ -89,7 +90,62 @@ class LessonController extends Controller
     {
         Gate::authorize('view', $lesson);
 
-        return $this->render($lesson);
+        return $this->render($lesson, parent: true);
+    }
+
+    public function destroy(Lesson $lesson, LessonGenerator $generator): RedirectResponse
+    {
+        Gate::authorize('delete', $lesson);
+
+        $generator->deleteImages($lesson);
+        $lesson->delete();
+
+        $this->toast('Lernseite gelöscht.');
+
+        return to_route('dashboard');
+    }
+
+    /**
+     * Freigeben: Das Kind sieht die Seite über seinen Link.
+     */
+    public function publish(Lesson $lesson): RedirectResponse
+    {
+        Gate::authorize('update', $lesson);
+
+        abort_unless($lesson->status === LessonStatus::Review && $lesson->content !== null, 422, 'Diese Lernseite kann nicht freigegeben werden.');
+
+        $lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
+
+        $this->toast("Freigegeben. {$lesson->child->name} sieht die Seite jetzt über den Link.");
+
+        return back();
+    }
+
+    public function unpublish(Lesson $lesson): RedirectResponse
+    {
+        Gate::authorize('update', $lesson);
+
+        abort_unless($lesson->status === LessonStatus::Published, 422);
+
+        $lesson->update(['status' => LessonStatus::Review, 'published_at' => null]);
+
+        $this->toast('Die Seite ist für das Kind nicht mehr sichtbar.');
+
+        return back();
+    }
+
+    /**
+     * Nur das Quiz oder nur die Grafik neu erstellen lassen.
+     */
+    public function regenerate(Lesson $lesson, string $part): RedirectResponse
+    {
+        Gate::authorize('update', $lesson);
+
+        abort_unless(GenerationPipeline::canRegenerate($lesson, $part), 422, 'Das geht bei dieser Lernseite gerade nicht.');
+
+        GenerationPipeline::regenerate($lesson, $part);
+
+        return to_route('lessons.show', $lesson);
     }
 
     public function retry(Lesson $lesson): RedirectResponse
@@ -110,7 +166,7 @@ class LessonController extends Controller
     {
         abort_unless(app()->isLocal(), 404);
 
-        return $this->render($lesson);
+        return $this->render($lesson, parent: false);
     }
 
     /**
@@ -124,27 +180,27 @@ class LessonController extends Controller
         return HeroDocument::response($lesson);
     }
 
-    private function render(Lesson $lesson): Response
+    private function render(Lesson $lesson, bool $parent): Response
     {
         return Inertia::render('lessons/Show', [
+            'parent' => $parent ? [
+                'childName' => $lesson->child->name,
+                'shareUrl' => $lesson->status === LessonStatus::Published
+                    ? route('shared.show', [$lesson->child->share_token, $lesson])
+                    : null,
+                'canPublish' => $lesson->status === LessonStatus::Review && $lesson->content !== null,
+                'canRegenerate' => [
+                    'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
+                    'grafik' => GenerationPipeline::canRegenerate($lesson, 'grafik'),
+                ],
+            ] : null,
             'lesson' => [
-                'id' => $lesson->id,
+                ...LessonView::page($lesson),
                 'status' => $lesson->status->value,
                 'step' => $lesson->step,
                 'error' => $lesson->error,
                 'canRetry' => GenerationPipeline::canRetry($lesson),
-                'subject' => $lesson->subject,
-                'level' => $lesson->level,
                 'fromTopic' => $lesson->isFromTopic(),
-                'content' => $lesson->content,
-                'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,
-                'hero' => $lesson->hero ? [
-                    'url' => URL::signedRoute('lessons.hero', [
-                        'lesson' => $lesson,
-                        'v' => $lesson->updated_at?->timestamp,
-                    ]),
-                    'beschreibung' => $lesson->hero['beschreibung'] ?? '',
-                ] : null,
                 'heroError' => $lesson->hero_error,
                 'checkNotes' => $lesson->check_notes ?? [],
             ],

@@ -159,12 +159,39 @@ class LessonGenerator
     }
 
     /**
-     * Die interaktive Grafik. Scheitert sie, bekommt die Seite keine Grafik, aber einen Hinweis.
+     * Neues Quiz für eine bestehende Seite.
+     *
+     * @throws GenerationFailed wenn das neue Quiz ungültig ist; das alte bleibt dann
      */
-    public function hero(Lesson $lesson): void
+    public function regenerateQuiz(Lesson $lesson): void
     {
+        $quiz = $this->call($lesson, Prompts::quiz($lesson))->data['quiz'] ?? null;
+
+        $content = $lesson->content;
+        $content['module']['quiz'] = $quiz;
+
+        if (! is_array($quiz) || ($errors = ContentValidator::errors($content)) !== []) {
+            throw new GenerationFailed('Das neue Quiz war fehlerhaft. Das bisherige Quiz bleibt.', implode(' | ', $errors ?? []));
+        }
+
+        $lesson->update(['content' => $content]);
+    }
+
+    /**
+     * Die interaktive Grafik. Scheitert sie, bekommt die Seite keine Grafik, aber einen Hinweis.
+     * Beim Neu-Erstellen ($keepExisting) bleibt die bisherige Grafik, wenn die neue scheitert.
+     */
+    public function hero(Lesson $lesson, bool $keepExisting = false): void
+    {
+        $fail = function (string $message) use ($lesson, $keepExisting) {
+            $lesson->update([
+                'hero' => $keepExisting ? $lesson->hero : null,
+                'hero_error' => $keepExisting && $lesson->hero ? $message.' Die bisherige Grafik bleibt.' : $message,
+            ]);
+        };
+
         if ($lesson->hero_plan === null) {
-            $lesson->update(['hero' => null, 'hero_error' => 'Es gibt keinen Plan für die Grafik.']);
+            $fail('Es gibt keinen Plan für die Grafik.');
 
             return;
         }
@@ -178,13 +205,13 @@ class LessonGenerator
                 $errors = HeroValidator::errors($hero);
             }
         } catch (ModelException $e) {
-            $lesson->update(['hero' => null, 'hero_error' => $e->getMessage()]);
+            $fail($e->getMessage());
 
             return;
         }
 
         if ($errors !== []) {
-            $lesson->update(['hero' => null, 'hero_error' => 'Die Grafik war fehlerhaft: '.implode(' ', $errors)]);
+            $fail('Die Grafik war fehlerhaft: '.implode(' ', $errors));
 
             return;
         }

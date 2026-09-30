@@ -21,6 +21,8 @@ class FinishLesson extends LessonStep
             'status' => LessonStatus::Review,
             'step' => null,
             'error' => null,
+            // Neuer Inhalt von der KI: die Eltern prüfen und geben wieder frei
+            'published_at' => null,
         ]);
     }
 }

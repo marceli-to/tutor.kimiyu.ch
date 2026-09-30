@@ -7,8 +7,11 @@ use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
 use App\Jobs\FinishLesson;
 use App\Jobs\GenerateLessonHero;
+use App\Jobs\RegenerateHero;
+use App\Jobs\RegenerateQuiz;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Bus;
+use InvalidArgumentException;
 
 /**
  * Startet die Job-Kette. Bei einem neuen Versuch werden erledigte Schritte übersprungen.
@@ -40,6 +43,33 @@ class GenerationPipeline
         ]);
 
         Bus::chain($jobs)->dispatch();
+    }
+
+    /**
+     * Einen Teil einer fertigen Seite neu erstellen lassen: «quiz» oder «grafik».
+     */
+    public static function regenerate(Lesson $lesson, string $part): void
+    {
+        $job = match ($part) {
+            'quiz' => new RegenerateQuiz($lesson),
+            'grafik' => new RegenerateHero($lesson),
+            default => throw new InvalidArgumentException("Unbekannter Teil: {$part}"),
+        };
+
+        $lesson->update([
+            'status' => LessonStatus::Generating,
+            'step' => "neu-{$part}",
+            'error' => null,
+        ]);
+
+        Bus::chain([$job, new FinishLesson($lesson)])->dispatch();
+    }
+
+    public static function canRegenerate(Lesson $lesson, string $part): bool
+    {
+        return in_array($lesson->status, [LessonStatus::Review, LessonStatus::Published], true)
+            && $lesson->content !== null
+            && ($part !== 'grafik' || $lesson->hero_plan !== null);
     }
 
     /**

@@ -42,11 +42,12 @@ onMounted(async () => {
     <Card class="w-full">
         <CardHeader>
             <CardTitle class="flex gap-3">
-                <LockKeyhole class="size-4" />2FA recovery codes
+                <LockKeyhole class="size-4" />Wiederherstellungscodes
             </CardTitle>
             <CardDescription>
-                Recovery codes let you regain access if you lose your 2FA
-                device. Store them in a secure password manager.
+                Mit Wiederherstellungscodes kommst du wieder in dein Konto,
+                falls du dein 2FA-Gerät verlierst. Bewahre sie in einem sicheren
+                Passwort-Manager auf.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -58,8 +59,11 @@ onMounted(async () => {
                         :is="isRecoveryCodesVisible ? EyeOff : Eye"
                         class="size-4"
                     />
-                    {{ isRecoveryCodesVisible ? 'Hide' : 'View' }} recovery
-                    codes
+                    {{
+                        isRecoveryCodesVisible
+                            ? 'Codes ausblenden'
+                            : 'Codes anzeigen'
+                    }}
                 </Button>
 
                 <Form
@@ -75,7 +79,7 @@ onMounted(async () => {
                         type="submit"
                         :disabled="processing"
                     >
-                        <RefreshCw /> Regenerate codes
+                        <RefreshCw /> Neue Codes erstellen
                     </Button>
                 </Form>
             </div>
@@ -111,10 +115,10 @@ onMounted(async () => {
                         </div>
                     </div>
                     <p class="text-xs text-muted-foreground select-none">
-                        Each recovery code can be used once to access your
-                        account and will be removed after use. If you need more,
-                        click
-                        <span class="font-bold">Regenerate codes</span> above.
+                        Jeder Wiederherstellungscode funktioniert genau einmal
+                        und wird danach gelöscht. Brauchst du neue, klicke oben
+                        auf
+                        <span class="font-bold">Neue Codes erstellen</span>.
                     </p>
                 </div>
             </div>

@@ -82,6 +82,29 @@ class Prompts
     }
 
     /**
+     * Neues Quiz mit anderen Fragen, der Rest der Seite bleibt.
+     */
+    public static function quiz(Lesson $lesson): ModelRequest
+    {
+        $system = strtr(self::load('module'), [
+            '{{BEISPIEL}}' => self::json(['module' => LessonFactory::fixture('fotosynthese')['module']]),
+        ]);
+
+        return new ModelRequest(
+            step: 'neu-quiz',
+            system: $system,
+            prompt: implode("\n\n", [
+                self::context($lesson),
+                'Erstelle nur ein neues Quiz mit genau 5 Fragen (IDs q1–q5). Frag andere Aspekte ab oder stell die Fragen anders als im bisherigen Quiz. Die Regeln für das Quiz gelten unverändert.',
+                "Bisheriges Quiz:\n".self::json($lesson->content['module']['quiz']),
+                "Textteil der Lernseite:\n".self::json(self::page($lesson->content)),
+            ]),
+            schema: Schemas::quizResult(),
+            maxTokens: config('lessons.max_tokens.module'),
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $content
      * @param  'seite'|'module'  $part
      * @param  list<string>  $errors

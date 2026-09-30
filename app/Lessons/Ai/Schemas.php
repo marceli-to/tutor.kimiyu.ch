@@ -43,6 +43,16 @@ class Schemas
     }
 
     /**
+     * Neues Quiz für eine bestehende Seite.
+     *
+     * @return array<string, mixed>
+     */
+    public static function quizResult(): array
+    {
+        return self::object(['quiz' => self::modules()['properties']['quiz']]);
+    }
+
+    /**
      * Reparatur oder Prüfung eines Teils. Die ganze Seite ist für eine einzelne
      * strukturierte Antwort zu gross (die API lehnt die Grammatik ab), deshalb getrennt.
      *

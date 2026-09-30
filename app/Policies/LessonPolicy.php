@@ -16,4 +16,9 @@ class LessonPolicy
     {
         return $this->view($user, $lesson);
     }
+
+    public function delete(User $user, Lesson $lesson): bool
+    {
+        return $this->view($user, $lesson);
+    }
 }

@@ -22,6 +22,8 @@ use Illuminate\Support\Str;
  * @property string $share_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read int|null $lessons_count
+ * @property-read int|null $published_count
  */
 #[Fillable(['name', 'level'])]
 #[Hidden(['share_token'])]

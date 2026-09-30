@@ -46,26 +46,27 @@ const pinInputContainerRef = useTemplateRef('pinInputContainerRef');
 const modalConfig = computed<TwoFactorConfigContent>(() => {
     if (props.twoFactorEnabled) {
         return {
-            title: 'Two-factor authentication enabled',
+            title: 'Zwei-Faktor-Authentisierung aktiviert',
             description:
-                'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
-            buttonText: 'Close',
+                'Die Zwei-Faktor-Authentisierung ist jetzt aktiv. Scanne den QR-Code oder gib den Schlüssel in deiner Authenticator-App ein.',
+            buttonText: 'Schliessen',
         };
     }
 
     if (showVerificationStep.value) {
         return {
-            title: 'Verify authentication code',
-            description: 'Enter the 6-digit code from your authenticator app',
-            buttonText: 'Continue',
+            title: 'Code bestätigen',
+            description:
+                'Gib den 6-stelligen Code aus deiner Authenticator-App ein.',
+            buttonText: 'Weiter',
         };
     }
 
     return {
-        title: 'Enable two-factor authentication',
+        title: 'Zwei-Faktor-Authentisierung aktivieren',
         description:
-            'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app',
-        buttonText: 'Continue',
+            'Scanne zum Abschluss den QR-Code oder gib den Schlüssel in deiner Authenticator-App ein.',
+        buttonText: 'Weiter',
     };
 });
 
@@ -197,7 +198,7 @@ watch(
                                 class="absolute inset-0 top-1/2 h-px w-full bg-border"
                             />
                             <span class="relative bg-card px-2 py-1"
-                                >or, enter the code manually</span
+                                >oder gib den Schlüssel von Hand ein</span
                             >
                         </div>
 
@@ -279,14 +280,14 @@ watch(
                                     @click="showVerificationStep = false"
                                     :disabled="processing"
                                 >
-                                    Back
+                                    Zurück
                                 </Button>
                                 <Button
                                     type="submit"
                                     class="w-auto flex-1"
                                     :disabled="processing || code.length < 6"
                                 >
-                                    Confirm
+                                    Bestätigen
                                 </Button>
                             </div>
                         </div>

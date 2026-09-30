@@ -14,7 +14,7 @@ const props = defineProps<{
     canRetry: boolean;
 }>();
 
-const steps = [
+const fullSteps = [
     { key: 'warteschlange', label: 'Wartet auf den Start' },
     { key: 'analyse', label: 'Stoff lesen und Erklärungen schreiben' },
     { key: 'module', label: 'Quiz und Übungen erstellen' },
@@ -22,7 +22,21 @@ const steps = [
     { key: 'grafik', label: 'Interaktive Grafik zeichnen' },
 ];
 
-const current = computed(() => steps.findIndex((s) => s.key === props.step));
+// Beim Neu-Erstellen einzelner Teile gibt es nur einen Schritt
+const partSteps: Record<string, { key: string; label: string }[]> = {
+    'neu-quiz': [{ key: 'neu-quiz', label: 'Neues Quiz schreiben' }],
+    'neu-grafik': [{ key: 'neu-grafik', label: 'Grafik neu zeichnen' }],
+};
+
+const steps = computed(() => {
+    const part = Object.keys(partSteps).find((key) => key === props.step);
+
+    return part ? partSteps[part] : fullSteps;
+});
+
+const current = computed(() =>
+    steps.value.findIndex((s) => s.key === props.step),
+);
 const failed = computed(() => props.status === 'failed');
 </script>
 
