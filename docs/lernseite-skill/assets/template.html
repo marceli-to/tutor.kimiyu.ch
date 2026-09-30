@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{TITEL}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ===== THEMA-FARBEN: nur diesen Block pro Thema anpassen (hell + dunkel) ===== */
+:root{
+  --accent:#134E5E; --accent-bg:#D5E9EE;
+  --cat1:#A0692E; --cat1-bg:#F6E7D3;
+  --cat2:#2E7D46; --cat2-bg:#DCEFD9;
+  --cat3:#5B4AA8; --cat3-bg:#E6E2F7;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --accent:#9ED3E0; --accent-bg:#18363F;
+  --cat1:#E7B57A; --cat1-bg:#3B2A17;
+  --cat2:#8FD49C; --cat2-bg:#1D3A24;
+  --cat3:#C3B8F2; --cat3-bg:#2B2548;
+}}
+:root[data-theme="dark"]{
+  --accent:#9ED3E0; --accent-bg:#18363F;
+  --cat1:#E7B57A; --cat1-bg:#3B2A17;
+  --cat2:#8FD49C; --cat2-bg:#1D3A24;
+  --cat3:#C3B8F2; --cat3-bg:#2B2548;
+}
+/* ===== BASIS: nicht anpassen ===== */
+:root{
+  --bg:#F3F6F5; --ink:#15252A; --muted:#4B5E62; --line:#C8D5D6; --card:#FFFFFF;
+  --ok-bg:#DDF0DA; --ok:#1F5E2A; --bad-bg:#F8E1DA; --bad:#8C3419; --focus:#E3A21A;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F191C; --ink:#E3EEF0; --muted:#A3B6BA; --line:#2B3D42; --card:#162429;
+  --ok-bg:#1E3A22; --ok:#A9DDA6; --bad-bg:#3E2219; --bad:#F2A98C;
+}}
+:root[data-theme="dark"]{
+  --bg:#0F191C; --ink:#E3EEF0; --muted:#A3B6BA; --line:#2B3D42; --card:#162429;
+  --ok-bg:#1E3A22; --ok:#A9DDA6; --bad-bg:#3E2219; --bad:#F2A98C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:18px;line-height:1.6}
+main{max-width:780px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+h1,h2,h3{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;line-height:1.15;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:700;letter-spacing:-0.02em;color:var(--accent)}
+h2{font-size:1.6rem;font-weight:700;margin:3rem 0 .75rem}
+h3{font-size:1.15rem;font-weight:500;margin:0 0 .35rem}
+p{margin:0 0 1rem;max-width:66ch}
+.lead{font-size:1.2rem;color:var(--muted);margin-top:.75rem}
+svg{max-width:100%;height:auto;display:block}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1rem;margin-top:1.75rem;overflow:hidden}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1.4rem}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem 1.2rem;margin-top:1rem}
+.box p:last-child{margin:0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:1rem}
+.col{border-radius:16px;padding:1.1rem 1.2rem}
+.col p{margin:0 0 .5rem}.col p:last-child{margin:0}
+.col.c1{background:var(--cat1-bg)}.col.c1 h3{color:var(--cat1)}
+.col.c2{background:var(--cat2-bg)}.col.c2 h3{color:var(--cat2)}
+.col.c3{background:var(--cat3-bg)}.col.c3 h3{color:var(--cat3)}
+.facts{display:grid;gap:1.25rem;margin-top:1rem}
+.fact{border-left:4px solid var(--accent);padding-left:1rem}
+.fact p{margin:0}
+.try{background:var(--accent);color:var(--bg);border-radius:16px;padding:1.25rem 1.4rem;margin-top:1rem}
+.try p{margin:0 0 .6rem}.try p:last-child{margin:0}
+.formel{font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(1.1rem,3.6vw,1.45rem);font-weight:500;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem 1.25rem;overflow-x:auto}
+.formel small{display:block;font-family:"Atkinson Hyperlegible",sans-serif;font-size:1rem;color:var(--muted);margin-top:.4rem}
+.ctl{display:grid;grid-template-columns:7rem 1fr 3.2rem;align-items:center;gap:.75rem;font-size:1rem;margin-top:.5rem}
+.ctl output{text-align:right;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.seg button[aria-pressed="true"]{background:var(--accent-bg);border-color:var(--accent)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:1rem}
+.readout div{background:var(--bg);border-radius:12px;padding:.75rem 1rem}
+.readout small{display:block;color:var(--muted);font-size:.9rem}
+.readout strong{font-family:"Bricolage Grotesque",sans-serif;font-size:1.7rem}
+.progress{color:var(--muted);font-size:.95rem;margin-bottom:.5rem}
+.qtext{font-family:"Bricolage Grotesque",sans-serif;font-size:1.3rem;font-weight:500;margin:0 0 1rem}
+.opts{display:grid;gap:.5rem}
+.opt{display:flex;gap:.75rem;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:.7rem .9rem;cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:.35rem;accent-color:var(--accent)}
+.opt.right{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;align-items:center}
+.btn,.seg button{font:inherit;font-size:1rem;border-radius:999px;padding:.55rem 1.2rem;cursor:pointer;border:1.5px solid var(--accent);background:transparent;color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--bg)}
+button:focus-visible,.opt:focus-within,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.err{color:var(--bad);font-size:.95rem}
+.feedback{margin-top:1rem;padding:.9rem 1rem;border-radius:12px}
+.feedback.ok{background:var(--ok-bg);color:var(--ok)}
+.feedback.no{background:var(--bad-bg);color:var(--bad)}
+.hintbox{color:var(--muted);font-style:italic;font-size:1rem;margin-top:.75rem}
+.score{font-family:"Bricolage Grotesque",sans-serif;font-size:3rem;font-weight:700;color:var(--accent)}
+.card-word{font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(1.5rem,6vw,2.2rem);font-weight:700;text-align:center;padding:1.25rem .5rem;border:2px dashed var(--line);border-radius:16px;margin:.5rem 0 1rem}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem}
+.choice button{font:inherit;font-size:1.05rem;border-radius:14px;padding:.8rem;cursor:pointer;border:2px solid;background:transparent;color:var(--ink)}
+.choice small{display:block;color:var(--muted);font-size:.85rem}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem}
+.bin{border-radius:12px;padding:.6rem .8rem;min-height:3rem;font-size:.95rem}
+.bin b{display:block;font-size:.85rem;color:var(--muted);font-weight:400}
+.tag{display:inline-block;margin:.2rem .3rem 0 0;padding:.05rem .5rem;border-radius:999px;background:var(--card);font-size:.9rem}
+.tag.x{text-decoration:line-through;color:var(--bad)}
+.k1{border-color:var(--cat1)!important}.k1:hover,.bin.k1{background:var(--cat1-bg)}
+.k2{border-color:var(--cat2)!important}.k2:hover,.bin.k2{background:var(--cat2-bg)}
+.k3{border-color:var(--cat3)!important}.k3:hover,.bin.k3{background:var(--cat3-bg)}
+.flip{font:inherit;width:100%;min-height:10rem;border:2px solid var(--line);border-radius:16px;background:var(--bg);color:var(--ink);cursor:pointer;padding:1.25rem;text-align:center}
+.flip .f{font-family:"Bricolage Grotesque",sans-serif;font-size:1.5rem;font-weight:700}
+.flip .b{font-size:1.1rem}
+.flip.back{background:var(--accent-bg);border-color:var(--accent)}
+.cloze{line-height:2.3}
+.cloze input{font:inherit;font-size:1rem;width:9em;padding:.1rem .5rem;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.cloze input.right{background:var(--ok-bg);border-color:var(--ok)}
+.cloze input.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.solution{font-size:.85rem;color:var(--ok);margin-left:.25rem}
+footer{margin-top:3rem;color:var(--muted);font-size:.95rem;border-top:1px solid var(--line);padding-top:1rem}
+@media (max-width:520px){.ctl{grid-template-columns:5.5rem 1fr 3rem}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+/* ===== THEMA-SPEZIFISCHES CSS (Hero-Grafik) hier ===== */
+</style>
+</head>
+<body>
+<main>
+<!-- ===== INHALT: Hero, Erklärteil, Module. Module brauchen nur ihren Container:
+     <div class="panel" id="quiz"></div>  <div class="panel" id="sorter"></div>
+     <div class="panel" id="cards"></div> <div class="panel" id="cloze"></div>
+     Nicht verwendete Module einfach weglassen. ===== -->
+
+<footer>Lernseite für die {{STUFE}} · {{FACH}}</footer>
+</main>
+
+<script>
+/* ===== DATEN: pro Thema ausfüllen. Nicht benötigte Schlüssel weglassen. ===== */
+const LESSON = {
+  quiz: [
+    /* {q:'Frage', o:['A','B','C','D'], a:1, h:'Tipp', e:'Erklärung, warum die Lösung stimmt'} */
+  ],
+  sort: null,
+  /* {cats:[{key:'k1',label:'Biotop',sub:'unbelebt'},{key:'k2',label:'Biozönose',sub:'belebt'}],
+      items:[['Sonnenlicht','k1'],['Frosch','k2']]}   (2 oder 3 Kategorien, Keys k1–k3) */
+  cards: [
+    /* {f:'Begriff', b:'Erklärung'} */
+  ],
+  cloze: null
+  /* {text:'Die Pflanze nimmt [Kohlenstoffdioxid|CO2|CO₂] aus der Luft und [Wasser] aus dem Boden.'}
+     Lücken in [ ], Alternativen mit | trennen. Gross/Klein wird ignoriert. */
+};
+</script>
+
+<script>
+/* ===== HERO-SKRIPT: thema-spezifische Interaktion hier ===== */
+</script>
+
+<script>
+/* ===== MODUL-ENGINES: nicht anpassen ===== */
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const result=(s,n)=>s===n?'Alles richtig. Bereit für die Prüfung!':s>=Math.ceil(n*0.6)?'Gut gemacht. Schau dir die Fehler nochmals an.':'Lies den Teil oben nochmals durch und versuch es erneut.';
+
+const qb=$('quiz');
+if(qb&&LESSON.quiz&&LESSON.quiz.length){
+  const Q=LESSON.quiz;let i=0,score=0,checked=false;
+  const render=()=>{
+    checked=false;
+    if(i>=Q.length){qb.innerHTML='<p class="progress">Geschafft</p><div class="score">'+score+' / '+Q.length+'</div><p>'+result(score,Q.length)+'</p><div class="actions"><button class="btn primary" id="qa">Nochmals versuchen</button></div>';$('qa').onclick=()=>{i=0;score=0;render();};return;}
+    const q=Q[i];
+    qb.innerHTML='<p class="progress">Frage '+(i+1)+' von '+Q.length+'</p><p class="qtext">'+esc(q.q)+'</p><div class="opts" role="radiogroup">'+q.o.map((t,k)=>'<label class="opt" data-k="'+k+'"><input type="radio" name="qa" value="'+k+'"><span>'+esc(t)+'</span></label>').join('')+'</div><div class="actions"><button class="btn primary" id="qgo">Antwort prüfen</button>'+(q.h?'<button class="btn" id="qh">Tipp zeigen</button>':'')+'<span class="err" id="qerr"></span></div><div id="qout"></div>';
+    qb.querySelectorAll('input').forEach(r=>r.addEventListener('change',()=>{$('qerr').textContent='';}));
+    if(q.h)$('qh').onclick=()=>{if(!qb.querySelector('.hintbox')){const d=document.createElement('p');d.className='hintbox';d.textContent='Tipp: '+q.h;$('qout').before(d);}};
+    $('qgo').onclick=()=>{
+      if(checked){i++;render();return;}
+      const sel=qb.querySelector('input:checked');if(!sel){$('qerr').textContent='Wähle zuerst eine Antwort.';return;}
+      checked=true;const k=+sel.value,ok=k===q.a;if(ok)score++;
+      qb.querySelectorAll('.opt').forEach(o=>{const n=+o.dataset.k;if(n===q.a)o.classList.add('right');else if(n===k)o.classList.add('wrong');o.querySelector('input').disabled=true;});
+      $('qout').innerHTML='<div class="feedback '+(ok?'ok':'no')+'"><strong>'+(ok?'Richtig!':'Nicht ganz.')+'</strong> '+esc(q.e)+'</div>';
+      $('qgo').textContent=i===Q.length-1?'Resultat anzeigen':'Nächste Frage';if($('qh'))$('qh').remove();
+    };
+  };render();
+}
+
+const sb=$('sorter');
+if(sb&&LESSON.sort){
+  const C=LESSON.sort.cats,lab=Object.fromEntries(C.map(c=>[c.key,c.label]));let order,pos,right,bins;
+  const binsHtml=()=>'<div class="bins">'+C.map(c=>'<div class="bin '+c.key+'"><b>'+esc(c.label)+'</b>'+bins[c.key].map(x=>'<span class="tag'+(x[1]?'':' x')+'">'+esc(x[0])+'</span>').join('')+'</div>').join('')+'</div>';
+  const start=()=>{order=shuffle(LESSON.sort.items);pos=0;right=0;bins=Object.fromEntries(C.map(c=>[c.key,[]]));draw();};
+  const draw=msg=>{
+    if(pos>=order.length){sb.innerHTML='<p class="progress">Fertig sortiert</p><div class="score">'+right+' / '+order.length+'</div><p>'+(right===order.length?'Perfekt sortiert!':'Durchgestrichene Begriffe lagen im falschen Korb.')+'</p>'+binsHtml()+'<div class="actions"><button class="btn primary" id="sa">Nochmals sortieren</button></div>';$('sa').onclick=start;return;}
+    sb.innerHTML='<p class="progress">Begriff '+(pos+1)+' von '+order.length+'</p><div class="card-word">'+esc(order[pos][0])+'</div><div class="choice">'+C.map(c=>'<button class="'+c.key+'" data-k="'+c.key+'">'+esc(c.label)+(c.sub?'<small>'+esc(c.sub)+'</small>':'')+'</button>').join('')+'</div>'+(msg||'')+binsHtml();
+    sb.querySelectorAll('.choice button').forEach(b=>b.onclick=()=>{
+      const w=order[pos],ok=b.dataset.k===w[1];if(ok)right++;bins[b.dataset.k].push([w[0],ok]);pos++;
+      draw('<div class="feedback '+(ok?'ok':'no')+'"><strong>'+(ok?'Richtig!':'Nicht ganz.')+'</strong> «'+esc(w[0])+'» gehört zu '+esc(lab[w[1]])+'.'+(w[2]?' '+esc(w[2]):'')+'</div>');
+    });
+  };start();
+}
+
+const cb=$('cards');
+if(cb&&LESSON.cards&&LESSON.cards.length){
+  let deck=LESSON.cards.slice(),i=0,back=false;
+  const draw=()=>{const c=deck[i];
+    cb.innerHTML='<p class="progress">Karte '+(i+1)+' von '+deck.length+'</p><button class="flip'+(back?' back':'')+'" id="fl" aria-live="polite">'+(back?'<span class="b">'+esc(c.b)+'</span>':'<span class="f">'+esc(c.f)+'</span><br><small>Tippen zum Umdrehen</small>')+'</button><div class="actions"><button class="btn" id="cp">Zurück</button><button class="btn primary" id="cn">Weiter</button><button class="btn" id="cm">Mischen</button></div>';
+    $('fl').onclick=()=>{back=!back;draw();};
+    $('cp').onclick=()=>{i=(i-1+deck.length)%deck.length;back=false;draw();};
+    $('cn').onclick=()=>{i=(i+1)%deck.length;back=false;draw();};
+    $('cm').onclick=()=>{deck=shuffle(deck);i=0;back=false;draw();};
+  };draw();
+}
+
+const zb=$('cloze');
+if(zb&&LESSON.cloze){
+  const parts=LESSON.cloze.text.split(/(\[[^\]]+\])/);const sol=[];
+  const html=parts.map(p=>{if(/^\[.*\]$/.test(p)){const alts=p.slice(1,-1).split('|');sol.push(alts);return '<input type="text" data-i="'+(sol.length-1)+'" aria-label="Lücke '+sol.length+'" autocomplete="off" spellcheck="false">';}return esc(p);}).join('');
+  zb.innerHTML='<p class="cloze">'+html+'</p><div class="actions"><button class="btn primary" id="zc">Prüfen</button><button class="btn" id="zs">Lösung zeigen</button><button class="btn" id="zr">Leeren</button><span class="err" id="zerr"></span></div><div id="zout"></div>';
+  const ins=[...zb.querySelectorAll('input')];const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
+  ins.forEach(x=>x.addEventListener('input',()=>{x.className='';$('zerr').textContent='';}));
+  $('zc').onclick=()=>{
+    if(ins.every(x=>!x.value.trim())){$('zerr').textContent='Füll zuerst mindestens eine Lücke aus.';return;}
+    let r=0;ins.forEach(x=>{const ok=sol[+x.dataset.i].some(a=>norm(a)===norm(x.value));x.className=ok?'right':'wrong';if(ok)r++;});
+    $('zout').innerHTML='<div class="feedback '+(r===ins.length?'ok':'no')+'"><strong>'+r+' von '+ins.length+' richtig.</strong> '+(r===ins.length?'Super!':'Rot markierte Lücken nochmals versuchen.')+'</div>';
+  };
+  $('zs').onclick=()=>{ins.forEach(x=>{x.value=sol[+x.dataset.i][0];x.className='right';});$('zout').innerHTML='';};
+  $('zr').onclick=()=>{ins.forEach(x=>{x.value='';x.className='';});$('zout').innerHTML='';};
+}
+})();
+</script>
+</body>
+</html>

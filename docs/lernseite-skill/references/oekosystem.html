@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Biotop + Biozönose = Ökosystem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F1F6F7; --ink:#13262B; --muted:#4B5F64; --line:#C6D6D9; --card:#FFFFFF;
+  --deep:#134E5E; --abio:#A0692E; --abio-bg:#F6E7D3; --bio:#2E7D46; --bio-bg:#DCEFD9; --eco:#134E5E; --eco-bg:#D5E9EE;
+  --ok-bg:#DDF0DA; --ok:#1F5E2A; --bad-bg:#F8E1DA; --bad:#8C3419; --focus:#E3A21A;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1A1D; --ink:#E3EEF0; --muted:#A3B6BA; --line:#2B3D42; --card:#16252A;
+    --deep:#9ED3E0; --abio:#E7B57A; --abio-bg:#3B2A17; --bio:#8FD49C; --bio-bg:#1D3A24; --eco:#9ED3E0; --eco-bg:#18363F;
+    --ok-bg:#1E3A22; --ok:#A9DDA6; --bad-bg:#3E2219; --bad:#F2A98C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1A1D; --ink:#E3EEF0; --muted:#A3B6BA; --line:#2B3D42; --card:#16252A;
+  --deep:#9ED3E0; --abio:#E7B57A; --abio-bg:#3B2A17; --bio:#8FD49C; --bio-bg:#1D3A24; --eco:#9ED3E0; --eco-bg:#18363F;
+  --ok-bg:#1E3A22; --ok:#A9DDA6; --bad-bg:#3E2219; --bad:#F2A98C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:18px;line-height:1.6}
+main{max-width:780px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+h1,h2,h3{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;line-height:1.15;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:700;letter-spacing:-0.02em;color:var(--deep)}
+h2{font-size:1.6rem;font-weight:700;margin:3rem 0 .75rem}
+h3{font-size:1.15rem;font-weight:500;margin:0 0 .35rem}
+p{margin:0 0 1rem;max-width:66ch}
+.lead{font-size:1.2rem;color:var(--muted);margin-top:.75rem}
+svg{max-width:100%;height:auto;display:block}
+
+.formula{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:.5rem;margin-top:1.75rem}
+.formula .op{align-self:center;font-family:"Bricolage Grotesque",sans-serif;font-size:2rem;font-weight:700;color:var(--muted)}
+.term{font:inherit;text-align:left;border:2px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);padding:.75rem .9rem;cursor:pointer}
+.term b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(1.05rem,3.4vw,1.4rem);font-weight:700}
+.term span{display:block;font-size:.95rem;color:var(--muted)}
+.term[data-m="biotop"][aria-pressed="true"]{background:var(--abio-bg);border-color:var(--abio)}
+.term[data-m="bioz"][aria-pressed="true"]{background:var(--bio-bg);border-color:var(--bio)}
+.term[data-m="oeko"][aria-pressed="true"]{background:var(--eco-bg);border-color:var(--eco)}
+@media (max-width:560px){.formula{grid-template-columns:1fr}.formula .op{text-align:center;font-size:1.5rem;line-height:1}}
+
+.stage{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:.75rem;margin-top:1rem;overflow:hidden}
+.scene{border-radius:14px;overflow:hidden}
+#env{transition:filter .4s,opacity .4s}
+.biotic,.lab-a,.lab-b,.links{transition:opacity .4s}
+.m-biotop .biotic{opacity:.08}
+.m-biotop .lab-b,.m-biotop .links{opacity:0}
+.m-bioz #env{filter:grayscale(1);opacity:.45}
+.m-bioz .lab-a,.m-bioz .links{opacity:0}
+.m-oeko .lab-a,.m-oeko .lab-b{opacity:.0}
+.m-oeko .links{opacity:1}
+.m-biotop .links,.m-bioz .links{pointer-events:none}
+.chip-a rect{fill:var(--abio-bg);stroke:var(--abio)}
+.chip-a text{fill:var(--abio)}
+.chip-b rect{fill:var(--bio-bg);stroke:var(--bio)}
+.chip-b text{fill:var(--bio)}
+.chip-e rect{fill:var(--eco-bg);stroke:var(--eco)}
+.chip-e text{fill:var(--eco)}
+.chip text{font-family:"Atkinson Hyperlegible",sans-serif;font-size:14px;font-weight:700}
+.linkline{stroke:var(--eco);stroke-width:2;fill:none;stroke-dasharray:6 5}
+@media (prefers-reduced-motion: no-preference){.m-oeko .linkline{animation:flow 1.4s linear infinite}}
+@keyframes flow{to{stroke-dashoffset:-22}}
+#explain{margin:1rem .5rem .25rem;font-size:1.05rem}
+#explain strong{font-family:"Bricolage Grotesque",sans-serif}
+
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:1rem}
+.col{border-radius:16px;padding:1.1rem 1.2rem}
+.col.a{background:var(--abio-bg)}.col.b{background:var(--bio-bg)}
+.col.a h3{color:var(--abio)}.col.b h3{color:var(--bio)}
+.col p{margin:0 0 .5rem}.col p:last-child{margin:0}
+.examples{margin-top:1rem;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem 1.2rem}
+.examples p:last-child{margin:0}
+
+.sorter,.quiz{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1.4rem}
+.card-word{font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(1.6rem,6vw,2.3rem);font-weight:700;text-align:center;padding:1.25rem .5rem;border:2px dashed var(--line);border-radius:16px;margin:.5rem 0 1rem}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.choice button{font:inherit;font-size:1.05rem;border-radius:14px;padding:.8rem;cursor:pointer;border:2px solid;background:transparent;color:var(--ink)}
+.choice .ba{border-color:var(--abio)}.choice .ba:hover{background:var(--abio-bg)}
+.choice .bb{border-color:var(--bio)}.choice .bb:hover{background:var(--bio-bg)}
+.choice small{display:block;color:var(--muted);font-size:.85rem}
+.bins{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem}
+.bin{border-radius:12px;padding:.6rem .8rem;min-height:3rem;font-size:.95rem}
+.bin.a{background:var(--abio-bg)}.bin.b{background:var(--bio-bg)}
+.bin b{display:block;font-size:.85rem;color:var(--muted);font-weight:400}
+.tag{display:inline-block;margin:.2rem .3rem 0 0;padding:.05rem .5rem;border-radius:999px;background:var(--card);font-size:.9rem}
+.tag.x{text-decoration:line-through;color:var(--bad)}
+
+.progress{color:var(--muted);font-size:.95rem;margin-bottom:.5rem}
+.qtext{font-family:"Bricolage Grotesque",sans-serif;font-size:1.3rem;font-weight:500;margin:0 0 1rem}
+.opts{display:grid;gap:.5rem}
+.opt{display:flex;gap:.75rem;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:.7rem .9rem;cursor:pointer}
+.opt:hover{border-color:var(--deep)}
+.opt input{margin-top:.35rem;accent-color:var(--deep)}
+.opt.right{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;align-items:center}
+.btn{font:inherit;font-size:1rem;border-radius:999px;padding:.55rem 1.2rem;cursor:pointer;border:1.5px solid var(--deep);background:transparent;color:var(--ink)}
+.btn.primary{background:var(--deep);color:var(--bg)}
+button:focus-visible,.opt:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.err{color:var(--bad);font-size:.95rem}
+.feedback{margin-top:1rem;padding:.9rem 1rem;border-radius:12px}
+.feedback.ok{background:var(--ok-bg);color:var(--ok)}
+.feedback.no{background:var(--bad-bg);color:var(--bad)}
+.hintbox{color:var(--muted);font-style:italic;font-size:1rem;margin-top:.75rem}
+.score{font-family:"Bricolage Grotesque",sans-serif;font-size:3rem;font-weight:700;color:var(--deep)}
+footer{margin-top:3rem;color:var(--muted);font-size:.95rem;border-top:1px solid var(--line);padding-top:1rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Biotop + Biozönose = Ökosystem</h1>
+<p class="lead">Tippe auf die drei Begriffe und schau, was sich am Weiher verändert.</p>
+
+<div class="formula" role="group" aria-label="Ansicht wählen">
+  <button class="term" data-m="biotop" aria-pressed="false"><b>Biotop</b><span>Lebensraum</span></button>
+  <div class="op" aria-hidden="true">+</div>
+  <button class="term" data-m="bioz" aria-pressed="false"><b>Biozönose</b><span>Lebensgemeinschaft</span></button>
+  <div class="op" aria-hidden="true">=</div>
+  <button class="term" data-m="oeko" aria-pressed="true"><b>Ökosystem</b><span>alles zusammen</span></button>
+</div>
+
+<section class="stage" aria-label="Interaktiver Weiher">
+<div class="scene" id="scene">
+<svg viewBox="0 0 680 400" role="img" aria-labelledby="wt wd">
+<title id="wt">Ein Weiher im Querschnitt</title>
+<desc id="wd">Links unbelebte Umwelt wie Licht, Wasser und Boden, dazu Lebewesen wie Schilf, Frosch, Fisch, Seerose, Libelle und Algen.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<g id="env">
+  <rect x="0" y="0" width="680" height="160" fill="#DDEFF7"/>
+  <circle cx="610" cy="55" r="28" fill="#F2C12E"/>
+  <rect x="0" y="150" width="680" height="250" fill="#9C7A4F"/>
+  <path d="M100 152 C130 270,220 340,340 344 C460 340,550 270,580 152 Z" fill="#3A86B8"/>
+  <path d="M100 152 L580 152" stroke="#8CC3E3" stroke-width="3"/>
+  <path d="M175 300 C230 332,290 344,340 344 C390 344,450 332,505 300 C470 322,400 334,340 334 C280 334,215 322,175 300 Z" fill="#5B4630"/>
+  <ellipse cx="300" cy="333" rx="16" ry="8" fill="#8E8E86"/>
+  <ellipse cx="392" cy="331" rx="12" ry="7" fill="#A3A39A"/>
+  <g fill="#D6ECF7" opacity=".9">
+    <circle cx="455" cy="230" r="4"/><circle cx="462" cy="210" r="3"/><circle cx="452" cy="192" r="2.5"/>
+  </g>
+</g>
+
+<g class="biotic">
+  <g stroke="#3F7D2A" stroke-width="4" stroke-linecap="round">
+    <line x1="110" y1="165" x2="104" y2="72"/><line x1="122" y1="170" x2="126" y2="62"/><line x1="134" y1="178" x2="142" y2="80"/><line x1="96" y1="160" x2="86" y2="90"/>
+  </g>
+  <g fill="#6B4A2A"><rect x="100" y="60" width="7" height="22" rx="3"/><rect x="123" y="50" width="7" height="22" rx="3"/><rect x="139" y="68" width="7" height="22" rx="3"/></g>
+  <ellipse cx="400" cy="152" rx="34" ry="7" fill="#4E9A3A"/>
+  <circle cx="400" cy="142" r="8" fill="#F4F4F0"/><circle cx="400" cy="142" r="3" fill="#F2C12E"/>
+  <path d="M400 159 C396 200,404 250,398 305" stroke="#4E9A3A" stroke-width="3" fill="none"/>
+  <ellipse cx="42" cy="140" rx="18" ry="11" fill="#5E9E3B"/>
+  <circle cx="34" cy="129" r="4" fill="#F4F4F0"/><circle cx="48" cy="129" r="4" fill="#F4F4F0"/>
+  <circle cx="34" cy="129" r="2" fill="#13262B"/><circle cx="48" cy="129" r="2" fill="#13262B"/>
+  <ellipse cx="300" cy="235" rx="26" ry="11" fill="#E0833A"/>
+  <path d="M274 235 L256 224 L256 246 Z" fill="#E0833A"/>
+  <circle cx="314" cy="232" r="2.5" fill="#13262B"/>
+  <line x1="236" y1="96" x2="276" y2="96" stroke="#1F6FA8" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="252" cy="88" rx="11" ry="5" fill="#BFE3F5" opacity=".9"/><ellipse cx="262" cy="88" rx="11" ry="5" fill="#BFE3F5" opacity=".9"/>
+  <g fill="#5FA84A"><circle cx="190" cy="275" r="3"/><circle cx="200" cy="282" r="3"/><circle cx="210" cy="272" r="3"/><circle cx="480" cy="285" r="3"/><circle cx="490" cy="276" r="3"/></g>
+  <path d="M352 330 C352 318,370 318,370 330 Z" fill="#8C6A3E"/><circle cx="373" cy="328" r="3" fill="#8C6A3E"/>
+</g>
+
+<g class="lab-a" id="labA"></g>
+<g class="lab-b" id="labB"></g>
+
+<g class="links">
+  <path class="linkline" d="M58 128 C120 60,190 70,230 90" marker-end="url(#ar)"/>
+  <path class="linkline" d="M396 300 C440 290,450 270,452 245" marker-end="url(#ar)"/>
+  <path class="linkline" d="M585 70 C520 90,450 110,418 138" marker-end="url(#ar)"/>
+  <path class="linkline" d="M320 244 C330 280,340 300,345 318" marker-end="url(#ar)"/>
+  <g id="labE"></g>
+</g>
+</svg>
+</div>
+<p id="explain" aria-live="polite"></p>
+</section>
+
+<h2>Die drei Begriffe</h2>
+<div class="cols">
+  <div class="col a"><h3>Biotop = Lebensraum</h3><p>Der Ort mit allen unbelebten Bedingungen: Licht, Temperatur, Wasser, Boden, Wind, Sauerstoff- und Mineralstoffgehalt.</p><p>Diese nennt man abiotische Faktoren (a-biotisch = nicht belebt).</p></div>
+  <div class="col b"><h3>Biozönose = Lebensgemeinschaft</h3><p>Alle Lebewesen, die in diesem Biotop leben: Pflanzen, Tiere, Pilze und Bakterien.</p><p>Sie beeinflussen sich gegenseitig. Das nennt man biotische Faktoren (biotisch = belebt).</p></div>
+</div>
+<div class="examples">
+<h3>Ökosystem = Biotop + Biozönose</h3>
+<p>Erst wenn Lebensraum und Lebensgemeinschaft zusammenkommen und sich gegenseitig beeinflussen, spricht man von einem Ökosystem. Der Frosch frisst Libellen, die Pflanzen liefern Sauerstoff ins Wasser, abgestorbene Pflanzen werden zu Schlamm und verändern so den Lebensraum.</p>
+<p>Weitere Beispiele: Wald, Wiese, Moor, Bergbach, Korallenriff.</p>
+</div>
+
+<h2>Sortier-Spiel</h2>
+<p>Gehört das zum Biotop (unbelebt) oder zur Biozönose (belebt)?</p>
+<div class="sorter" id="sorter" aria-live="polite"></div>
+
+<h2>Teste dich selbst</h2>
+<div class="quiz" id="quiz" aria-live="polite"></div>
+
+<h2>Zum Nachdenken</h2>
+<p>Ist ein Aquarium im Wohnzimmer ein Ökosystem? Was spricht dafür, was dagegen?</p>
+
+<footer>Lernseite für die 2. Sek · Biologie</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
+function chip(parent,cls,x,y,txt){
+  const g=document.createElementNS(NS,'g');g.setAttribute('class','chip '+cls);
+  const w=txt.length*8.2+18;
+  const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',26);r.setAttribute('rx',13);r.setAttribute('stroke-width',1.2);
+  const t=document.createElementNS(NS,'text');t.setAttribute('x',x+w/2);t.setAttribute('y',y+18);t.setAttribute('text-anchor','middle');t.textContent=txt;
+  g.append(r,t);parent.append(g);
+}
+[[520,92,'Licht'],[160,190,'Wasser'],[485,176,'Temperatur'],[468,220,'Sauerstoff'],[190,352,'Schlamm und Boden'],[400,360,'Steine'],[560,120,'Luft']].forEach(a=>chip($('labA'),'chip-a',...a));
+[[160,40,'Schilf'],[4,164,'Frosch'],[284,62,'Libelle'],[330,248,'Fisch'],[436,126,'Seerose'],[150,248,'Algen'],[372,300,'Schnecke']].forEach(a=>chip($('labB'),'chip-b',...a));
+[[108,40,'frisst'],[468,262,'liefert O₂'],[500,106,'Licht für Pflanzen'],[244,292,'braucht O₂']].forEach(a=>chip($('labE'),'chip-e',...a));
+
+const texts={
+ biotop:'<strong>Biotop:</strong> Nur der Lebensraum, ohne Lebewesen. Licht, Wasser, Temperatur, Sauerstoff, Boden und Steine sind die unbelebten (abiotischen) Bedingungen.',
+ bioz:'<strong>Biozönose:</strong> Alle Lebewesen, die im Weiher zusammenleben: Schilf, Seerose, Algen, Frosch, Fisch, Libelle, Schnecke und viele winzige Bakterien.',
+ oeko:'<strong>Ökosystem:</strong> Lebensraum und Lebewesen zusammen. Die gestrichelten Pfeile zeigen, wie alles zusammenhängt: Wer frisst wen, wer braucht was, wer liefert was.'
+};
+function setMode(m){
+  const sc=$('scene');sc.className='scene m-'+m;
+  document.querySelectorAll('.term').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m?'true':'false'));
+  $('explain').innerHTML=texts[m];
+}
+document.querySelectorAll('.term').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.m)));
+setMode('oeko');
+
+/* Sortier-Spiel */
+const W=[['Sonnenlicht','a'],['Frosch','b'],['Wassertemperatur','a'],['Schilf','b'],['Steine am Grund','a'],['Bakterien','b'],['Regen','a'],['Libellenlarve','b'],['Sauerstoff im Wasser','a'],['Algen','b'],['Wind','a'],['Pilze im Waldboden','b']];
+const S=$('sorter');let order,pos,right,bins;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startSort(){order=shuffle(W.slice());pos=0;right=0;bins={a:[],b:[]};drawSort();}
+function binsHtml(){const f=k=>bins[k].map(x=>'<span class="tag'+(x[1]?'':' x')+'">'+x[0]+'</span>').join('');
+  return '<div class="bins"><div class="bin a"><b>Biotop</b>'+f('a')+'</div><div class="bin b"><b>Biozönose</b>'+f('b')+'</div></div>';}
+function drawSort(msg){
+  if(pos>=order.length){
+    S.innerHTML='<p class="progress">Fertig sortiert</p><div class="score">'+right+' / '+order.length+'</div><p>'+(right===order.length?'Perfekt! Unbelebt und belebt kannst du sicher unterscheiden.':'Durchgestrichene Begriffe waren im falschen Korb. Schau sie dir nochmals an.')+'</p>'+binsHtml()+'<div class="actions"><button class="btn primary" id="rs">Nochmals sortieren</button></div>';
+    $('rs').onclick=startSort;return;
+  }
+  S.innerHTML='<p class="progress">Begriff '+(pos+1)+' von '+order.length+'</p><div class="card-word">'+order[pos][0]+'</div>'+
+   '<div class="choice"><button class="ba" data-k="a">Biotop<small>unbelebt</small></button><button class="bb" data-k="b">Biozönose<small>belebt</small></button></div>'+
+   (msg||'')+binsHtml();
+  S.querySelectorAll('.choice button').forEach(b=>b.onclick=()=>{
+    const w=order[pos],ok=b.dataset.k===w[1];if(ok)right++;
+    bins[b.dataset.k].push([w[0],ok]);pos++;
+    drawSort('<div class="feedback '+(ok?'ok':'no')+'"><strong>'+(ok?'Richtig!':'Nicht ganz.')+'</strong> '+w[0]+' gehört zur '+(w[1]==='a'?'unbelebten Umwelt, also zum Biotop.':'Lebensgemeinschaft, also zur Biozönose.')+'</div>');
+  });
+}
+startSort();
+
+/* Quiz */
+const Q=[
+ {q:'Was ist ein Biotop?',o:['Alle Tiere in einem Wald','Der Lebensraum mit seinen unbelebten Bedingungen','Eine einzelne Pflanzenart','Die Nahrungskette in einem See'],a:1,h:'Bio-top: «topos» heisst auf Griechisch «Ort».',e:'Das Biotop ist der Lebensraum: der Ort mit Licht, Wasser, Boden, Temperatur und weiteren unbelebten Faktoren.'},
+ {q:'Was gehört alles zur Biozönose eines Weihers?',o:['Nur die Fische','Nur die Pflanzen','Alle Lebewesen: Pflanzen, Tiere, Pilze und Bakterien','Das Wasser und der Schlamm'],a:2,h:'Lebensgemeinschaft heisst: alles, was lebt.',e:'Zur Biozönose gehören alle Lebewesen, auch die winzigen wie Bakterien und Algen.'},
+ {q:'Was ist ein Ökosystem?',o:['Biotop und Biozönose, die sich gegenseitig beeinflussen','Ein Naturschutzgebiet','Nur die Lebewesen eines Ortes','Eine Gruppe gleicher Tiere'],a:0,h:'Denk an die Formel ganz oben.',e:'Biotop + Biozönose = Ökosystem. Wichtig ist, dass Lebensraum und Lebewesen aufeinander wirken.'},
+ {q:'Welches ist ein abiotischer Faktor?',o:['Die Libelle','Die Wassertemperatur','Die Seerose','Die Bakterien'],a:1,h:'Abiotisch = unbelebt.',e:'Die Temperatur lebt nicht, also ist sie ein abiotischer Faktor und gehört zum Biotop. Alles andere sind Lebewesen.'},
+ {q:'Jedes Jahr sterben viele Pflanzen im Weiher ab und sinken auf den Grund. Der Schlamm wird dicker. Was zeigt das?',o:['Dass der Weiher kein Ökosystem ist','Dass nur das Biotop die Lebewesen beeinflusst','Dass auch die Lebewesen den Lebensraum verändern','Dass Pflanzen zum Biotop gehören'],a:2,h:'Wer verändert hier wen?',e:'Die Biozönose (abgestorbene Pflanzen) verändert das Biotop (mehr Schlamm). Die Beeinflussung geht in beide Richtungen, genau das macht ein Ökosystem aus.'}
+];
+const box=$('quiz');let i=0,score=0,checked=false;
+function render(){
+  checked=false;
+  if(i>=Q.length){
+    const msg=score===5?'Alles richtig. Bereit für die Prüfung!':score>=3?'Gut gemacht. Schau dir die falschen Fragen nochmals an.':'Lies den Teil oben nochmals durch und versuch es erneut.';
+    box.innerHTML='<p class="progress">Geschafft</p><div class="score">'+score+' / '+Q.length+'</div><p>'+msg+'</p><div class="actions"><button class="btn primary" id="again">Nochmals versuchen</button></div>';
+    $('again').onclick=()=>{i=0;score=0;render();};return;
+  }
+  const q=Q[i];
+  box.innerHTML='<p class="progress">Frage '+(i+1)+' von '+Q.length+'</p><p class="qtext">'+q.q+'</p><div class="opts" role="radiogroup">'+
+    q.o.map((t,k)=>'<label class="opt" data-k="'+k+'"><input type="radio" name="a" value="'+k+'"><span>'+t+'</span></label>').join('')+
+    '</div><div class="actions"><button class="btn primary" id="go">Antwort prüfen</button><button class="btn" id="hb">Tipp zeigen</button><span class="err" id="err"></span></div><div id="out"></div>';
+  box.querySelectorAll('input[name=a]').forEach(r=>r.addEventListener('change',()=>{$('err').textContent='';}));
+  $('hb').onclick=()=>{if(!box.querySelector('.hintbox')){const d=document.createElement('p');d.className='hintbox';d.textContent='Tipp: '+q.h;$('out').before(d);}};
+  $('go').onclick=()=>{
+    if(checked){i++;render();return;}
+    const sel=box.querySelector('input[name=a]:checked');
+    if(!sel){$('err').textContent='Wähle zuerst eine Antwort.';return;}
+    checked=true;const k=+sel.value,ok=k===q.a;if(ok)score++;
+    box.querySelectorAll('.opt').forEach(o=>{const n=+o.dataset.k;if(n===q.a)o.classList.add('right');else if(n===k)o.classList.add('wrong');o.querySelector('input').disabled=true;});
+    $('out').innerHTML='<div class="feedback '+(ok?'ok':'no')+'"><strong>'+(ok?'Richtig!':'Nicht ganz.')+'</strong> '+q.e+'</div>';
+    $('go').textContent=i===Q.length-1?'Resultat anzeigen':'Nächste Frage';$('hb').remove();
+  };
+}
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+{
+    "petrol": {
+        "label": "Petrol (Ökologie, Umwelt, allgemein)",
+        "light": {
+            "accent": "#134E5E",
+            "accent-bg": "#D5E9EE",
+            "cat1": "#8A5A24",
+            "cat1-bg": "#F6E7D3",
+            "cat2": "#276B3C",
+            "cat2-bg": "#DCEFD9",
+            "cat3": "#5B4AA8",
+            "cat3-bg": "#E6E2F7"
+        },
+        "dark": {
+            "accent": "#9ED3E0",
+            "accent-bg": "#18363F",
+            "cat1": "#E7B57A",
+            "cat1-bg": "#3B2A17",
+            "cat2": "#8FD49C",
+            "cat2-bg": "#1D3A24",
+            "cat3": "#C3B8F2",
+            "cat3-bg": "#2B2548"
+        }
+    },
+    "gruen": {
+        "label": "Grün (Pflanzen, Biologie)",
+        "light": {
+            "accent": "#1F4D2B",
+            "accent-bg": "#DCEFD9",
+            "cat1": "#8A5A24",
+            "cat1-bg": "#F6E7D3",
+            "cat2": "#1F5F8B",
+            "cat2-bg": "#D8E8F4",
+            "cat3": "#5B4AA8",
+            "cat3-bg": "#E6E2F7"
+        },
+        "dark": {
+            "accent": "#A6D08A",
+            "accent-bg": "#1D3A24",
+            "cat1": "#E7B57A",
+            "cat1-bg": "#3B2A17",
+            "cat2": "#9CCBEC",
+            "cat2-bg": "#17324A",
+            "cat3": "#C3B8F2",
+            "cat3-bg": "#2B2548"
+        }
+    },
+    "blau": {
+        "label": "Blau (Wasser, Physik, Geografie)",
+        "light": {
+            "accent": "#1F5F8B",
+            "accent-bg": "#D8E8F4",
+            "cat1": "#8A5A24",
+            "cat1-bg": "#F6E7D3",
+            "cat2": "#276B3C",
+            "cat2-bg": "#DCEFD9",
+            "cat3": "#8C3A6B",
+            "cat3-bg": "#F4DFEA"
+        },
+        "dark": {
+            "accent": "#9CCBEC",
+            "accent-bg": "#17324A",
+            "cat1": "#E7B57A",
+            "cat1-bg": "#3B2A17",
+            "cat2": "#8FD49C",
+            "cat2-bg": "#1D3A24",
+            "cat3": "#EBA9CF",
+            "cat3-bg": "#3F2033"
+        }
+    },
+    "erde": {
+        "label": "Erdig (Geschichte, Gesellschaft)",
+        "light": {
+            "accent": "#7A4A22",
+            "accent-bg": "#F2E4D3",
+            "cat1": "#1F5F8B",
+            "cat1-bg": "#D8E8F4",
+            "cat2": "#276B3C",
+            "cat2-bg": "#DCEFD9",
+            "cat3": "#8C3419",
+            "cat3-bg": "#F8E1DA"
+        },
+        "dark": {
+            "accent": "#E7B57A",
+            "accent-bg": "#3B2A17",
+            "cat1": "#9CCBEC",
+            "cat1-bg": "#17324A",
+            "cat2": "#8FD49C",
+            "cat2-bg": "#1D3A24",
+            "cat3": "#F2A98C",
+            "cat3-bg": "#3E2219"
+        }
+    },
+    "violett": {
+        "label": "Violett (Sprachen, Grammatik)",
+        "light": {
+            "accent": "#4A3A96",
+            "accent-bg": "#E6E2F7",
+            "cat1": "#8A5A24",
+            "cat1-bg": "#F6E7D3",
+            "cat2": "#276B3C",
+            "cat2-bg": "#DCEFD9",
+            "cat3": "#1F5F8B",
+            "cat3-bg": "#D8E8F4"
+        },
+        "dark": {
+            "accent": "#C3B8F2",
+            "accent-bg": "#2B2548",
+            "cat1": "#E7B57A",
+            "cat1-bg": "#3B2A17",
+            "cat2": "#8FD49C",
+            "cat2-bg": "#1D3A24",
+            "cat3": "#9CCBEC",
+            "cat3-bg": "#17324A"
+        }
+    },
+    "rot": {
+        "label": "Rot (Chemie, Energie, Körper)",
+        "light": {
+            "accent": "#8C3419",
+            "accent-bg": "#F8E1DA",
+            "cat1": "#1F5F8B",
+            "cat1-bg": "#D8E8F4",
+            "cat2": "#276B3C",
+            "cat2-bg": "#DCEFD9",
+            "cat3": "#5B4AA8",
+            "cat3-bg": "#E6E2F7"
+        },
+        "dark": {
+            "accent": "#F2A98C",
+            "accent-bg": "#3E2219",
+            "cat1": "#9CCBEC",
+            "cat1-bg": "#17324A",
+            "cat2": "#8FD49C",
+            "cat2-bg": "#1D3A24",
+            "cat3": "#C3B8F2",
+            "cat3-bg": "#2B2548"
+        }
+    },
+    "anthrazit": {
+        "label": "Anthrazit (Mathematik, Informatik)",
+        "light": {
+            "accent": "#2B3A45",
+            "accent-bg": "#E1E7EB",
+            "cat1": "#8A5A24",
+            "cat1-bg": "#F6E7D3",
+            "cat2": "#276B3C",
+            "cat2-bg": "#DCEFD9",
+            "cat3": "#5B4AA8",
+            "cat3-bg": "#E6E2F7"
+        },
+        "dark": {
+            "accent": "#C9D6DE",
+            "accent-bg": "#26323A",
+            "cat1": "#E7B57A",
+            "cat1-bg": "#3B2A17",
+            "cat2": "#8FD49C",
+            "cat2-bg": "#1D3A24",
+            "cat3": "#C3B8F2",
+            "cat3-bg": "#2B2548"
+        }
+    }
+}

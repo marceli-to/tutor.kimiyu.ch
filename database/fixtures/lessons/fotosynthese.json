@@ -1,0 +1,183 @@
+{
+    "meta": {
+        "titel": "Wie macht ein Blatt Zucker aus Licht?",
+        "anleitung": "Dreh an den Reglern und schau, was im Blatt passiert.",
+        "thema": "Fotosynthese",
+        "kernidee": "Pflanzen bauen mit der Energie des Lichts aus CO₂ und Wasser Traubenzucker und geben dabei Sauerstoff ab.",
+        "emoji": "🌿",
+        "palette": "gruen"
+    },
+    "abschnitte": [
+        {
+            "titel": "Das Rezept",
+            "bloecke": [
+                {
+                    "typ": "absatz",
+                    "text": "Die Pflanze nimmt CO₂ aus der Luft und Wasser aus dem Boden. Mit der Energie des Sonnenlichts baut sie daraus Traubenzucker. Als «Abfall» entsteht Sauerstoff, den wir atmen."
+                },
+                {
+                    "typ": "formel",
+                    "text": "Kohlenstoffdioxid + Wasser → Traubenzucker + Sauerstoff",
+                    "zusatz": "6 CO₂ + 6 H₂O → C₆H₁₂O₆ + 6 O₂ (mit Licht und Chlorophyll)"
+                }
+            ]
+        },
+        {
+            "titel": "Was man wissen muss",
+            "bloecke": [
+                {
+                    "typ": "fakten",
+                    "eintraege": [
+                        {
+                            "titel": "Wo passiert es?",
+                            "text": "In den Chloroplasten, kleinen grünen Körperchen in den Blattzellen. Grün sind sie wegen des Chlorophylls, das das Licht einfängt. Deshalb sind Blätter grün."
+                        },
+                        {
+                            "titel": "Wie kommen die Zutaten hinein?",
+                            "text": "CO₂ gelangt durch winzige Öffnungen an der Blattunterseite ins Blatt, die Spaltöffnungen. Durch dieselben Öffnungen geht der Sauerstoff hinaus. Das Wasser kommt von den Wurzeln über den Stängel."
+                        },
+                        {
+                            "titel": "Wozu das Ganze?",
+                            "text": "Traubenzucker ist Nahrung und Baustoff der Pflanze. Sie nutzt ihn als Energie oder baut daraus Stärke (Vorrat) und Zellulose (Zellwände). Fast alles Leben auf der Erde hängt davon ab."
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "probieren": {
+        "experimente": [
+            "Stell das Licht auf 100 %, lass aber das CO₂ tief. Die Leistung steigt nicht, weil die Pflanze nur so schnell arbeiten kann, wie es die knappste Zutat erlaubt. Das nennt man den begrenzenden Faktor.",
+            "Und stell das Licht auf 0 %: So sieht es in der Nacht aus."
+        ],
+        "alltagsvergleich": "Wie beim Backen: Mit zehn Eiern, aber nur einer Tasse Mehl gibt es trotzdem nur einen kleinen Kuchen."
+    },
+    "module": {
+        "sortieren": null,
+        "karten": {
+            "anleitung": "Tippe auf eine Karte, um die Erklärung zu sehen.",
+            "eintraege": [
+                {
+                    "id": "k1",
+                    "vorne": "Fotosynthese",
+                    "hinten": "Die Pflanze baut mit Lichtenergie aus CO₂ und Wasser Traubenzucker. Dabei entsteht Sauerstoff."
+                },
+                {
+                    "id": "k2",
+                    "vorne": "Chloroplast",
+                    "hinten": "Kleines grünes Körperchen in der Blattzelle. Hier findet die Fotosynthese statt."
+                },
+                {
+                    "id": "k3",
+                    "vorne": "Chlorophyll",
+                    "hinten": "Der grüne Farbstoff in den Chloroplasten. Er fängt das Licht ein."
+                },
+                {
+                    "id": "k4",
+                    "vorne": "Spaltöffnungen",
+                    "hinten": "Winzige Öffnungen an der Blattunterseite. CO₂ kommt hinein, Sauerstoff geht hinaus."
+                },
+                {
+                    "id": "k5",
+                    "vorne": "Begrenzender Faktor",
+                    "hinten": "Die Zutat, die am knappsten ist. Sie bestimmt, wie schnell die Fotosynthese läuft."
+                }
+            ]
+        },
+        "lueckentext": {
+            "anleitung": "Füll die Lücken aus. Gross- und Kleinschreibung spielt keine Rolle.",
+            "segmente": [
+                { "text": "Die Pflanze nimmt " },
+                {
+                    "id": "g1",
+                    "loesungen": ["Kohlenstoffdioxid", "CO₂", "CO2"]
+                },
+                { "text": " aus der Luft und " },
+                { "id": "g2", "loesungen": ["Wasser"] },
+                { "text": " aus dem Boden auf. Mit der Energie des " },
+                {
+                    "id": "g3",
+                    "loesungen": ["Lichts", "Sonnenlichts", "Licht"]
+                },
+                { "text": " stellt sie daraus " },
+                {
+                    "id": "g4",
+                    "loesungen": ["Traubenzucker", "Glucose", "Glukose"]
+                },
+                { "text": " her. Dabei entsteht " },
+                { "id": "g5", "loesungen": ["Sauerstoff", "O₂", "O2"] },
+                { "text": "." }
+            ]
+        },
+        "quiz": [
+            {
+                "id": "q1",
+                "frage": "Welche zwei Stoffe braucht die Pflanze als Ausgangsstoffe für die Fotosynthese?",
+                "optionen": [
+                    "Sauerstoff und Wasser",
+                    "Kohlenstoffdioxid und Wasser",
+                    "Traubenzucker und Sauerstoff",
+                    "Kohlenstoffdioxid und Traubenzucker"
+                ],
+                "loesung": 1,
+                "tipp": "Denk an das, was ins Blatt hineingeht, nicht an das, was herauskommt.",
+                "erklaerung": "Die Pflanze nimmt CO₂ aus der Luft und Wasser aus dem Boden auf. Sauerstoff und Traubenzucker sind die Produkte."
+            },
+            {
+                "id": "q2",
+                "frage": "In welchen Zellbestandteilen findet die Fotosynthese statt?",
+                "optionen": [
+                    "Im Zellkern",
+                    "In den Mitochondrien",
+                    "In den Chloroplasten",
+                    "In der Vakuole"
+                ],
+                "loesung": 2,
+                "tipp": "Sie sind grün.",
+                "erklaerung": "Die Chloroplasten enthalten das grüne Chlorophyll, das die Lichtenergie einfängt. Mitochondrien sind für die Zellatmung zuständig, also das Gegenstück."
+            },
+            {
+                "id": "q3",
+                "frage": "Wozu braucht die Pflanze das Licht bei der Fotosynthese?",
+                "optionen": [
+                    "Als Energiequelle, um Traubenzucker herzustellen",
+                    "Um das Wasser zu erwärmen",
+                    "Als Baustoff für die Blätter",
+                    "Um Sauerstoff aufzunehmen"
+                ],
+                "loesung": 0,
+                "tipp": "Licht wird nicht zu einem Stoff, es liefert etwas anderes.",
+                "erklaerung": "Licht ist kein Stoff, sondern Energie. Die Pflanze speichert diese Energie im Traubenzucker als chemische Energie."
+            },
+            {
+                "id": "q4",
+                "frage": "Wie gelangt das Kohlenstoffdioxid ins Blatt?",
+                "optionen": [
+                    "Über die Wurzeln",
+                    "Durch die Spaltöffnungen an der Blattunterseite",
+                    "Mit dem Regenwasser",
+                    "Durch die Blüten"
+                ],
+                "loesung": 1,
+                "tipp": "Es sind winzig kleine Öffnungen im Blatt.",
+                "erklaerung": "Die Spaltöffnungen sind winzige Poren in der Blattunterseite. Durch sie kommt CO₂ hinein und Sauerstoff hinaus. Das Wasser kommt über die Wurzeln."
+            },
+            {
+                "id": "q5",
+                "frage": "Eine Pflanze bekommt viel Licht und viel Wasser, aber sehr wenig CO₂. Was passiert?",
+                "optionen": [
+                    "Sie macht trotzdem maximal Fotosynthese",
+                    "Die Fotosynthese läuft nur langsam, weil CO₂ fehlt",
+                    "Sie stellt stattdessen mehr Sauerstoff her",
+                    "Sie ersetzt das CO₂ durch Wasser"
+                ],
+                "loesung": 1,
+                "tipp": "Erinnere dich an die Regler im Blatt oben.",
+                "erklaerung": "Die knappste Zutat bestimmt das Tempo (begrenzender Faktor). Mehr Licht oder Wasser hilft nichts, solange CO₂ fehlt."
+            }
+        ]
+    },
+    "nachdenken": {
+        "frage": "Warum bringt es nichts, eine Zimmerpflanze im dunklen Keller fleissig zu giessen, damit sie wächst?"
+    }
+}

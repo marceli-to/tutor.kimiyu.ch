@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fotosynthese – wie ein Blatt Zucker aus Licht macht</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F7F1; --ink:#15261A; --muted:#4D5E52; --line:#C9D6C6; --card:#FFFFFF;
+  --leaf:#3E8E41; --leaf-dark:#1F4D2B; --leaf-light:#A6D08A;
+  --sun:#F2B705; --water:#2F7FC1; --gas:#7A8580; --o2:#17A085; --sugar:#C0572B;
+  --ok-bg:#DDF0DA; --ok:#1F5E2A; --bad-bg:#F8E1DA; --bad:#8C3419;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101A13; --ink:#E6EFE4; --muted:#A7B8AA; --line:#2C3D30; --card:#172419;
+    --leaf:#5DB060; --leaf-dark:#A6D08A; --leaf-light:#2F6B34;
+    --gas:#9AA59F; --ok-bg:#1E3A22; --ok:#A9DDA6; --bad-bg:#3E2219; --bad:#F2A98C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101A13; --ink:#E6EFE4; --muted:#A7B8AA; --line:#2C3D30; --card:#172419;
+  --leaf:#5DB060; --leaf-dark:#A6D08A; --leaf-light:#2F6B34;
+  --gas:#9AA59F; --ok-bg:#1E3A22; --ok:#A9DDA6; --bad-bg:#3E2219; --bad:#F2A98C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:18px;line-height:1.6}
+main{max-width:760px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+h1,h2,h3{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;line-height:1.15;margin:0}
+h1{font-size:clamp(2rem,6vw,3.1rem);font-weight:700;letter-spacing:-0.02em;color:var(--leaf-dark)}
+h2{font-size:1.6rem;font-weight:700;margin:3rem 0 .75rem}
+h3{font-size:1.15rem;font-weight:500;margin:0 0 .35rem}
+p{margin:0 0 1rem;max-width:66ch}
+.lead{font-size:1.2rem;color:var(--muted);margin-top:.75rem}
+svg{max-width:100%;height:auto;display:block}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1rem 1rem 1.25rem;margin-top:1.75rem}
+.controls{display:grid;gap:.6rem;margin-top:.5rem}
+.ctl{display:grid;grid-template-columns:7rem 1fr 3.2rem;align-items:center;gap:.75rem;font-size:1rem}
+.ctl output{text-align:right;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--leaf)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:1rem}
+.readout div{background:var(--bg);border-radius:12px;padding:.75rem 1rem}
+.readout small{display:block;color:var(--muted);font-size:.9rem}
+.readout strong{font-family:"Bricolage Grotesque",sans-serif;font-size:1.7rem}
+#hint{color:var(--muted);font-size:1rem;margin:.9rem 0 0}
+.fl{stroke-dasharray:7 6}
+@media (prefers-reduced-motion: no-preference){.fl{animation:flow 1.2s linear infinite}}
+@keyframes flow{to{stroke-dashoffset:-26}}
+.equation{font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(1.1rem,3.6vw,1.45rem);font-weight:500;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem 1.25rem;overflow-x:auto}
+.equation .chem{display:block;font-family:"Atkinson Hyperlegible",sans-serif;font-size:1rem;color:var(--muted);margin-top:.4rem}
+.facts{display:grid;gap:1.25rem;margin-top:1rem}
+.fact{border-left:4px solid var(--leaf);padding-left:1rem}
+.fact p{margin:0}
+.try{background:var(--leaf-dark);color:var(--bg);border-radius:16px;padding:1.25rem 1.4rem;margin-top:1rem}
+.try p{margin:0 0 .6rem}.try p:last-child{margin:0}
+.quiz{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1.4rem}
+.progress{color:var(--muted);font-size:.95rem;margin-bottom:.5rem}
+.qtext{font-family:"Bricolage Grotesque",sans-serif;font-size:1.3rem;font-weight:500;margin:0 0 1rem}
+.opts{display:grid;gap:.5rem}
+.opt{display:flex;gap:.75rem;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:.7rem .9rem;cursor:pointer;background:transparent}
+.opt:hover{border-color:var(--leaf)}
+.opt input{margin-top:.35rem;accent-color:var(--leaf)}
+.opt.right{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;align-items:center}
+button{font:inherit;font-size:1rem;border-radius:999px;padding:.55rem 1.2rem;cursor:pointer;border:1.5px solid var(--leaf-dark);background:transparent;color:var(--ink)}
+button.primary{background:var(--leaf-dark);color:var(--bg)}
+button:focus-visible,.opt:focus-within,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.err{color:var(--bad);font-size:.95rem}
+.feedback{margin-top:1rem;padding:.9rem 1rem;border-radius:12px}
+.feedback.ok{background:var(--ok-bg);color:var(--ok)}
+.feedback.no{background:var(--bad-bg);color:var(--bad)}
+.hintbox{color:var(--muted);font-style:italic;font-size:1rem;margin-top:.75rem}
+.score{font-family:"Bricolage Grotesque",sans-serif;font-size:3rem;font-weight:700;color:var(--leaf-dark)}
+footer{margin-top:3rem;color:var(--muted);font-size:.95rem;border-top:1px solid var(--line);padding-top:1rem}
+@media (max-width:520px){.ctl{grid-template-columns:5.5rem 1fr 3rem}}
+</style>
+</head>
+<body>
+<main>
+<h1>Wie macht ein Blatt Zucker aus Licht?</h1>
+<p class="lead">Dreh an den Reglern und schau, was im Blatt passiert.</p>
+
+<section class="stage" aria-label="Interaktives Blatt">
+<svg viewBox="0 0 680 370" role="img" aria-labelledby="st sd">
+<title id="st">Fotosynthese im Blatt</title>
+<desc id="sd">Licht, CO₂ und Wasser gehen ins Blatt. Traubenzucker und Sauerstoff kommen heraus.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g id="sun">
+<circle cx="90" cy="70" r="30" fill="var(--sun)"/>
+<g stroke="var(--sun)" stroke-width="3" stroke-linecap="round">
+<line x1="90" y1="24" x2="90" y2="12"/><line x1="90" y1="116" x2="90" y2="128"/><line x1="44" y1="70" x2="32" y2="70"/><line x1="136" y1="70" x2="148" y2="70"/>
+<line x1="58" y1="38" x2="49" y2="29"/><line x1="122" y1="38" x2="131" y2="29"/><line x1="58" y1="102" x2="49" y2="111"/>
+</g></g>
+<text x="160" y="40" fill="var(--ink)" font-size="16" font-weight="700">Licht</text>
+<path d="M340 330 L340 300" stroke="var(--leaf-dark)" stroke-width="5" fill="none"/>
+<path d="M340 300 C300 290,230 240,240 190 C250 130,320 95,420 110 C470 118,470 150,455 185 C430 250,380 290,340 300 Z" fill="var(--leaf-light)" stroke="var(--leaf-dark)" stroke-width="1.5"/>
+<path d="M340 300 C350 240,380 170,430 125" stroke="var(--leaf-dark)" stroke-width="1.5" fill="none"/>
+<g id="chloro" fill="var(--leaf-dark)">
+<ellipse cx="300" cy="200" rx="9" ry="6"/><ellipse cx="330" cy="170" rx="9" ry="6"/><ellipse cx="370" cy="150" rx="9" ry="6"/><ellipse cx="310" cy="245" rx="9" ry="6"/>
+<ellipse cx="400" cy="200" rx="9" ry="6"/><ellipse cx="270" cy="220" rx="9" ry="6"/><ellipse cx="420" cy="150" rx="9" ry="6"/><ellipse cx="365" cy="235" rx="9" ry="6"/>
+</g>
+<line id="aL" class="fl" x1="122" y1="92" x2="268" y2="160" stroke="var(--sun)" marker-end="url(#ar)"/>
+<line id="aC" class="fl" x1="70" y1="240" x2="228" y2="222" stroke="var(--gas)" marker-end="url(#ar)"/>
+<text x="30" y="272" fill="var(--ink)" font-size="15">CO₂ aus der Luft</text>
+<line id="aW" class="fl" x1="340" y1="366" x2="340" y2="336" stroke="var(--water)" marker-end="url(#ar)"/>
+<text x="352" y="356" fill="var(--ink)" font-size="15">Wasser von den Wurzeln</text>
+<line id="aO" class="fl" x1="462" y1="150" x2="560" y2="110" stroke="var(--o2)" marker-end="url(#ar)"/>
+<text x="540" y="94" fill="var(--ink)" font-size="15">Sauerstoff (O₂)</text>
+<line id="aZ" class="fl" x1="440" y1="230" x2="540" y2="262" stroke="var(--sugar)" marker-end="url(#ar)"/>
+<text x="548" y="266" fill="var(--ink)" font-size="15">Traubenzucker</text>
+<text x="548" y="285" fill="var(--muted)" font-size="13">Energie für</text>
+<text x="548" y="302" fill="var(--muted)" font-size="13">die Pflanze</text>
+<line x1="370" y1="150" x2="440" y2="62" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="446" y="58" fill="var(--muted)" font-size="13">Chloroplasten</text>
+</svg>
+
+<div class="controls">
+<div class="ctl"><label for="l">Licht</label><input type="range" id="l" min="0" max="100" step="1" value="80"><output id="lo" for="l">80%</output></div>
+<div class="ctl"><label for="c">CO₂</label><input type="range" id="c" min="0" max="100" step="1" value="60"><output id="co" for="c">60%</output></div>
+<div class="ctl"><label for="w">Wasser</label><input type="range" id="w" min="0" max="100" step="1" value="90"><output id="wo" for="w">90%</output></div>
+</div>
+<div class="readout" aria-live="polite">
+<div><small>Fotosynthese-Leistung</small><strong id="rate">60%</strong></div>
+<div><small>Bremst gerade</small><strong id="lim">CO₂</strong></div>
+</div>
+<p id="hint"></p>
+</section>
+
+<h2>Das Rezept</h2>
+<p>Die Pflanze nimmt CO₂ aus der Luft und Wasser aus dem Boden. Mit der Energie des Sonnenlichts baut sie daraus Traubenzucker. Als «Abfall» entsteht Sauerstoff, den wir atmen.</p>
+<div class="equation">Kohlenstoffdioxid + Wasser → Traubenzucker + Sauerstoff
+<span class="chem">6 CO₂ + 6 H₂O → C₆H₁₂O₆ + 6 O₂ &nbsp;(mit Licht und Chlorophyll)</span></div>
+
+<h2>Was man wissen muss</h2>
+<div class="facts">
+<div class="fact"><h3>Wo passiert es?</h3><p>In den Chloroplasten, kleinen grünen Körperchen in den Blattzellen. Grün sind sie wegen des Chlorophylls, das das Licht einfängt. Deshalb sind Blätter grün.</p></div>
+<div class="fact"><h3>Wie kommen die Zutaten hinein?</h3><p>CO₂ gelangt durch winzige Öffnungen an der Blattunterseite ins Blatt, die Spaltöffnungen. Durch dieselben Öffnungen geht der Sauerstoff hinaus. Das Wasser kommt von den Wurzeln über den Stängel.</p></div>
+<div class="fact"><h3>Wozu das Ganze?</h3><p>Traubenzucker ist Nahrung und Baustoff der Pflanze. Sie nutzt ihn als Energie oder baut daraus Stärke (Vorrat) und Zellulose (Zellwände). Fast alles Leben auf der Erde hängt davon ab.</p></div>
+</div>
+
+<h2>Probier es aus</h2>
+<div class="try">
+<p>Stell das Licht auf 100 %, lass aber das CO₂ tief. Die Leistung steigt nicht, weil die Pflanze nur so schnell arbeiten kann, wie es die knappste Zutat erlaubt. Das nennt man den begrenzenden Faktor.</p>
+<p>Wie beim Backen: Mit zehn Eiern, aber nur einer Tasse Mehl gibt es trotzdem nur einen kleinen Kuchen.</p>
+<p>Und stell das Licht auf 0 %: So sieht es in der Nacht aus.</p>
+</div>
+
+<h2>Teste dich selbst</h2>
+<div class="quiz" id="quiz" aria-live="polite"></div>
+
+<h2>Zum Nachdenken</h2>
+<p>Warum bringt es nichts, eine Zimmerpflanze im dunklen Keller fleissig zu giessen, damit sie wächst?</p>
+
+<footer>Lernseite für die 2. Sek · Biologie</footer>
+</main>
+
+<script>
+(function(){
+const ids={l:'aL',c:'aC',w:'aW'}, names={l:'Licht',c:'CO₂',w:'Wasser'};
+const $=id=>document.getElementById(id);
+function sty(el,v){el.setAttribute('stroke-width',(1.5+v/100*5).toFixed(1));el.setAttribute('opacity',(0.15+0.85*v/100).toFixed(2));}
+function upd(){
+  const v={};
+  for(const k of ['l','c','w']){v[k]=+$(k).value;$(k+'o').textContent=v[k]+'%';sty($(ids[k]),v[k]);}
+  const r=Math.min(v.l,v.c,v.w);
+  const k=Object.keys(v).reduce((a,b)=>v[a]<=v[b]?a:b);
+  sty($('aO'),r);sty($('aZ'),r);
+  $('chloro').setAttribute('opacity',(0.25+0.75*r/100).toFixed(2));
+  $('sun').setAttribute('opacity',(0.15+0.85*v.l/100).toFixed(2));
+  $('rate').textContent=Math.round(r)+'%';
+  $('lim').textContent=r>=100?'Nichts':names[k];
+  $('hint').textContent=r===0?'Ohne '+names[k]+' läuft gar nichts, auch wenn alles andere reichlich da ist.':(r>=100?'Alles optimal: Die Pflanze arbeitet auf Hochtouren.':'Mehr '+names[k]+' würde am meisten bringen. Die anderen Zutaten zu erhöhen, nützt jetzt nichts.');
+}
+document.querySelectorAll('input[type=range]').forEach(i=>i.addEventListener('input',upd));
+upd();
+
+const Q=[
+ {q:'Welche zwei Stoffe braucht die Pflanze als Ausgangsstoffe für die Fotosynthese?',o:['Sauerstoff und Wasser','Kohlenstoffdioxid und Wasser','Traubenzucker und Sauerstoff','Kohlenstoffdioxid und Traubenzucker'],a:1,h:'Denk an das, was ins Blatt hineingeht, nicht an das, was herauskommt.',e:'Die Pflanze nimmt CO₂ aus der Luft und Wasser aus dem Boden auf. Sauerstoff und Traubenzucker sind die Produkte.'},
+ {q:'In welchen Zellbestandteilen findet die Fotosynthese statt?',o:['Im Zellkern','In den Mitochondrien','In den Chloroplasten','In der Vakuole'],a:2,h:'Sie sind grün.',e:'Die Chloroplasten enthalten das grüne Chlorophyll, das die Lichtenergie einfängt. Mitochondrien sind für die Zellatmung zuständig, also das Gegenstück.'},
+ {q:'Wozu braucht die Pflanze das Licht bei der Fotosynthese?',o:['Als Energiequelle, um Traubenzucker herzustellen','Um das Wasser zu erwärmen','Als Baustoff für die Blätter','Um Sauerstoff aufzunehmen'],a:0,h:'Licht wird nicht zu einem Stoff, es liefert etwas anderes.',e:'Licht ist kein Stoff, sondern Energie. Die Pflanze speichert diese Energie im Traubenzucker als chemische Energie.'},
+ {q:'Wie gelangt das Kohlenstoffdioxid ins Blatt?',o:['Über die Wurzeln','Durch die Spaltöffnungen an der Blattunterseite','Mit dem Regenwasser','Durch die Blüten'],a:1,h:'Es sind winzig kleine Öffnungen im Blatt.',e:'Die Spaltöffnungen sind winzige Poren in der Blattunterseite. Durch sie kommt CO₂ hinein und Sauerstoff hinaus. Das Wasser kommt über die Wurzeln.'},
+ {q:'Eine Pflanze bekommt viel Licht und viel Wasser, aber sehr wenig CO₂. Was passiert?',o:['Sie macht trotzdem maximal Fotosynthese','Die Fotosynthese läuft nur langsam, weil CO₂ fehlt','Sie stellt stattdessen mehr Sauerstoff her','Sie ersetzt das CO₂ durch Wasser'],a:1,h:'Erinnere dich an die Regler im Blatt oben.',e:'Die knappste Zutat bestimmt das Tempo (begrenzender Faktor). Mehr Licht oder Wasser hilft nichts, solange CO₂ fehlt.'}
+];
+const box=$('quiz'); let i=0, score=0, checked=false;
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function render(){
+  checked=false;
+  if(i>=Q.length){
+    const msg=score===5?'Alles richtig. Bereit für die Prüfung!':score>=3?'Gut gemacht. Schau dir die falschen Fragen nochmals an.':'Lies den Teil oben nochmals durch und versuch es erneut.';
+    box.innerHTML='<p class="progress">Geschafft</p><div class="score">'+score+' / '+Q.length+'</div><p>'+msg+'</p><div class="actions"><button class="primary" id="again">Nochmals versuchen</button></div>';
+    $('again').onclick=()=>{i=0;score=0;render();};
+    return;
+  }
+  const q=Q[i];
+  box.innerHTML='<p class="progress">Frage '+(i+1)+' von '+Q.length+'</p><p class="qtext">'+esc(q.q)+'</p><div class="opts" role="radiogroup">'+
+    q.o.map((t,k)=>'<label class="opt" data-k="'+k+'"><input type="radio" name="a" value="'+k+'"><span>'+esc(t)+'</span></label>').join('')+
+    '</div><div class="actions"><button class="primary" id="go">Antwort prüfen</button><button id="hb">Tipp zeigen</button><span class="err" id="err"></span></div><div id="out"></div>';
+  box.querySelectorAll('input[name=a]').forEach(r=>r.addEventListener('change',()=>{$('err').textContent='';}));
+  $('hb').onclick=()=>{if(!box.querySelector('.hintbox')){const d=document.createElement('p');d.className='hintbox';d.textContent='Tipp: '+q.h;$('out').before(d);}};
+  $('go').onclick=()=>{
+    if(checked){i++;render();return;}
+    const sel=box.querySelector('input[name=a]:checked');
+    if(!sel){$('err').textContent='Wähle zuerst eine Antwort.';return;}
+    checked=true;
+    const k=+sel.value, ok=k===q.a; if(ok)score++;
+    box.querySelectorAll('.opt').forEach(o=>{const n=+o.dataset.k;if(n===q.a)o.classList.add('right');else if(n===k)o.classList.add('wrong');o.querySelector('input').disabled=true;});
+    $('out').innerHTML='<div class="feedback '+(ok?'ok':'no')+'"><strong>'+(ok?'Richtig!':'Nicht ganz.')+'</strong> '+esc(q.e)+'</div>';
+    $('go').textContent=i===Q.length-1?'Resultat anzeigen':'Nächste Frage';
+    $('hb').remove();
+  };
+}
+render();
+})();
+</script>
+</body>
+</html>
