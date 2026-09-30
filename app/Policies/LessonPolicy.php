@@ -11,4 +11,9 @@ class LessonPolicy
     {
         return $lesson->child->user_id === $user->id;
     }
+
+    public function update(User $user, Lesson $lesson): bool
+    {
+        return $this->view($user, $lesson);
+    }
 }

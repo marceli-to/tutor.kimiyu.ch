@@ -1,8 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+/*
+| Hostpoint hat keinen dauerhaften Queue-Worker. Der Cronjob ruft jede Minute
+| `php artisan schedule:run` auf, das startet einen Worker, der die Warteschlange
+| abarbeitet und sich dann beendet. withoutOverlapping verhindert zwei Worker gleichzeitig.
+*/
+Schedule::command('queue:work --stop-when-empty --max-time=50')
+    ->everyMinute()
+    ->withoutOverlapping(20)
+    ->runInBackground();

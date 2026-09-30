@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { dashboard } from '@/routes';
-import { show } from '@/routes/lessons';
+import { Button } from '@/components/ui/button';
+import { create, show } from '@/routes/lessons';
 
 defineOptions({
     layout: {
@@ -21,6 +22,7 @@ defineProps<{
         subject: string;
         child: string;
         emoji: string | null;
+        status: string;
     }[];
 }>();
 </script>
@@ -29,7 +31,12 @@ defineProps<{
     <Head title="Übersicht" />
 
     <div class="flex h-full flex-1 flex-col gap-4 p-4">
-        <h1 class="text-xl font-semibold">Lernseiten</h1>
+        <div class="flex items-center justify-between gap-4">
+            <h1 class="text-xl font-semibold">Lernseiten</h1>
+            <Button as-child>
+                <Link :href="create()">Neue Lernseite</Link>
+            </Button>
+        </div>
         <ul class="grid gap-3 md:grid-cols-2">
             <li v-for="lesson in lessons" :key="lesson.id">
                 <Link
@@ -44,7 +51,8 @@ defineProps<{
                             lesson.title
                         }}</span>
                         <span class="text-sm text-muted-foreground">
-                            {{ lesson.subject }} · {{ lesson.child }}
+                            {{ lesson.subject }} · {{ lesson.child }} ·
+                            {{ lesson.status }}
                         </span>
                     </span>
                 </Link>

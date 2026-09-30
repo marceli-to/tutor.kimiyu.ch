@@ -15,13 +15,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('child_id')->constrained('children')->cascadeOnDelete();
             $table->string('status')->default('draft');
+            $table->string('step')->nullable();
             $table->string('title')->nullable();
             $table->string('subject');
             $table->string('level');
             $table->text('notes')->nullable();
             $table->unsignedSmallInteger('schema_version')->nullable();
             $table->json('content')->nullable();
+            $table->json('hero_plan')->nullable();
             $table->json('hero')->nullable();
+            $table->text('hero_error')->nullable();
+            $table->json('check_notes')->nullable();
             $table->text('source_summary')->nullable();
             $table->text('error')->nullable();
             $table->timestamp('published_at')->nullable();

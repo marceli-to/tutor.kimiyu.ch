@@ -21,10 +21,11 @@ class DashboardController extends Controller
             ->get()
             ->map(fn (Lesson $lesson) => [
                 'id' => $lesson->id,
-                'title' => $lesson->title,
+                'title' => $lesson->title ?? 'Neue Lernseite',
                 'subject' => $lesson->subject,
                 'child' => $lesson->child->name,
                 'emoji' => $lesson->content['meta']['emoji'] ?? null,
+                'status' => $lesson->status->label(),
             ]);
 
         return Inertia::render('Dashboard', ['lessons' => $lessons]);

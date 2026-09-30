@@ -61,6 +61,8 @@ function toggleTheme() {
                 </button>
             </div>
 
+            <slot name="before" />
+
             <h1
                 class="text-[clamp(2rem,6vw,3rem)] font-bold tracking-[-0.02em] text-ls-accent"
             >

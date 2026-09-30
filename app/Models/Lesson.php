@@ -15,20 +15,24 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $child_id
  * @property LessonStatus $status
+ * @property string|null $step
  * @property string|null $title
  * @property string $subject
  * @property string $level
  * @property string|null $notes
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
+ * @property array{muster: string, idee: string}|null $hero_plan
  * @property array{muster: string, beschreibung: string, css: string, markup: string, script: string}|null $hero
+ * @property string|null $hero_error
+ * @property list<array{bereich: string, aenderung: string}>|null $check_notes
  * @property string|null $source_summary
  * @property string|null $error
  * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['status', 'title', 'subject', 'level', 'notes', 'schema_version', 'content', 'hero', 'source_summary', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'level', 'notes', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
@@ -39,7 +43,9 @@ class Lesson extends Model
         return [
             'status' => LessonStatus::class,
             'content' => 'array',
+            'hero_plan' => 'array',
             'hero' => 'array',
+            'check_notes' => 'array',
             'published_at' => 'datetime',
         ];
     }

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use Anthropic\Client;
+use App\Lessons\Ai\ClaudeLanguageModel;
+use App\Lessons\Ai\FakeLanguageModel;
+use App\Lessons\Ai\LanguageModel;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +19,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(LanguageModel::class, function () {
+            if (config('lessons.fake_ai')) {
+                return new FakeLanguageModel;
+            }
+
+            return new ClaudeLanguageModel(
+                client: new Client(apiKey: (string) config('services.anthropic.key')),
+                model: config('services.anthropic.model'),
+                effort: config('services.anthropic.effort'),
+                fallbacks: config('services.anthropic.fallbacks'),
+                timeout: config('services.anthropic.timeout'),
+            );
+        });
     }
 
     /**

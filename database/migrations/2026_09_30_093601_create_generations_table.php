@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedInteger('input_tokens')->default(0);
             $table->unsignedInteger('output_tokens')->default(0);
             $table->unsignedInteger('cache_read_tokens')->default(0);
+            $table->unsignedInteger('cache_write_tokens')->default(0);
             $table->decimal('cost_usd', 10, 5)->default(0);
             $table->unsignedInteger('duration_ms')->nullable();
             $table->text('error')->nullable();

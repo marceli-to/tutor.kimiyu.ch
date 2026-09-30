@@ -18,6 +18,15 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        'effort' => env('ANTHROPIC_EFFORT', 'high'),
+        // Serverseitiger Ersatz, falls das Modell eine Anfrage ablehnt
+        'fallbacks' => (bool) env('ANTHROPIC_FALLBACKS', true),
+        'timeout' => (int) env('ANTHROPIC_TIMEOUT', 600),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
