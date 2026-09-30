@@ -22,8 +22,10 @@ class StoreLessonRequest extends FormRequest
             'subject' => ['required', 'string', 'max:60'],
             'level' => ['required', 'string', 'max:60'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'images' => ['required', 'array', 'min:1', 'max:'.config('lessons.images.max_count')],
-            'images.*' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.config('lessons.images.max_upload_kb')],
+            'source' => ['required', Rule::in(['fotos', 'thema'])],
+            'topic' => ['exclude_unless:source,thema', 'required', 'string', 'max:120'],
+            'images' => ['exclude_unless:source,fotos', 'required', 'array', 'min:1', 'max:'.config('lessons.images.max_count')],
+            'images.*' => ['exclude_unless:source,fotos', 'required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.config('lessons.images.max_upload_kb')],
         ];
     }
 
@@ -38,6 +40,8 @@ class StoreLessonRequest extends FormRequest
             'subject.required' => 'Gib das Fach an.',
             'level.required' => 'Gib die Stufe an.',
             'notes.max' => 'Die Hinweise dürfen höchstens 500 Zeichen lang sein.',
+            'topic.required' => 'Gib ein Thema ein.',
+            'topic.max' => 'Das Thema darf höchstens 120 Zeichen lang sein.',
             'images.required' => 'Lade mindestens ein Foto hoch.',
             'images.min' => 'Lade mindestens ein Foto hoch.',
             'images.max' => 'Höchstens :max Fotos pro Lernseite.',

@@ -2,6 +2,7 @@
 defineProps<{
     checkNotes: { bereich: string; aenderung: string }[];
     heroError: string | null;
+    fromTopic: boolean;
 }>();
 </script>
 
@@ -13,6 +14,10 @@ defineProps<{
         <p class="mt-1 mb-0 text-ls-muted">
             Die Inhalte hat eine KI erstellt. Schau Texte, Quiz-Lösungen und
             Sortierung kurz durch.
+        </p>
+        <p v-if="fromTopic" class="mt-2 mb-0">
+            Ohne Buchseite erstellt – mit dem Schulstoff vergleichen. An der
+            Prüfung zählt die Definition aus dem Buch.
         </p>
         <details v-if="checkNotes.length" class="mt-3">
             <summary class="cursor-pointer">

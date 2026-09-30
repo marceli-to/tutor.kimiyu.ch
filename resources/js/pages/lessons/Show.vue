@@ -13,6 +13,7 @@ const props = defineProps<{
         step: string | null;
         error: string | null;
         canRetry: boolean;
+        fromTopic: boolean;
         subject: string;
         level: string;
         content: LessonContent | null;
@@ -66,6 +67,7 @@ watch(generating, (active) => (active ? start() : stop()));
             <ReviewNotice
                 :check-notes="lesson.checkNotes"
                 :hero-error="lesson.heroError"
+                :from-topic="lesson.fromTopic"
             />
         </template>
     </LessonPage>

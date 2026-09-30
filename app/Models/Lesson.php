@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $title
  * @property string $subject
  * @property string $level
+ * @property string|null $topic
  * @property string|null $notes
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
@@ -32,7 +33,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'level', 'notes', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
@@ -48,6 +49,14 @@ class Lesson extends Model
             'check_notes' => 'array',
             'published_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Ohne Fotos erstellt: Inhalt stammt aus dem Wissen der KI, nicht aus dem Schulbuch.
+     */
+    public function isFromTopic(): bool
+    {
+        return $this->topic !== null;
     }
 
     /**

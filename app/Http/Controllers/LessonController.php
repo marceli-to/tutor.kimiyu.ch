@@ -38,7 +38,7 @@ class LessonController extends Controller
     {
         // Zuerst alle Fotos verarbeiten, damit bei einem kaputten Bild nichts halb gespeichert wird
         $images = [];
-        foreach ($request->file('images') as $index => $file) {
+        foreach ($request->file('images', []) as $index => $file) {
             try {
                 $images[] = ImageProcessor::process($file);
             } catch (InvalidArgumentException) {
@@ -61,6 +61,7 @@ class LessonController extends Controller
                 'status' => LessonStatus::Draft,
                 'subject' => $request->string('subject')->trim()->value(),
                 'level' => $request->string('level')->trim()->value(),
+                'topic' => $request->input('source') === 'thema' ? $request->string('topic')->trim()->value() : null,
                 'notes' => $request->string('notes')->trim()->value() ?: null,
             ]);
 
@@ -134,6 +135,7 @@ class LessonController extends Controller
                 'canRetry' => GenerationPipeline::canRetry($lesson),
                 'subject' => $lesson->subject,
                 'level' => $lesson->level,
+                'fromTopic' => $lesson->isFromTopic(),
                 'content' => $lesson->content,
                 'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,
                 'hero' => $lesson->hero ? [

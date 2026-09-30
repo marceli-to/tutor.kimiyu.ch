@@ -50,6 +50,8 @@ const levels = [
 ];
 
 const form = useForm<{
+    source: 'fotos' | 'thema';
+    topic: string;
     child_id: number | null;
     child_name: string;
     subject: string;
@@ -57,6 +59,8 @@ const form = useForm<{
     notes: string;
     images: File[];
 }>({
+    source: 'fotos',
+    topic: '',
     child_id: props.children[0]?.id ?? null,
     child_name: '',
     subject: '',
@@ -71,6 +75,15 @@ const imageError = ref('');
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const canAddMore = computed(() => form.images.length < props.maxImages);
+
+const sources = [
+    { value: 'fotos', label: 'Fotos vom Schulbuch' },
+    { value: 'thema', label: 'Nur ein Thema' },
+] as const;
+
+const hasSource = computed(() =>
+    form.source === 'fotos' ? form.images.length > 0 : form.topic.trim() !== '',
+);
 
 // Stufe vom gewählten Kind übernehmen, solange nichts anderes eingetragen ist
 watch(
@@ -129,6 +142,8 @@ function imageErrors(): string | undefined {
 function submit() {
     form.transform((data) => ({
         ...data,
+        images: data.source === 'fotos' ? data.images : [],
+        topic: data.source === 'thema' ? data.topic : '',
         child_id: props.children.length ? data.child_id : null,
         child_name: props.children.length ? '' : data.child_name,
     })).post(store().url, { forceFormData: true });
@@ -145,11 +160,53 @@ onBeforeUnmount(() =>
     <div class="mx-auto w-full max-w-2xl p-4 md:p-6">
         <Heading
             title="Neue Lernseite"
-            description="Fotografiere 1 bis 4 Seiten aus dem Schulbuch oder Heft. Daraus entsteht eine Lernseite mit Grafik, Quiz und Übungen."
+            description="Aus Fotos vom Schulbuch oder aus einem Thema entsteht eine Lernseite mit Grafik, Quiz und Übungen."
         />
 
         <form class="space-y-6" @submit.prevent="submit">
-            <div class="grid gap-2">
+            <fieldset class="grid gap-2">
+                <legend class="mb-2 text-sm font-medium">Woraus?</legend>
+                <div class="inline-flex w-full rounded-lg border p-1 sm:w-auto">
+                    <label
+                        v-for="option in sources"
+                        :key="option.value"
+                        class="flex-1 cursor-pointer rounded-md px-4 py-1.5 text-center text-sm has-focus-visible:ring-2 has-focus-visible:ring-ring sm:flex-none"
+                        :class="
+                            form.source === option.value
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:text-foreground'
+                        "
+                    >
+                        <input
+                            v-model="form.source"
+                            type="radio"
+                            name="source"
+                            :value="option.value"
+                            class="sr-only"
+                        />
+                        {{ option.label }}
+                    </label>
+                </div>
+            </fieldset>
+
+            <div v-if="form.source === 'thema'" class="grid gap-2">
+                <Label for="topic">Thema</Label>
+                <Input
+                    id="topic"
+                    v-model="form.topic"
+                    maxlength="120"
+                    autocomplete="off"
+                    placeholder="z. B. Biodiversität"
+                />
+                <p class="text-sm text-muted-foreground">
+                    Ohne Buchseite schreibt die KI den Stoff aus ihrem
+                    Fachwissen. Für die Prüfung sind Fotos besser, weil sie der
+                    Definition im Buch folgen.
+                </p>
+                <InputError :message="form.errors.topic" />
+            </div>
+
+            <div v-else class="grid gap-2">
                 <Label for="images">Fotos</Label>
                 <p id="images-hint" class="text-sm text-muted-foreground">
                     Gut lesbar, gerade von oben, ganze Seite im Bild. Die Fotos
@@ -290,9 +347,7 @@ onBeforeUnmount(() =>
             <div class="flex items-center gap-4">
                 <Button
                     type="submit"
-                    :disabled="
-                        form.processing || preparing || !form.images.length
-                    "
+                    :disabled="form.processing || preparing || !hasSource"
                 >
                     <Spinner v-if="form.processing" />
                     Lernseite erstellen

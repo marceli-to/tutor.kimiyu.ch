@@ -33,8 +33,14 @@ class Prompts
             ]),
         ]);
 
+        $source = match (true) {
+            $lesson->isFromTopic() => "Erstelle den Inhalt einer Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Thema, keine Fotos»).",
+            count($images) === 1 => 'Erstelle den Inhalt einer Lernseite aus diesem Foto.',
+            default => 'Erstelle den Inhalt einer Lernseite aus diesen '.count($images).' Fotos.',
+        };
+
         $prompt = implode("\n", array_filter([
-            'Erstelle den Inhalt einer Lernseite aus '.(count($images) === 1 ? 'diesem Foto' : 'diesen '.count($images).' Fotos').'.',
+            $source,
             '',
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",

@@ -20,7 +20,7 @@ class LessonGenerator
     public function __construct(private LanguageModel $model) {}
 
     /**
-     * Fotos → Inhalt, Zusammenfassung und Plan für die Grafik. Bei Regelverstössen ein Reparatur-Call.
+     * Fotos oder Thema → Inhalt, Zusammenfassung und Plan für die Grafik. Bei Regelverstössen ein Reparatur-Call.
      *
      * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
      * @throws ModelException bei API-Fehlern
@@ -36,7 +36,9 @@ class LessonGenerator
             }
         }
 
-        if ($images === [] || count($images) !== $lesson->images->count()) {
+        $missingImages = $images === [] || count($images) !== $lesson->images->count();
+
+        if (! $lesson->isFromTopic() && $missingImages) {
             throw new GenerationFailed('Es sind keine Fotos mehr vorhanden. Bitte die Lernseite neu erstellen.');
         }
 
@@ -44,7 +46,9 @@ class LessonGenerator
 
         if (! ($data['quelle']['lesbar'] ?? false) || ! is_array($data['inhalt'] ?? null)) {
             throw new GenerationFailed(
-                $data['quelle']['problem'] ?? 'Auf den Fotos war kein Schulstoff zu erkennen.',
+                $data['quelle']['problem'] ?? ($lesson->isFromTopic()
+                    ? 'Zu diesem Thema konnte keine Lernseite erstellt werden.'
+                    : 'Auf den Fotos war kein Schulstoff zu erkennen.'),
             );
         }
 

@@ -51,6 +51,7 @@ beforeEach(function () {
 function upload(array $data = []): TestResponse
 {
     return test()->actingAs(test()->user)->post(route('lessons.store'), [
+        'source' => 'fotos',
         'child_id' => test()->child->id,
         'subject' => 'Biologie',
         'level' => '2. Sek',
@@ -397,4 +398,65 @@ it('shows the upload form with the parent’s children', function () {
             ->where('maxImages', 4)
             ->where('maxEdge', 1600)
         );
+});
+
+describe('from a topic', function () {
+    function uploadTopic(array $data = []): TestResponse
+    {
+        return upload(['source' => 'thema', 'topic' => 'Biodiversität', 'images' => [], ...$data]);
+    }
+
+    it('creates a lesson without photos', function () {
+        uploadTopic()->assertRedirect();
+
+        $lesson = Lesson::sole();
+        $request = $this->fake->requestsFor('analyse')[0];
+
+        expect($lesson->topic)->toBe('Biodiversität')
+            ->and($lesson->status)->toBe(LessonStatus::Review)
+            ->and($lesson->images()->count())->toBe(0)
+            ->and($request->images)->toBe([])
+            ->and($request->prompt)->toContain('zum Thema «Biodiversität»')
+            ->toContain('Fach: Biologie')
+            ->and($request->system)->toContain('Nur ein Thema, keine Fotos');
+
+        $this->actingAs($this->user)->get(route('lessons.show', $lesson))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.fromTopic', true));
+    });
+
+    it('marks photo lessons as not from a topic', function () {
+        upload(['topic' => 'wird ignoriert']);
+
+        expect(Lesson::sole()->topic)->toBeNull();
+
+        $this->actingAs($this->user)->get(route('lessons.show', Lesson::sole()))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.fromTopic', false));
+    });
+
+    it('requires a topic but no photos', function () {
+        uploadTopic(['topic' => ''])
+            ->assertSessionHasErrors(['topic' => 'Gib ein Thema ein.'])
+            ->assertSessionDoesntHaveErrors('images');
+
+        upload(['source' => 'irgendwas'])->assertSessionHasErrors('source');
+
+        expect(Lesson::count())->toBe(0);
+    });
+
+    it('explains when the topic does not work', function () {
+        $this->fake->push('analyse', analysis([
+            'quelle' => ['lesbar' => false, 'problem' => 'Das ist kein Thema aus dem Schulstoff.'],
+            'inhalt' => null,
+        ]));
+
+        uploadTopic(['topic' => 'Fussballresultate vom Wochenende']);
+
+        $lesson = Lesson::sole();
+        expect($lesson->status)->toBe(LessonStatus::Failed)
+            ->and($lesson->error)->toBe('Das ist kein Thema aus dem Schulstoff.');
+
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        expect($lesson->fresh()->status)->toBe(LessonStatus::Review);
+    });
 });

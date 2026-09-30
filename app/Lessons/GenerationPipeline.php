@@ -43,11 +43,11 @@ class GenerationPipeline
     }
 
     /**
-     * Ein neuer Versuch geht nur, wenn noch Fotos da sind oder der Inhalt schon steht.
+     * Ein neuer Versuch geht nur, wenn es eine Quelle gibt (Fotos oder Thema) oder der Inhalt schon steht.
      */
     public static function canRetry(Lesson $lesson): bool
     {
         return $lesson->status === LessonStatus::Failed
-            && ($lesson->content !== null || $lesson->images()->exists());
+            && ($lesson->content !== null || $lesson->isFromTopic() || $lesson->images()->exists());
     }
 }
