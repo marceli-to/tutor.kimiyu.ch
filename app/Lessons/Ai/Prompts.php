@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\File;
 /**
  * Baut die Anfragen für die einzelnen Schritte.
  *
- * Die System-Prompts (resources/prompts) sind für alle Lernseiten gleich und werden gecacht.
+ * Die System-Prompts (resources/prompts) sind für alle Lernseiten gleich.
  * Alles, was sich pro Lernseite ändert, steht im Benutzer-Prompt. Der Name des Kindes wird nie mitgeschickt.
  */
 class Prompts

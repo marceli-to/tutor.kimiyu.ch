@@ -24,7 +24,8 @@ use Anthropic\Lib\Streaming\MessageAccumulator;
  *
  * - Strukturierte Ausgabe per JSON-Schema (output_config.format)
  * - Streaming, weil Antworten gross sein können und sonst HTTP-Timeouts drohen
- * - System-Prompt wird gecacht, er ist für alle Aufrufe eines Schritts gleich
+ * - Kein Prompt-Caching: Lernseiten entstehen zu selten, der Cache (5 Min.) wurde nie gelesen
+ *   und das Schreiben kostet 25 % mehr als normaler Input
  * - Serverseitiger Ersatz (fallbacks), falls das Modell eine Anfrage ablehnt
  */
 class ClaudeLanguageModel implements LanguageModel
@@ -45,9 +46,7 @@ class ClaudeLanguageModel implements LanguageModel
             $stream = $this->client->beta->messages->createStream(
                 maxTokens: $request->maxTokens,
                 model: $this->model,
-                system: [
-                    ['type' => 'text', 'text' => $request->system, 'cacheControl' => ['type' => 'ephemeral']],
-                ],
+                system: $request->system,
                 messages: [
                     BetaMessageParam::with(content: $this->content($request), role: 'user'),
                 ],
