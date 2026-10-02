@@ -100,46 +100,32 @@ class LessonGenerator
     }
 
     /**
-     * Zweiter Durchgang, der fachliche Fehler korrigiert, getrennt für Textteil und Module.
-     * Scheitert ein Teil oder liefert er Ungültiges, bleibt dieser Teil wie er ist.
+     * Zweiter Durchgang, der fachliche Fehler korrigiert. Die Prüfung liefert nur Korrekturen;
+     * ungültige werden verworfen. Scheitert der Aufruf, bleibt die Seite wie sie ist.
      */
     public function check(Lesson $lesson): void
     {
-        $content = $lesson->content;
-        $notes = [];
+        try {
+            $corrections = $this->call($lesson, Prompts::check($lesson, $lesson->content))->data['korrekturen'] ?? [];
+        } catch (ModelException $e) {
+            Log::warning('Prüf-Call fehlgeschlagen', ['lesson' => $lesson->id, 'error' => $e->detail ?? $e->getMessage()]);
 
-        foreach (['seite', 'module'] as $part) {
-            try {
-                $data = $this->call($lesson, Prompts::check($lesson, $content, $part))->data;
-            } catch (ModelException $e) {
-                Log::warning('Prüf-Call fehlgeschlagen', ['lesson' => $lesson->id, 'part' => $part, 'error' => $e->detail ?? $e->getMessage()]);
+            return;
+        }
 
-                continue;
-            }
+        $result = Corrections::apply($lesson->content, $corrections);
 
-            $checked = $data[$part] ?? null;
-            $candidate = is_array($checked)
-                ? ($part === 'module' ? self::assemble($content, $checked) : self::assemble($checked, $content['module']))
-                : null;
-
-            if ($candidate === null || ($errors = ContentValidator::errors($candidate)) !== []) {
-                Log::warning('Prüf-Call lieferte ungültigen Inhalt, Original bleibt', [
-                    'lesson' => $lesson->id,
-                    'part' => $part,
-                    'errors' => $errors ?? ['kein Inhalt'],
-                ]);
-
-                continue;
-            }
-
-            $content = $candidate;
-            $notes = [...$notes, ...array_values($data['aenderungen'] ?? [])];
+        if ($result['rejected'] !== []) {
+            Log::warning('Korrekturen der Prüfung verworfen', ['lesson' => $lesson->id, 'rejected' => $result['rejected']]);
         }
 
         $lesson->update([
-            'title' => $content['meta']['titel'],
-            'content' => $content,
-            'check_notes' => $notes,
+            'title' => $result['content']['meta']['titel'],
+            'content' => $result['content'],
+            'check_notes' => array_map(
+                fn (array $c) => ['bereich' => $c['bereich'], 'aenderung' => $c['aenderung']],
+                $result['applied'],
+            ),
         ]);
     }
 

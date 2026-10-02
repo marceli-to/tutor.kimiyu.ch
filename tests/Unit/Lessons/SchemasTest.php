@@ -12,8 +12,7 @@ it('only uses features the structured output supports', function (array $schema)
     'modules' => fn () => Schemas::modulesResult(),
     'repair page' => fn () => Schemas::part('seite'),
     'repair modules' => fn () => Schemas::part('module'),
-    'check page' => fn () => Schemas::part('seite', withChanges: true),
-    'check modules' => fn () => Schemas::part('module', withChanges: true),
+    'check' => fn () => Schemas::checkResult(),
     'hero' => fn () => Schemas::hero(),
 ]);
 
@@ -38,8 +37,7 @@ it('matches the responses of the fake model', function (string $step, Closure $s
     ['module', fn () => Schemas::modulesResult()],
     ['reparatur-seite', fn () => Schemas::part('seite')],
     ['reparatur-module', fn () => Schemas::part('module')],
-    ['pruefung-seite', fn () => Schemas::part('seite', withChanges: true)],
-    ['pruefung-module', fn () => Schemas::part('module', withChanges: true)],
+    ['pruefung', fn () => Schemas::checkResult()],
     ['grafik', fn () => Schemas::hero()],
 ]);
 

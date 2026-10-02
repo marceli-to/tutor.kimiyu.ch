@@ -53,17 +53,34 @@ class Schemas
     }
 
     /**
-     * Reparatur oder Prüfung eines Teils. Die ganze Seite ist für eine einzelne
-     * strukturierte Antwort zu gross (die API lehnt die Grammatik ab), deshalb getrennt.
+     * Reparatur eines Teils. Die ganze Seite ist für eine einzelne strukturierte
+     * Antwort zu gross (die API lehnt die Grammatik ab), deshalb getrennt.
      *
      * @return array<string, mixed>
      */
-    public static function part(string $part, bool $withChanges = false): array
+    public static function part(string $part): array
     {
-        $properties = $withChanges ? ['aenderungen' => self::changes()] : [];
-        $properties[$part] = $part === 'seite' ? self::page() : self::modules();
+        return self::object([$part => $part === 'seite' ? self::page() : self::modules()]);
+    }
 
-        return self::object($properties);
+    /**
+     * Prüfung: nur die Korrekturen, nicht die ganze Seite.
+     *
+     * @return array<string, mixed>
+     */
+    public static function checkResult(): array
+    {
+        return self::object([
+            'korrekturen' => [
+                'type' => 'array',
+                'items' => self::object([
+                    'pfad' => ['type' => 'string', 'description' => 'JSON-Pointer auf den Wert, z. B. /module/quiz/2/loesung oder /abschnitte/0/bloecke/1/text. Indizes 0-basiert.'],
+                    'wert' => ['type' => 'string', 'description' => 'Neuer Wert. Text direkt; Zahlen, Listen und Objekte als JSON, z. B. 1 oder ["A","B","C"]'],
+                    'bereich' => ['type' => 'string', 'description' => 'z. B. «Quiz, Frage 3» oder «Sortierspiel»'],
+                    'aenderung' => ['type' => 'string', 'description' => 'Was geändert wurde und warum, ein Satz'],
+                ]),
+            ],
+        ]);
     }
 
     /**
@@ -207,20 +224,6 @@ class Schemas
                 ]]],
             ])),
         ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function changes(): array
-    {
-        return [
-            'type' => 'array',
-            'items' => self::object([
-                'bereich' => ['type' => 'string', 'description' => 'z. B. «Quiz, Frage 3» oder «Sortierspiel»'],
-                'aenderung' => ['type' => 'string', 'description' => 'Was geändert wurde und warum, ein Satz'],
-            ]),
-        ];
     }
 
     /**

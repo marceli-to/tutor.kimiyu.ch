@@ -84,8 +84,7 @@ class FakeLanguageModel implements LanguageModel
             ],
             'module', 'reparatur-module' => ['module' => $content['module']],
             'reparatur-seite' => ['seite' => $page],
-            'pruefung-seite' => ['aenderungen' => [], 'seite' => $page],
-            'pruefung-module' => ['aenderungen' => [], 'module' => $content['module']],
+            'pruefung' => ['korrekturen' => []],
             'grafik', 'grafik-reparatur' => $hero,
             default => [],
         };

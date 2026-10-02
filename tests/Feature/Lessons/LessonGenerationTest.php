@@ -77,8 +77,8 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->source_summary)->toContain('Fotosynthese')
         ->and($lesson->schema_version)->toBe(1);
 
-    expect($lesson->generations()->pluck('step')->all())->toBe(['analyse', 'module', 'pruefung-seite', 'pruefung-module', 'grafik'])
-        ->and($lesson->generations()->where('status', 'ok')->count())->toBe(5);
+    expect($lesson->generations()->pluck('step')->all())->toBe(['analyse', 'module', 'pruefung', 'grafik'])
+        ->and($lesson->generations()->where('status', 'ok')->count())->toBe(4);
 
     $this->actingAs($this->user)->get(route('lessons.show', $lesson))
         ->assertInertia(fn (Assert $page) => $page
@@ -143,19 +143,23 @@ it('skips the check when it is switched off', function () {
 
     upload();
 
-    expect($this->fake->requestsFor('pruefung-seite'))->toBe([])
-        ->and($this->fake->requestsFor('pruefung-module'))->toBe([])
+    expect($this->fake->requestsFor('pruefung'))->toBe([])
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review);
 });
 
-it('stores the corrections of the check', function () {
-    $content = LessonFactory::fixture('fotosynthese');
-    $content['module']['quiz'][0]['tipp'] = 'Denk an die Zutaten, nicht an das Ergebnis.';
+it('checks the whole page in one call', function () {
+    upload();
 
-    $this->fake->push('pruefung-module', [
-        'aenderungen' => [['bereich' => 'Quiz, Frage 1', 'aenderung' => 'Tipp präzisiert.']],
-        'module' => $content['module'],
-    ]);
+    $request = $this->fake->requestsFor('pruefung');
+    expect($request)->toHaveCount(1)
+        ->and($request[0]->prompt)->toContain('"module"')
+        ->and($request[0]->prompt)->toContain('"abschnitte"');
+});
+
+it('applies the corrections of the check and lists them for the parents', function () {
+    $this->fake->push('pruefung', ['korrekturen' => [
+        ['pfad' => '/module/quiz/0/tipp', 'wert' => 'Denk an die Zutaten, nicht an das Ergebnis.', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Tipp präzisiert.'],
+    ]]);
 
     upload();
 
@@ -164,27 +168,26 @@ it('stores the corrections of the check', function () {
         ->and($lesson->content['module']['quiz'][0]['tipp'])->toBe('Denk an die Zutaten, nicht an das Ergebnis.');
 });
 
-it('keeps the original content when the check returns something invalid', function () {
-    $broken = LessonFactory::fixture('fotosynthese');
-    $broken['module']['quiz'][0]['loesung'] = 3;
-    $broken['module']['quiz'][0]['optionen'] = ['A', 'B', 'C'];
-
-    $this->fake->push('pruefung-module', ['aenderungen' => [], 'module' => $broken['module']]);
+it('drops corrections that would break the content', function () {
+    $this->fake->push('pruefung', ['korrekturen' => [
+        ['pfad' => '/module/quiz/0/loesung', 'wert' => '99', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Lösung korrigiert.'],
+    ]]);
 
     upload();
 
     expect(Lesson::sole()->content)->toBe(LessonFactory::fixture('fotosynthese'))
+        ->and(Lesson::sole()->check_notes)->toBe([])
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review);
 });
 
 it('keeps going when the check call fails', function () {
-    $this->fake->push('pruefung-seite', new ModelException('Die KI ist gerade ausgelastet.', retryable: false));
+    $this->fake->push('pruefung', new ModelException('Die KI ist gerade ausgelastet.', retryable: false));
 
     upload();
 
     expect(Lesson::sole()->status)->toBe(LessonStatus::Review)
-        ->and(Lesson::sole()->generations()->where('step', 'pruefung-seite')->value('status'))->toBe('error')
-        ->and(Lesson::sole()->generations()->where('step', 'pruefung-module')->value('status'))->toBe('ok');
+        ->and(Lesson::sole()->content)->toBe(LessonFactory::fixture('fotosynthese'))
+        ->and(Lesson::sole()->generations()->where('step', 'pruefung')->value('status'))->toBe('error');
 });
 
 it('repairs invalid content once', function () {

@@ -127,20 +127,20 @@ class Prompts
     }
 
     /**
+     * Prüfung der ganzen Seite in einem Aufruf. Die Antwort enthält nur Korrekturen.
+     *
      * @param  array<string, mixed>  $content
-     * @param  'seite'|'module'  $part
      */
-    public static function check(Lesson $lesson, array $content, string $part): ModelRequest
+    public static function check(Lesson $lesson, array $content): ModelRequest
     {
         return new ModelRequest(
-            step: "pruefung-{$part}",
+            step: 'pruefung',
             system: self::load('pruefung'),
             prompt: implode("\n\n", [
                 self::context($lesson),
-                "Prüfe diesen Teil und gib ihn zurück: {$part}",
-                "Ganze Lernseite:\n".self::json($content),
+                "Lernseite:\n".self::json($content),
             ]),
-            schema: Schemas::part($part, withChanges: true),
+            schema: Schemas::checkResult(),
             maxTokens: config('lessons.max_tokens.pruefung'),
         );
     }

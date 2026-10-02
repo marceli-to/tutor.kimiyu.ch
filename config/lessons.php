@@ -26,7 +26,7 @@ return [
         'analyse' => 32000,
         'module' => 32000,
         'reparatur' => 32000,
-        'pruefung' => 48000,
+        'pruefung' => 16000,
         'grafik' => 48000,
     ],
 
