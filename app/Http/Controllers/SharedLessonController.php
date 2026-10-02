@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Progress\RecordAnswer;
 use App\Enums\LessonStatus;
 use App\Lessons\LessonView;
 use App\Lessons\Progress;
@@ -68,7 +69,7 @@ class SharedLessonController extends Controller
     /**
      * Eine Antwort des Kindes. Der Server prüft sie selbst gegen den Inhalt.
      */
-    public function answer(Request $request, string $token, Lesson $lesson): JsonResponse
+    public function answer(Request $request, string $token, Lesson $lesson, RecordAnswer $recordAnswer): JsonResponse
     {
         $child = $this->child($token);
 
@@ -80,17 +81,9 @@ class SharedLessonController extends Controller
             'answer' => ['present', 'nullable'],
         ]);
 
-        $answer = $data['answer'];
-        $correct = Progress::check($lesson, $data['module'], $data['item_id'], is_scalar($answer) ? $answer : null);
+        $correct = $recordAnswer->handle($child, $lesson, $data['module'], $data['item_id'], $data['answer']);
 
         abort_if($correct === null, 422, 'Diese Aufgabe gibt es nicht.');
-
-        $child->attempts()->create([
-            'lesson_id' => $lesson->id,
-            'module' => $data['module'],
-            'item_id' => $data['item_id'],
-            'correct' => $correct,
-        ]);
 
         return response()->json(['correct' => $correct]);
     }

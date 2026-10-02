@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Children\CreateChild;
+use App\Actions\Children\DeleteChild;
+use App\Actions\Children\RenewShareLink;
+use App\Actions\Children\UpdateChild;
 use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
+use App\Http\Requests\ChildRequest;
 use App\Lessons\Progress;
 use App\Models\Child;
 use App\Models\Lesson;
@@ -34,20 +38,18 @@ class ChildController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(ChildRequest $request, CreateChild $createChild): RedirectResponse
     {
-        $request->user()->children()->create($this->validated($request));
+        $createChild->handle($request->user(), $request->validated('name'), $request->validated('level'));
 
         $this->toast('Kind hinzugefügt.');
 
         return back();
     }
 
-    public function update(Request $request, Child $child): RedirectResponse
+    public function update(ChildRequest $request, Child $child, UpdateChild $updateChild): RedirectResponse
     {
-        Gate::authorize('update', $child);
-
-        $child->update($this->validated($request));
+        $updateChild->handle($child, $request->validated('name'), $request->validated('level'));
 
         $this->toast('Gespeichert.');
 
@@ -57,15 +59,11 @@ class ChildController extends Controller
     /**
      * Löscht das Kind mit allen Lernseiten und dem Lernstand.
      */
-    public function destroy(Child $child, LessonGenerator $generator): RedirectResponse
+    public function destroy(Child $child, DeleteChild $deleteChild): RedirectResponse
     {
         Gate::authorize('delete', $child);
 
-        foreach ($child->lessons as $lesson) {
-            $generator->deleteImages($lesson);
-        }
-
-        $child->delete();
+        $deleteChild->handle($child);
 
         $this->toast('Kind und Lernseiten gelöscht.');
 
@@ -108,29 +106,14 @@ class ChildController extends Controller
     /**
      * Neuer Link, z. B. wenn der alte an die falsche Person ging. Der alte Link funktioniert danach nicht mehr.
      */
-    public function renewLink(Child $child): RedirectResponse
+    public function renewLink(Child $child, RenewShareLink $renewShareLink): RedirectResponse
     {
         Gate::authorize('update', $child);
 
-        $child->forceFill(['share_token' => Child::newShareToken()])->save();
+        $renewShareLink->handle($child);
 
         $this->toast('Neuer Link erstellt. Der alte Link funktioniert nicht mehr.');
 
         return back();
-    }
-
-    /**
-     * @return array{name: string, level: string|null}
-     */
-    private function validated(Request $request): array
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:60'],
-            'level' => ['nullable', 'string', 'max:60'],
-        ], [
-            'name.required' => 'Gib einen Namen ein.',
-        ]);
-
-        return ['name' => trim($data['name']), 'level' => isset($data['level']) ? trim($data['level']) : null];
     }
 }
