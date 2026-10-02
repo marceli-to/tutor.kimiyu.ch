@@ -220,7 +220,7 @@ function submit() {
                 <select
                     id="child_id"
                     v-model="form.child_id"
-                    class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                    class="h-9 w-full rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
                 >
                     <option
                         v-for="child in children"

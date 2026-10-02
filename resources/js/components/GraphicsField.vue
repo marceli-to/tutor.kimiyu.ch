@@ -154,7 +154,7 @@ function rowError(index: number, field: keyof GraphicWish) {
                     <select
                         :id="`graphic-${index}-pattern`"
                         :value="graphic.muster ?? ''"
-                        class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                        class="h-9 w-full rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
                         @change="
                             update(index, {
                                 muster:

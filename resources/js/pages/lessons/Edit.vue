@@ -161,7 +161,7 @@ function save() {
                     <select
                         id="palette"
                         v-model="c.meta.palette"
-                        class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                        class="h-9 w-full rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
                     >
                         <option
                             v-for="p in palettes"
@@ -467,7 +467,7 @@ function save() {
                     <select
                         :id="`korb-${term.id}`"
                         v-model="term.kategorie"
-                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                        class="h-9 rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
                     >
                         <option
                             v-for="category in c.module.sortieren.kategorien"
