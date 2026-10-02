@@ -13,7 +13,10 @@ Korrigiere nur, was falsch oder missverständlich ist. Ändere nichts, was korre
 Gib **nur die Korrekturen** zurück, nicht die Seite. Jede Korrektur ersetzt genau einen bestehenden Wert:
 
 - `pfad`: JSON-Pointer auf den Wert in der Lernseite, Indizes 0-basiert, z. B. `/module/quiz/2/loesung`, `/module/quiz/0/optionen`, `/abschnitte/1/bloecke/0/text`.
-- `wert`: der neue Wert. Text direkt (ohne Anführungszeichen); Zahlen, Listen und Objekte als JSON, z. B. `1` oder `["Licht","Wasser","CO₂"]`. Wenn du die Lösung einer Quizfrage änderst und dafür die Optionen umstellst, ersetze `optionen` und `loesung` je mit einer eigenen Korrektur.
+- `wert`: der neue Wert. Text direkt (ohne Anführungszeichen); Zahlen und Listen als JSON, z. B. `1` oder `["Licht","Wasser","CO₂"]`. Wenn du die Lösung einer Quizfrage änderst und dafür die Optionen umstellst, ersetze `optionen` und `loesung` je mit einer eigenen Korrektur.
+- Ersetze nur einzelne Werte (Text, Zahl) oder ganze Listen aus Texten (z. B. `optionen`, `loesungen`). Nie ganze Objekte, Module oder Abschnitte, nie `null`.
+- Listen immer ganz ersetzen, nie einzelne Elemente (`/module/quiz/0/optionen`, nicht `/module/quiz/0/optionen/1`).
+- Felder, die `null` sind, nicht befüllen.
 - `bereich` und `aenderung`: wo und was, in einem Satz. Die Eltern sehen das.
 
 Wenn alles stimmt, ist `korrekturen` leer.

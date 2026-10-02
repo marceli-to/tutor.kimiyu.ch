@@ -75,7 +75,7 @@ class Schemas
                 'type' => 'array',
                 'items' => self::object([
                     'pfad' => ['type' => 'string', 'description' => 'JSON-Pointer auf den Wert, z. B. /module/quiz/2/loesung oder /abschnitte/0/bloecke/1/text. Indizes 0-basiert.'],
-                    'wert' => ['type' => 'string', 'description' => 'Neuer Wert. Text direkt; Zahlen, Listen und Objekte als JSON, z. B. 1 oder ["A","B","C"]'],
+                    'wert' => ['type' => 'string', 'description' => 'Neuer Wert. Text direkt; Zahlen und Listen aus Texten als JSON, z. B. 1 oder ["A","B","C"]'],
                     'bereich' => ['type' => 'string', 'description' => 'z. B. «Quiz, Frage 3» oder «Sortierspiel»'],
                     'aenderung' => ['type' => 'string', 'description' => 'Was geändert wurde und warum, ein Satz'],
                 ]),

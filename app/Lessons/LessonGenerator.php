@@ -122,10 +122,11 @@ class LessonGenerator
         $lesson->update([
             'title' => $result['content']['meta']['titel'],
             'content' => $result['content'],
-            'check_notes' => array_map(
+            // Eine Änderung kann mehrere Korrekturen brauchen (z. B. Optionen und Lösung): ein Hinweis genügt.
+            'check_notes' => array_values(array_unique(array_map(
                 fn (array $c) => ['bereich' => $c['bereich'], 'aenderung' => $c['aenderung']],
                 $result['applied'],
-            ),
+            ), SORT_REGULAR)),
         ]);
     }
 

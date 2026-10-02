@@ -176,6 +176,19 @@ it('applies the corrections of the check and lists them for the parents', functi
         ->and($lesson->content['module']['quiz'][0]['tipp'])->toBe('Denk an die Zutaten, nicht an das Ergebnis.');
 });
 
+it('lists one note for several corrections with the same description', function () {
+    $this->fake->push('pruefung', ['korrekturen' => [
+        ['pfad' => '/module/quiz/0/optionen', 'wert' => '["Kohlenstoffdioxid und Wasser","Sauerstoff und Wasser","Traubenzucker und Sauerstoff","Kohlenstoffdioxid und Traubenzucker"]', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Richtige Antwort an den Anfang gestellt.'],
+        ['pfad' => '/module/quiz/0/loesung', 'wert' => '0', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Richtige Antwort an den Anfang gestellt.'],
+    ]]);
+
+    upload();
+
+    $lesson = Lesson::sole();
+    expect($lesson->content['module']['quiz'][0]['loesung'])->toBe(0)
+        ->and($lesson->check_notes)->toBe([['bereich' => 'Quiz, Frage 1', 'aenderung' => 'Richtige Antwort an den Anfang gestellt.']]);
+});
+
 it('drops corrections that would break the content', function () {
     $this->fake->push('pruefung', ['korrekturen' => [
         ['pfad' => '/module/quiz/0/loesung', 'wert' => '99', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Lösung korrigiert.'],
