@@ -50,7 +50,8 @@ enum Profile: string
 	public function blocks(): array
 	{
 		return match ($this) {
-			self::Languages => [...self::BASE_BLOCKS, 'vocabulary', 'conjugation'],
+			// No formulas in a language lesson: the room in the schema goes to the word list and verb table
+			self::Languages => ['paragraph', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation'],
 			default => self::BASE_BLOCKS,
 		};
 	}

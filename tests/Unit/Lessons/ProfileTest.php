@@ -27,16 +27,15 @@ it('has a german label, a prompt file and an example for every profile', functio
 		->and(LessonFactory::fixture($profile->fixture()))->toHaveKey('sections');
 })->with(Profile::cases());
 
-it('allows the base blocks and modules for every profile', function (Profile $profile) {
-	expect(array_slice($profile->blocks(), 0, 6))->toBe(['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic'])
+it('allows the base blocks and modules where the profile needs no room for its own', function (Profile $profile) {
+	expect($profile->blocks())->toBe(['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic'])
 		->and($profile->modules())->toBe(['quiz', 'sorting', 'flashcards', 'cloze']);
-})->with(Profile::cases());
+})->with([Profile::Science, Profile::General, Profile::German]);
 
-it('adds vocabulary and conjugation for languages only', function (Profile $profile) {
-	$extra = array_values(array_diff($profile->blocks(), ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic']));
-
-	expect($extra)->toBe($profile === Profile::Languages ? ['vocabulary', 'conjugation'] : []);
-})->with(Profile::cases());
+it('gives languages word lists and verb tables instead of formulas', function () {
+	expect(Profile::Languages->blocks())->toBe(['paragraph', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation'])
+		->and(Profile::Languages->modules())->toBe(['quiz', 'sorting', 'flashcards', 'cloze']);
+});
 
 it('uses its own fixture as the example for languages', function () {
 	expect(Profile::Languages->fixture())->toBe('passe-compose')
