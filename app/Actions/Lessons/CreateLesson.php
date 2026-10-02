@@ -58,6 +58,8 @@ class CreateLesson
 				'status' => LessonStatus::Draft,
 				// Empty: the AI detects the subject in the analysis
 				'subject' => $data['subject'] ?? null,
+				// Empty: derived from the subject
+				'profile' => $data['profile'] ?? null,
 				'level' => $level,
 				'prompt' => $data['prompt'] ?? null,
 				'photo_count' => count($images),

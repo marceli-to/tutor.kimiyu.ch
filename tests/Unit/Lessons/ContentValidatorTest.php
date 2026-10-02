@@ -1,6 +1,7 @@
 <?php
 
 use App\Lessons\ContentValidator;
+use App\Lessons\Profile;
 use Database\Factories\LessonFactory;
 
 function lessonFixture(string $name = 'fotosynthese'): array
@@ -247,4 +248,20 @@ describe('graphic blocks', function () {
 			->and(ContentValidator::errors($content, strict: true))
 			->toContain('Abschnitt «Nur Grafik»: Eine Grafik braucht erklärenden Text daneben.');
 	});
+});
+
+describe('profiles', function () {
+	it('rejects experiments on a fresh page of a profile without experiments', function () {
+		$content = lessonFixture();
+
+		expect(ContentValidator::errors($content, strict: true, profile: Profile::General))
+			->toContain('Das Fachprofil «Allgemein» hat keine Experimente («Ausprobieren»).')
+			->and(ContentValidator::errorsByPart($content, strict: true, profile: Profile::General)['page'])->not->toBe([])
+			->and(ContentValidator::errors($content, profile: Profile::General))->toBe([])
+			->and(ContentValidator::errors($content, strict: true, profile: Profile::Science))->toBe([]);
+	});
+
+	it('accepts the fixtures with their profile', function (string $name) {
+		expect(ContentValidator::errors(lessonFixture($name), strict: true, profile: Profile::Science))->toBe([]);
+	})->with(LessonFactory::FIXTURES);
 });

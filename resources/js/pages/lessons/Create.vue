@@ -34,6 +34,7 @@ const props = defineProps<{
 	maxImages: number;
 	maxEdge: number;
 	patterns: { value: string; label: string }[];
+	profiles: { value: string; label: string }[];
 	lastSettings: Record<string, RememberedSettings>;
 	lastByChild: Record<string, LessonSettings>;
 	scopeInfo: ScopeInfo;
@@ -72,6 +73,8 @@ const form = useForm<{
 	child_id: number | null;
 	child_name: string;
 	subject: string;
+	// Empty: derived from the subject
+	profile: string;
 	level: string;
 	graphics_mode: GraphicsMode;
 	graphics: GraphicWish[];
@@ -84,6 +87,7 @@ const form = useForm<{
 	child_id: props.children[0]?.id ?? null,
 	child_name: '',
 	subject: '',
+	profile: '',
 	level: props.children[0]?.level ?? '',
 	graphics_mode: 'auto',
 	graphics: [],
@@ -394,7 +398,14 @@ watch(
 );
 
 // Fields that only exist in advanced mode
-const advancedFields = ['subject', 'purpose', 'scope', 'modules', 'graphics'];
+const advancedFields = [
+	'subject',
+	'profile',
+	'purpose',
+	'scope',
+	'modules',
+	'graphics',
+];
 
 // Errors in these fields must be visible
 watch(
@@ -429,6 +440,7 @@ function submit() {
 		child_name: props.children.length ? '' : data.child_name,
 		// In simple mode the AI detects the subject; the level comes from the child
 		subject: advanced.value ? data.subject : '',
+		profile: advanced.value ? data.profile : '',
 		level: advanced.value || needsLevel.value ? data.level : '',
 		// Send wishes only with graphics mode «custom»
 		graphics: data.graphics_mode === 'custom' ? data.graphics : [],
@@ -544,6 +556,25 @@ function submit() {
 						<option v-for="s in subjects" :key="s" :value="s" />
 					</datalist>
 					<InputError :message="form.errors.subject" />
+				</div>
+
+				<div v-if="advanced" class="grid gap-2">
+					<Label for="profile">Fachprofil</Label>
+					<select
+						id="profile"
+						v-model="form.profile"
+						class="h-9 w-full rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
+					>
+						<option value="">Automatisch (nach Fach)</option>
+						<option
+							v-for="profile in profiles"
+							:key="profile.value"
+							:value="profile.value"
+						>
+							{{ profile.label }}
+						</option>
+					</select>
+					<InputError :message="form.errors.profile" />
 				</div>
 
 				<div class="grid gap-2">

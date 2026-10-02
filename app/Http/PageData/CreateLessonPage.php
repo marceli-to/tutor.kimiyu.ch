@@ -3,12 +3,13 @@
 namespace App\Http\PageData;
 
 use App\Lessons\GraphicPattern;
+use App\Lessons\Profile;
 use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Props for lessons/Create: children, limits, patterns and the defaults from earlier lessons.
+ * Props for lessons/Create: children, limits, patterns, profiles and the defaults from earlier lessons.
  */
 class CreateLessonPage
 {
@@ -33,6 +34,10 @@ class CreateLessonPage
 			'patterns' => array_map(
 				fn (GraphicPattern $pattern) => ['value' => $pattern->value, 'label' => $pattern->label()],
 				GraphicPattern::cases(),
+			),
+			'profiles' => array_map(
+				fn (Profile $profile) => ['value' => $profile->value, 'label' => $profile->label()],
+				Profile::cases(),
 			),
 			'lastSettings' => self::lastSettings($recent),
 			'lastByChild' => self::lastByChild($recent),

@@ -16,6 +16,8 @@ Diese Regeln gelten für zwei Aufrufe nacheinander, beide mit denselben Fotos. D
 
 - `page`: der Textteil der Lernseite. Zusammenfassung, Ergänzungen und Pläne für die Grafiken aus Schritt 1 stehen im Benutzer-Prompt und sind verbindlich: Schreib den Textteil daraus und aus den Fotos, mit den Begriffen des Buchs. Setze die Bausteine `graphic` nur für die geplanten Grafiken; `meta.instructions` und `try_it` passen zum Plan von Grafik 1.
 
+Im zweiten Schritt steht im Benutzer-Prompt ein Abschnitt «Fachprofil» mit Regeln für dieses Fach. Halte dich an den Abschnitt «Fachprofil», er geht den allgemeinen Regeln vor. Felder, die im Schema fehlen (z. B. `try_it`), lieferst du nicht.
+
 Die Lernmodule (Quiz, Sortierspiel, Karteikarten, Lückentext) entstehen danach in einem eigenen Schritt, nur aus der Zusammenfassung und dem Textteil. Du schreibst sie hier nicht.
 
 ## 1. Quelle verstehen

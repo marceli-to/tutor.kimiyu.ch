@@ -15,6 +15,7 @@ use App\Lessons\Ai\Prompts;
 use App\Lessons\Ai\Schemas;
 use App\Lessons\GenerationFailed;
 use App\Lessons\GenerationPipeline;
+use App\Lessons\Profile;
 use App\Models\Child;
 use App\Models\Generation;
 use App\Models\Lesson;
@@ -1574,5 +1575,102 @@ describe('subject detected by the ai', function () {
 		$this->actingAs($this->user)->get(route('lessons.show', $lesson))
 			->assertOk()
 			->assertInertia(fn (Assert $page) => $page->where('lesson.subject', 'Fach wird erkannt …'));
+	});
+});
+
+describe('subject profiles', function () {
+	function addendum(Profile $profile): string
+	{
+		return trim((string) file_get_contents($profile->promptFile()));
+	}
+
+	it('derives the profile from a detected subject after the analysis', function () {
+		$this->fake->push('analysis', analysis(['subject' => 'Chemie']));
+
+		upload(['subject' => '']);
+
+		$page = $this->fake->requestsFor('page')[0];
+		expect(Lesson::sole()->profile)->toBeNull()
+			->and(Lesson::sole()->resolvedProfile())->toBe(Profile::Science)
+			->and($this->fake->requestsFor('analysis')[0]->prompt)->not->toContain('Fachprofil')
+			->and($page->prompt)->toContain('Fachprofil: Naturwissenschaften')
+			->toContain(addendum(Profile::Science))
+			->and($page->schema)->toBe(Schemas::part('page', Profile::Science))
+			->and($this->fake->requestsFor('modules')[0]->prompt)->toContain('Fachprofil: Naturwissenschaften')
+			->toContain(addendum(Profile::Science));
+	});
+
+	it('takes the profile the parents chose over the subject', function () {
+		upload(['subject' => 'Biologie', 'profile' => 'general'])->assertSessionHasNoErrors();
+
+		$lesson = Lesson::sole();
+		$page = $this->fake->requestsFor('page')[0];
+		expect($lesson->profile)->toBe(Profile::General)
+			->and($page->prompt)->toContain('Fachprofil: Allgemein')
+			->toContain(addendum(Profile::General))
+			->not->toContain('Fachprofil: Naturwissenschaften')
+			->and($page->schema['properties']['page']['properties'])->not->toHaveKey('try_it')
+			->and($this->fake->requestsFor('modules')[0]->schema)->toBe(Schemas::modulesResult(Profile::General));
+	});
+
+	it('sets the parts a profile does not allow to null', function () {
+		// The fake returns the photosynthesis page with experiments anyway
+		upload(['profile' => 'general']);
+
+		$lesson = Lesson::sole();
+		expect($lesson->status)->toBe(LessonStatus::Review)
+			->and($lesson->content)->toHaveKey('try_it')
+			->and($lesson->content['try_it'])->toBeNull()
+			->and($lesson->content['modules'])->toHaveKeys(Lesson::MODULES);
+	});
+
+	it('gives the graphic only the label of the profile', function () {
+		upload();
+
+		expect($this->fake->requestsFor('graphic')[0]->prompt)->toContain('Fachprofil: Naturwissenschaften')
+			->not->toContain(addendum(Profile::Science));
+	});
+
+	it('tells the system prompts that the profile comes first', function () {
+		$rule = 'Halte dich an den Abschnitt «Fachprofil», er geht den allgemeinen Regeln vor.';
+
+		expect(file_get_contents(resource_path('prompts/analysis.md')))->toContain($rule)
+			->and(file_get_contents(resource_path('prompts/modules.md')))->toContain($rule);
+	});
+
+	it('derives the profile again on a retry with a detected subject', function () {
+		$this->fake->push('analysis', analysis(['subject' => 'Chemie']));
+		$this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
+		upload(['subject' => '']);
+		$lesson = Lesson::sole();
+
+		$this->fake->push('analysis', analysis(['subject' => 'Geschichte']));
+		$this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+		expect($this->fake->requestsFor('page')[1]->prompt)->toContain('Fachprofil: Allgemein')
+			->and($lesson->fresh()->resolvedProfile())->toBe(Profile::General);
+	});
+
+	it('treats old lessons without a profile like an automatic one', function () {
+		$lesson = Lesson::factory()->fromFixture()->create(['subject' => 'Geschichte']);
+
+		expect($lesson->profile)->toBeNull()
+			->and(Prompts::quiz($lesson)->prompt)->toContain('Fachprofil: Allgemein');
+	});
+
+	it('rejects an unknown profile', function () {
+		Bus::fake();
+
+		upload(['profile' => 'kunst'])->assertSessionHasErrors(['profile' => 'Wähle ein Fachprofil aus der Liste.']);
+
+		expect(Lesson::count())->toBe(0);
+	});
+
+	it('offers the profiles in the form', function () {
+		$this->actingAs($this->user)->get(route('lessons.create'))
+			->assertInertia(fn (Assert $page) => $page
+				->has('profiles', 6)
+				->where('profiles.0', ['value' => 'science', 'label' => 'Naturwissenschaften'])
+			);
 	});
 });

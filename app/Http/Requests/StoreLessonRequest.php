@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Lessons\GraphicPattern;
+use App\Lessons\Profile;
 use App\Models\Lesson;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -23,6 +24,8 @@ class StoreLessonRequest extends FormRequest
 			'child_name' => ['required_without:child_id', 'nullable', 'string', 'max:60'],
 			// Empty: the AI detects the subject in the analysis
 			'subject' => ['nullable', 'string', 'max:60'],
+			// Empty: derived from the subject after the analysis
+			'profile' => ['nullable', Rule::enum(Profile::class)],
 			// Empty: the level comes from the child; only needed if the child has none or is new
 			'level' => [Rule::requiredIf(fn () => $this->childLevel() === null), 'nullable', 'string', 'max:60'],
 			'graphics_mode' => ['required', Rule::in(['none', 'auto', 'custom'])],
@@ -65,6 +68,7 @@ class StoreLessonRequest extends FormRequest
 			'child_id.required_without' => 'Wähle ein Kind aus.',
 			'child_name.required_without' => 'Gib den Namen des Kindes ein.',
 			'level.required' => 'Gib die Stufe an.',
+			'profile' => 'Wähle ein Fachprofil aus der Liste.',
 			'graphics_mode' => 'Wähle aus, ob und welche Grafiken die Seite bekommt.',
 			'purpose' => 'Wähle den Zweck der Lernseite.',
 			'scope' => 'Wähle den Umfang der Lernseite.',

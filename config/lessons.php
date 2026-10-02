@@ -32,6 +32,23 @@ return [
 		'detailed' => ['sections' => '2–4', 'quiz' => 8, 'flashcards' => '8–15', 'terms' => '10–16', 'gaps' => '6–10'],
 	],
 
+	/*
+	| Subject profile per subject (lower case, as typed by the parents or detected by the AI).
+	| Every other subject gets «general». See App\Lessons\Profile.
+	*/
+	'profiles' => [
+		'natur und technik' => 'science',
+		'biologie' => 'science',
+		'chemie' => 'science',
+		'physik' => 'science',
+		'mathematik' => 'math',
+		'geometrie' => 'geometry',
+		'deutsch' => 'german',
+		'französisch' => 'languages',
+		'englisch' => 'languages',
+		'italienisch' => 'languages',
+	],
+
 	'max_tokens' => [
 		'analysis' => 32000,
 		'page' => 32000,

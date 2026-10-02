@@ -2,6 +2,7 @@
 
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\Schemas;
+use App\Lessons\Profile;
 use Database\Factories\LessonFactory;
 use Tests\Support\JsonSchema;
 
@@ -126,4 +127,29 @@ it('plans the graphics in the analysis and places them with a block', function (
 			['number' => 2, 'plan' => null, 'note' => 'Passt nicht zu den Fotos.'],
 		]], ['type' => 'object', 'properties' => ['graphic_plans' => $analysis['graphic_plans']], 'required' => ['graphic_plans'], 'additionalProperties' => false]))->toBe([])
 		->and(JsonSchema::errors($content, Schemas::content()))->toBe([]);
+});
+
+describe('per profile', function () {
+	it('keeps the schemas of every profile small and supported', function (Profile $profile) {
+		foreach ([Schemas::part('page', $profile), Schemas::part('modules', $profile), Schemas::modulesResult($profile)] as $schema) {
+			expect(JsonSchema::unsupportedKeywords($schema))->toBe([])
+				->and(strlen(json_encode($schema)))->toBeLessThan(4500);
+		}
+	})->with(Profile::cases());
+
+	it('only contains the blocks and modules of the profile', function (Profile $profile) {
+		$blocks = Schemas::page($profile)['properties']['sections']['items']['properties']['blocks']['items']['anyOf'];
+
+		expect(array_map(fn (array $block) => $block['properties']['type']['const'], $blocks))->toBe($profile->blocks())
+			->and(array_keys(Schemas::modules($profile)['properties']))->toBe($profile->modules());
+	})->with(Profile::cases());
+
+	it('omits the experiments where the profile has none', function (Profile $profile) {
+		expect(array_key_exists('try_it', Schemas::page($profile)['properties']))->toBe($profile->allowsExperiments());
+	})->with(Profile::cases());
+
+	it('keeps the full set without a profile', function () {
+		expect(Schemas::page()['properties'])->toHaveKey('try_it')
+			->and(Schemas::part('page'))->toBe(Schemas::part('page', Profile::Science));
+	});
 });

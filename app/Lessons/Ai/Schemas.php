@@ -5,6 +5,7 @@ namespace App\Lessons\Ai;
 use App\Lessons\ContentValidator;
 use App\Lessons\GraphicPattern;
 use App\Lessons\Palettes;
+use App\Lessons\Profile;
 
 /**
  * JSON schemas for the structured output.
@@ -39,13 +40,13 @@ class Schemas
 	}
 
 	/**
-	 * Second step: quiz, sorting game, flashcards, cloze.
+	 * Second step: quiz, sorting game, flashcards, cloze (as far as the profile offers them).
 	 *
 	 * @return array<string, mixed>
 	 */
-	public static function modulesResult(): array
+	public static function modulesResult(?Profile $profile = null): array
 	{
-		return self::object(['modules' => self::modules()]);
+		return self::object(['modules' => self::modules($profile)]);
 	}
 
 	/**
@@ -64,9 +65,9 @@ class Schemas
 	 *
 	 * @return array<string, mixed>
 	 */
-	public static function part(string $part): array
+	public static function part(string $part, ?Profile $profile = null): array
 	{
-		return self::object([$part => $part === 'page' ? self::page() : self::modules()]);
+		return self::object([$part => $part === 'page' ? self::page($profile) : self::modules($profile)]);
 	}
 
 	/**
@@ -130,11 +131,13 @@ class Schemas
 	}
 
 	/**
-	 * Text part of the page: everything except the modules.
+	 * Text part of the page: everything except the modules. With a profile only its blocks, and
+	 * «try_it» only if it has experiments: every extra part makes the grammar larger.
+	 * Without a profile the full set.
 	 *
 	 * @return array<string, mixed>
 	 */
-	public static function page(): array
+	public static function page(?Profile $profile = null): array
 	{
 		$text = ['type' => 'string'];
 		$texts = ['type' => 'array', 'items' => $text];
@@ -143,7 +146,24 @@ class Schemas
 
 		$block = fn (string $type, array $properties) => self::object(['type' => ['type' => 'string', 'const' => $type], ...$properties, 'origin' => $origin]);
 
-		return self::object([
+		$blocks = [
+			'paragraph' => $block('paragraph', ['text' => $text]),
+			'formula' => $block('formula', ['text' => $text, 'addendum' => self::nullable($text)]),
+			'facts' => $block('facts', ['entries' => ['type' => 'array', 'items' => self::object(['title' => $text, 'text' => $text])]]),
+			'columns' => $block('columns', ['entries' => ['type' => 'array', 'items' => self::object([
+				'title' => $text,
+				'category' => $category,
+				'paragraphs' => $texts,
+			])]]),
+			'box' => $block('box', ['title' => $text, 'paragraphs' => $texts]),
+			'graphic' => $block('graphic', ['number' => ['type' => 'integer']]),
+		];
+
+		if ($profile !== null) {
+			$blocks = array_intersect_key($blocks, array_flip($profile->blocks()));
+		}
+
+		$schema = self::object([
 			'meta' => self::object([
 				'title' => ['type' => 'string', 'description' => 'Frage oder Formel, die neugierig macht'],
 				'instructions' => ['type' => 'string', 'description' => 'Eine Zeile: was man mit der Grafik tun kann; ohne Grafik: worum es geht'],
@@ -158,18 +178,7 @@ class Schemas
 					'title' => $text,
 					'blocks' => [
 						'type' => 'array',
-						'items' => ['anyOf' => [
-							$block('paragraph', ['text' => $text]),
-							$block('formula', ['text' => $text, 'addendum' => self::nullable($text)]),
-							$block('facts', ['entries' => ['type' => 'array', 'items' => self::object(['title' => $text, 'text' => $text])]]),
-							$block('columns', ['entries' => ['type' => 'array', 'items' => self::object([
-								'title' => $text,
-								'category' => $category,
-								'paragraphs' => $texts,
-							])]]),
-							$block('box', ['title' => $text, 'paragraphs' => $texts]),
-							$block('graphic', ['number' => ['type' => 'integer']]),
-						]],
+						'items' => ['anyOf' => array_values($blocks)],
 					],
 				]),
 			],
@@ -179,6 +188,13 @@ class Schemas
 			])),
 			'reflect' => self::object(['question' => $text]),
 		]);
+
+		if ($profile !== null && ! $profile->allowsExperiments()) {
+			unset($schema['properties']['try_it']);
+			$schema['required'] = array_keys($schema['properties']);
+		}
+
+		return $schema;
 	}
 
 	/**
@@ -205,16 +221,19 @@ class Schemas
 	}
 
 	/**
+	 * Modules not offered by the profile are left out (not nullable); AnalyzeLesson sets them to null.
+	 * Without a profile the full set.
+	 *
 	 * @return array<string, mixed>
 	 */
-	public static function modules(): array
+	public static function modules(?Profile $profile = null): array
 	{
 		$text = ['type' => 'string'];
 		$texts = ['type' => 'array', 'items' => $text];
 		$category = ['type' => 'string', 'enum' => ContentValidator::CATEGORIES];
 		$origin = self::origin();
 
-		return self::object([
+		$modules = [
 			// null if the parents don't want a quiz
 			'quiz' => self::nullable(self::quiz()),
 			'sorting' => self::nullable(self::object([
@@ -249,7 +268,9 @@ class Schemas
 				]]],
 				'origin' => $origin,
 			])),
-		]);
+		];
+
+		return self::object($profile !== null ? array_intersect_key($modules, array_flip($profile->modules())) : $modules);
 	}
 
 	/**

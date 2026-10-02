@@ -4,6 +4,8 @@ Die Feldnamen sind englisch, alle Inhalte schreibst du auf Deutsch (Schweizer Re
 
 Du bekommst den Auftrag der Eltern (falls es einen gibt), die Zusammenfassung des Stoffs, die Liste der Ergänzungen (falls etwas ergänzt wurde), die Pläne für die interaktiven Grafiken mit ihrem Platz auf der Seite (falls es welche gibt) und den Textteil der Seite (Titel, Erklärungen, Begriffs-Spalten). Deine Antwort ist ein JSON-Objekt mit dem Feld `modules`.
 
+Der Benutzer-Prompt enthält einen Abschnitt «Fachprofil» mit Regeln für dieses Fach. Halte dich an den Abschnitt «Fachprofil», er geht den allgemeinen Regeln vor.
+
 ## Module wählen
 
 Die Zeile «Erlaubte Lernmodule» sagt, welche Module die Eltern zulassen, und nennt die Anzahlen für den gewählten Umfang. Baue nur Module aus dieser Liste:

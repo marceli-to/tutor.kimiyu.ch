@@ -91,10 +91,13 @@ class AnalyzeLesson
 		// The whole page is too large for one structured answer, so the modules come separately
 		$lesson->update(['step' => 'modules']);
 		$modules = $this->callModel->handle($lesson, Prompts::modules($lesson, $page))->data['modules'] ?? [];
-		$content = self::assemble($page, self::onlyAllowed($lesson, $modules));
+		$content = self::assemble($lesson, $page, $modules);
+
+		// The subject is known now: profile chosen by the parents or derived from the (detected) subject
+		$profile = $lesson->resolvedProfile();
 
 		// Repair faulty parts once
-		foreach (ContentValidator::errorsByPart($content, strict: true) as $part => $errors) {
+		foreach (ContentValidator::errorsByPart($content, strict: true, profile: $profile) as $part => $errors) {
 			if ($errors === []) {
 				continue;
 			}
@@ -102,11 +105,11 @@ class AnalyzeLesson
 			$repaired = $this->callModel->handle($lesson, Prompts::repair($lesson, $content, $part, $errors))->data[$part] ?? null;
 
 			if (is_array($repaired)) {
-				$content = $part === 'modules' ? self::assemble($content, self::onlyAllowed($lesson, $repaired)) : self::assemble($repaired, $content['modules']);
+				$content = $part === 'modules' ? self::assemble($lesson, $content, $repaired) : self::assemble($lesson, $repaired, $content['modules']);
 			}
 		}
 
-		$errors = ContentValidator::errors($content, strict: true);
+		$errors = ContentValidator::errors($content, strict: true, profile: $profile);
 
 		// After the repair the normal rules are enough; the parents check the rest
 		if ($errors !== [] && ContentValidator::errors($content) !== []) {
@@ -188,22 +191,28 @@ class AnalyzeLesson
 	}
 
 	/**
-	 * Joins text part and modules into one page, in the order of the fixtures.
+	 * Joins text part and modules into one page, in the order of the fixtures. Parts the profile's schema
+	 * leaves out («try_it», modules) become null, so stored content always has the same shape.
 	 *
 	 * @param  array<string, mixed>  $page  text part (or whole page whose modules are replaced)
 	 * @param  array<string, mixed>  $modules
 	 * @return array<string, mixed>
 	 */
-	private static function assemble(array $page, array $modules): array
+	private static function assemble(Lesson $lesson, array $page, array $modules): array
 	{
+		$profile = $lesson->resolvedProfile();
 		$reflect = $page['reflect'] ?? null;
 		unset($page['modules'], $page['reflect']);
 
-		return [...$page, 'modules' => $modules, 'reflect' => $reflect];
+		if (! $profile->allowsExperiments()) {
+			$page['try_it'] = null;
+		}
+
+		return [...$page, 'modules' => self::onlyAllowed($lesson, $modules), 'reflect' => $reflect];
 	}
 
 	/**
-	 * Sets modules the parents didn't allow to null, even if the AI delivers them anyway.
+	 * Sets modules the parents or the profile don't allow to null, even if the AI delivers them anyway.
 	 * If none is left, the content validation reports it like any other error.
 	 *
 	 * @param  array<string, mixed>  $modules
@@ -211,7 +220,9 @@ class AnalyzeLesson
 	 */
 	private static function onlyAllowed(Lesson $lesson, array $modules): array
 	{
-		foreach (array_diff(Lesson::MODULES, $lesson->allowedModules()) as $module) {
+		$allowed = array_intersect($lesson->allowedModules(), $lesson->resolvedProfile()->modules());
+
+		foreach (array_diff(Lesson::MODULES, $allowed) as $module) {
 			$modules[$module] = null;
 		}
 

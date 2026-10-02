@@ -10,7 +10,8 @@ use Illuminate\Validation\Validator;
  * Validates the content of a lesson (schema version 1).
  *
  * Non-strict: what a page needs to be shown and edited.
- * Strict: additionally the didactic rules from SKILL.md that apply to freshly generated pages.
+ * Strict: additionally the didactic rules from SKILL.md that apply to freshly generated pages,
+ * and with a profile only its blocks, modules and experiments. Non-strict tolerates them, so old content never breaks.
  */
 class ContentValidator
 {
@@ -27,16 +28,16 @@ class ContentValidator
 	/**
 	 * @param  array<string, mixed>  $content
 	 */
-	public static function make(array $content, bool $strict = false): Validator
+	public static function make(array $content, bool $strict = false, ?Profile $profile = null): Validator
 	{
 		$validator = ValidatorFactory::make($content, self::rules($strict), [], self::attributes());
 
-		$validator->after(function (Validator $validator) use ($content, $strict) {
+		$validator->after(function (Validator $validator) use ($content, $strict, $profile) {
 			if ($validator->errors()->isNotEmpty()) {
 				return;
 			}
 
-			(new self($validator, $content, $strict))->checkConsistency();
+			(new self($validator, $content, $strict, $profile))->checkConsistency();
 		});
 
 		return $validator;
@@ -46,9 +47,9 @@ class ContentValidator
 	 * @param  array<string, mixed>  $content
 	 * @return list<string>
 	 */
-	public static function errors(array $content, bool $strict = false): array
+	public static function errors(array $content, bool $strict = false, ?Profile $profile = null): array
 	{
-		return array_values(self::make($content, $strict)->errors()->all());
+		return array_values(self::make($content, $strict, $profile)->errors()->all());
 	}
 
 	/**
@@ -57,11 +58,11 @@ class ContentValidator
 	 * @param  array<string, mixed>  $content
 	 * @return array{page: list<string>, modules: list<string>}
 	 */
-	public static function errorsByPart(array $content, bool $strict = false): array
+	public static function errorsByPart(array $content, bool $strict = false, ?Profile $profile = null): array
 	{
 		$parts = ['page' => [], 'modules' => []];
 
-		foreach (self::make($content, $strict)->errors()->toArray() as $key => $messages) {
+		foreach (self::make($content, $strict, $profile)->errors()->toArray() as $key => $messages) {
 			$part = str_starts_with((string) $key, 'modules') ? 'modules' : 'page';
 			array_push($parts[$part], ...$messages);
 		}
@@ -209,6 +210,7 @@ class ContentValidator
 		private Validator $validator,
 		private array $content,
 		private bool $strict,
+		private ?Profile $profile,
 	) {}
 
 	private function checkConsistency(): void
@@ -223,6 +225,10 @@ class ContentValidator
 
 		if ($this->strict) {
 			$this->checkStrictRules();
+		}
+
+		if ($this->strict && $this->profile !== null) {
+			$this->checkProfile($this->profile);
 		}
 	}
 
@@ -389,6 +395,30 @@ class ContentValidator
 			if (array_diff(array_column($section['blocks'], 'type'), ['graphic']) === []) {
 				$this->fail("sections.$i", "Abschnitt «{$section['title']}»: Eine Grafik braucht erklärenden Text daneben.");
 			}
+		}
+	}
+
+	/**
+	 * A fresh page uses only the blocks, modules and experiments of its profile.
+	 */
+	private function checkProfile(Profile $profile): void
+	{
+		foreach ($this->content['sections'] as $i => $section) {
+			foreach ($section['blocks'] as $j => $block) {
+				if (! in_array($block['type'], $profile->blocks(), true)) {
+					$this->fail("sections.$i.blocks.$j", "Das Fachprofil «{$profile->label()}» hat keine Bausteine vom Typ «{$block['type']}».");
+				}
+			}
+		}
+
+		foreach ($this->content['modules'] as $module => $value) {
+			if ($value !== null && ! in_array($module, $profile->modules(), true)) {
+				$this->fail("modules.$module", "Das Fachprofil «{$profile->label()}» hat kein Lernmodul «{$module}».");
+			}
+		}
+
+		if ($this->content['try_it'] !== null && ! $profile->allowsExperiments()) {
+			$this->fail('try_it', "Das Fachprofil «{$profile->label()}» hat keine Experimente («Ausprobieren»).");
 		}
 	}
 

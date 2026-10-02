@@ -5,6 +5,7 @@ namespace App\Lessons\Ai;
 use App\Lessons\GraphicPattern;
 use App\Lessons\LessonView;
 use App\Lessons\Palettes;
+use App\Lessons\Profile;
 use App\Models\Lesson;
 use App\Models\LessonGraphic;
 use Database\Factories\LessonFactory;
@@ -62,11 +63,19 @@ class Prompts
 	 */
 	public static function pageRequest(Lesson $lesson, array $images): ModelRequest
 	{
-		$system = self::analysisSystem(['page' => self::page(LessonFactory::fixture('fotosynthese'))]);
+		$profile = $lesson->resolvedProfile();
+		$page = self::page(LessonFactory::fixture($profile->fixture()));
+
+		if (! $profile->allowsExperiments()) {
+			unset($page['try_it']);
+		}
+
+		$system = self::analysisSystem(['page' => $page]);
 
 		$parts = [
 			'Schritt 2 von 2: Liefere nur `page`, den Textteil der Lernseite. Quelle, Zusammenfassung, Ergänzungen und die Pläne für die Grafiken stehen fest (unten), halte dich daran.',
 			self::sourceLines($lesson, count($images)),
+			self::profileSection($profile),
 			"Zusammenfassung des Stoffs:\n{$lesson->source_summary}",
 		];
 
@@ -80,7 +89,7 @@ class Prompts
 			step: 'page',
 			system: $system,
 			prompt: implode("\n\n", $parts),
-			schema: Schemas::part('page'),
+			schema: Schemas::part('page', $profile),
 			maxTokens: config('lessons.max_tokens.page'),
 			images: $images,
 		);
@@ -135,9 +144,8 @@ class Prompts
 	 */
 	public static function modules(Lesson $lesson, array $page): ModelRequest
 	{
-		$system = strtr(self::load('modules'), [
-			'{{BEISPIEL}}' => self::json(['modules' => LessonFactory::fixture('fotosynthese')['modules']]),
-		]);
+		$profile = $lesson->resolvedProfile();
+		$system = self::modulesSystem($profile);
 
 		return new ModelRequest(
 			step: 'modules',
@@ -147,7 +155,7 @@ class Prompts
 				self::graphicPlansText($lesson, $page),
 				"Textteil der Lernseite:\n".self::json($page),
 			]),
-			schema: Schemas::modulesResult(),
+			schema: Schemas::modulesResult($profile),
 			maxTokens: config('lessons.max_tokens.modules'),
 		);
 	}
@@ -157,9 +165,7 @@ class Prompts
 	 */
 	public static function quiz(Lesson $lesson): ModelRequest
 	{
-		$system = strtr(self::load('modules'), [
-			'{{BEISPIEL}}' => self::json(['modules' => LessonFactory::fixture('fotosynthese')['modules']]),
-		]);
+		$system = self::modulesSystem($lesson->resolvedProfile());
 
 		$count = self::scopeCounts($lesson)['quiz'];
 
@@ -175,6 +181,26 @@ class Prompts
 			schema: Schemas::quizResult(),
 			maxTokens: config('lessons.max_tokens.modules'),
 		);
+	}
+
+	/**
+	 * Rules for the modules with the example of the profile, the offered modules only.
+	 */
+	private static function modulesSystem(Profile $profile): string
+	{
+		$modules = LessonFactory::fixture($profile->fixture())['modules'];
+
+		return strtr(self::load('modules'), [
+			'{{BEISPIEL}}' => self::json(['modules' => array_intersect_key($modules, array_flip($profile->modules()))]),
+		]);
+	}
+
+	/**
+	 * The profile with its addendum; it takes precedence over the general rules (analysis.md, modules.md).
+	 */
+	private static function profileSection(Profile $profile): string
+	{
+		return "Fachprofil: {$profile->label()}\n\n".trim(File::get($profile->promptFile()));
 	}
 
 	/**
@@ -195,7 +221,7 @@ class Prompts
 				"Diese Fehler müssen behoben werden:\n- ".implode("\n- ", $errors),
 				"Ganze Lernseite:\n".self::json($content),
 			])),
-			schema: Schemas::part($part),
+			schema: Schemas::part($part, $lesson->resolvedProfile()),
 			maxTokens: config('lessons.max_tokens.repair'),
 		);
 	}
@@ -321,7 +347,9 @@ class Prompts
 		$lines = $plans->isNotEmpty() ? ["Geplante Grafiken:\n\n".$plans->implode("\n\n")] : [];
 
 		if (! $graphics->contains('position', 1)) {
-			$lines[] = 'Diese Seite hat keine Grafik 1: `try_it` ist null, `meta.instructions` sagt in einem Satz, worum es geht.';
+			$lines[] = $lesson->resolvedProfile()->allowsExperiments()
+				? 'Diese Seite hat keine Grafik 1: `try_it` ist null, `meta.instructions` sagt in einem Satz, worum es geht.'
+				: 'Diese Seite hat keine Grafik 1: `meta.instructions` sagt in einem Satz, worum es geht.';
 		}
 
 		$lines[] = $graphics->contains(fn (LessonGraphic $graphic) => $graphic->position > 1)
@@ -372,12 +400,15 @@ class Prompts
 	/**
 	 * Part shared by all steps after the analysis: subject, level, purpose, scope, modules, request, summary and additions.
 	 * For parts the child sees ($forChild, e.g. the graphic) without additions and without the «(ergänzt)» mark;
-	 * purpose, scope and modules don't matter there and are left out.
+	 * purpose, scope and modules don't matter there and are left out, and of the profile only the label.
 	 */
 	private static function context(Lesson $lesson, bool $forChild = false): string
 	{
+		$profile = $lesson->resolvedProfile();
+
 		$header = implode("\n", array_filter([
 			"Fach: {$lesson->subject}",
+			$forChild ? "Fachprofil: {$profile->label()}" : null,
 			"Stufe: {$lesson->level}",
 			$forChild ? null : self::purposeLine($lesson),
 			$forChild ? null : self::scopeLine($lesson),
@@ -391,7 +422,7 @@ class Prompts
 			? (string) preg_replace('/\s*\(ergänzt\)/u', '', (string) $lesson->source_summary)
 			: $lesson->source_summary;
 
-		$parts = [$header, "Zusammenfassung des Stoffs:\n{$summary}"];
+		$parts = array_filter([$header, $forChild ? null : self::profileSection($profile), "Zusammenfassung des Stoffs:\n{$summary}"]);
 
 		if ($lesson->additions && ! $forChild) {
 			$parts[] = "Ergänzt (nicht auf den Fotos):\n- ".implode("\n- ", $lesson->additions);
@@ -430,7 +461,9 @@ class Prompts
 			'cloze' => "Lückentext ({$counts['gaps']} Lücken)",
 		];
 
-		return 'Erlaubte Lernmodule: '.implode(', ', array_intersect_key($labels, array_flip($lesson->allowedModules())));
+		$allowed = array_intersect($lesson->allowedModules(), $lesson->resolvedProfile()->modules());
+
+		return 'Erlaubte Lernmodule: '.implode(', ', array_intersect_key($labels, array_flip($allowed)));
 	}
 
 	/**

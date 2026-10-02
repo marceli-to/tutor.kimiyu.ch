@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\LessonStatus;
+use App\Lessons\Profile;
 use Database\Factories\LessonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Support\Str;
  * @property string|null $title
  * @property string|null $subject Empty until the AI has detected the subject
  * @property bool $subject_detected The AI detected the subject; the parents did not give one
+ * @property Profile|null $profile Chosen by the parents; null: derived from the subject
  * @property string $level
  * @property string|null $topic
  * @property string|null $notes
@@ -41,7 +43,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at Soft-deleted: photos are gone, the costs are kept
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'profile', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
 {
 	/** @use HasFactory<LessonFactory> */
@@ -78,6 +80,7 @@ class Lesson extends Model
 			'status' => LessonStatus::class,
 			'photo_count' => 'integer',
 			'subject_detected' => 'boolean',
+			'profile' => Profile::class,
 			'content' => 'array',
 			'check_notes' => 'array',
 			'additions' => 'array',
@@ -102,6 +105,15 @@ class Lesson extends Model
 	public function allowedModules(): array
 	{
 		return $this->modules ?? self::MODULES;
+	}
+
+	/**
+	 * The parents' profile, otherwise the one of the subject. Not stored: a subject the AI
+	 * detects again on a retry brings its own profile, and old lessons have none.
+	 */
+	public function resolvedProfile(): Profile
+	{
+		return $this->profile ?? Profile::forSubject($this->subject);
 	}
 
 	/**
