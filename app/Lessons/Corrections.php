@@ -9,6 +9,10 @@ namespace App\Lessons;
  * Korrekturen am selben Eintrag (gleicher Pointer ohne letztes Segment, z. B. /module/quiz/0) gehören zusammen:
  * Optionen und Lösung einer Quizfrage etwa sind nur gemeinsam gültig. Jede Gruppe wird darum als Ganzes
  * angewendet und nur behalten, wenn die Seite danach gültig ist; sonst wird die ganze Gruppe verworfen.
+ *
+ * Ersetzt werden nur einzelne Werte (Text, Zahl, Wahrheitswert) und Listen aus Texten oder Zahlen
+ * (z. B. optionen, loesungen), jeweils mit dem gleichen Typ wie bisher. Ganze Objekte, Module, Listen
+ * von Objekten und leere Felder (null) bleiben unangetastet, und kein Wert wird auf null gesetzt.
  */
 class Corrections
 {
@@ -125,20 +129,59 @@ class Corrections
             return $node;
         }
 
-        if (is_string($node[$index])) {
-            $node[$index] = $value;
+        $converted = self::convert($node[$index], $value);
 
-            return $node;
+        if ($converted === null) {
+            return null;
+        }
+
+        $node[$index] = $converted;
+
+        return $node;
+    }
+
+    /**
+     * Wandelt den neuen Wert in den Typ des bisherigen um.
+     *
+     * Texte dürfen direkt oder als JSON-Text kommen; Zahlen, Wahrheitswerte und Listen aus Texten als JSON.
+     * Objekte, Listen von Objekten und leere Felder (null) werden nie ersetzt.
+     *
+     * @return string|int|float|bool|list<string|int|float>|null null, wenn der Wert nicht passt
+     */
+    private static function convert(mixed $old, string $value): string|int|float|bool|array|null
+    {
+        if (is_string($old)) {
+            $decoded = json_decode($value);
+
+            return is_string($decoded) ? $decoded : $value;
         }
 
         $decoded = json_decode($value, true);
 
-        if ($decoded === null && trim($value) !== 'null') {
-            return null;
+        return match (true) {
+            is_int($old) => is_int($decoded) ? $decoded : null,
+            is_float($old) => is_int($decoded) || is_float($decoded) ? $decoded : null,
+            is_bool($old) => is_bool($decoded) ? $decoded : null,
+            self::isScalarList($old) => self::isScalarList($decoded) && $decoded !== [] ? $decoded : null,
+            default => null,
+        };
+    }
+
+    /**
+     * @phpstan-assert-if-true list<string|int|float> $value
+     */
+    private static function isScalarList(mixed $value): bool
+    {
+        if (! is_array($value) || ! array_is_list($value)) {
+            return false;
         }
 
-        $node[$index] = $decoded;
+        foreach ($value as $item) {
+            if (! is_string($item) && ! is_int($item) && ! is_float($item)) {
+                return false;
+            }
+        }
 
-        return $node;
+        return true;
     }
 }
