@@ -29,10 +29,11 @@ defineProps<{
         totalUsd: number;
     }[];
     lessons: {
-        id: number;
+        id: number | null;
         title: string;
-        child: string;
+        child: string | null;
         date: string;
+        deleted: boolean;
         calls: number;
         failed: number;
         outputTokens: number;
@@ -233,15 +234,35 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="l in lessons" :key="l.id" class="border-t">
+                        <tr
+                            v-for="l in lessons"
+                            :key="l.id ?? 'geloescht'"
+                            class="border-t"
+                        >
                             <td class="px-4 py-2">
+                                <span
+                                    v-if="l.deleted || l.id === null"
+                                    class="font-medium"
+                                    >{{ l.title }}</span
+                                >
                                 <Link
+                                    v-else
                                     :href="show(l.id)"
                                     class="font-medium hover:underline"
                                     >{{ l.title }}</Link
                                 >
-                                <span class="block text-muted-foreground"
-                                    >{{ l.child }} · {{ l.date }}</span
+                                <span
+                                    v-if="l.child"
+                                    class="block text-muted-foreground"
+                                    >{{ l.child }} · {{ l.date
+                                    }}<template v-if="l.deleted">
+                                        · gelöscht</template
+                                    ></span
+                                >
+                                <span
+                                    v-else
+                                    class="block text-muted-foreground italic"
+                                    >gelöscht</span
                                 >
                             </td>
                             <td class="px-4 py-2 text-right tabular-nums">
