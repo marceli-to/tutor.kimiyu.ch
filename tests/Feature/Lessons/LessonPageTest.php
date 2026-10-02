@@ -25,6 +25,23 @@ it('shows a lesson to the parent', function () {
         );
 });
 
+it('shows a lesson without quiz to the parent and the child', function () {
+    $content = $this->lesson->content;
+    $content['module']['quiz'] = null;
+    $this->lesson->update(['content' => $content]);
+
+    $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('lesson.content.module.quiz', null)
+            ->where('parent.canRegenerate.quiz', false)
+        );
+
+    $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('lesson.content.module.quiz', null));
+});
+
 it('hides a lesson from other parents', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('lessons.show', $this->lesson))

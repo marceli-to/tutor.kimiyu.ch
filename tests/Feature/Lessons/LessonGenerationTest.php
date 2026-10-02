@@ -179,7 +179,7 @@ it('tells the system prompts to keep the origin marker away from the child', fun
 
 it('tells the repair to keep origin and ids', function () {
     $broken = LessonFactory::fixture('fotosynthese');
-    array_pop($broken['module']['quiz']);
+    $broken['module']['quiz'] = array_slice($broken['module']['quiz'], 0, 2);
     $this->fake->push('module', ['module' => $broken['module']]);
 
     upload();
@@ -313,7 +313,7 @@ it('keeps going when the check call fails', function () {
 
 it('repairs invalid content once', function () {
     $broken = LessonFactory::fixture('fotosynthese');
-    array_pop($broken['module']['quiz']);
+    $broken['module']['quiz'] = array_slice($broken['module']['quiz'], 0, 2);
 
     $this->fake->push('module', ['module' => $broken['module']]);
 
@@ -322,7 +322,7 @@ it('repairs invalid content once', function () {
     $repair = $this->fake->requestsFor('reparatur-module');
     expect($repair)->toHaveCount(1)
         ->and($this->fake->requestsFor('reparatur-seite'))->toBe([])
-        ->and($repair[0]->prompt)->toContain('Das Feld module.quiz muss 5 Elemente enthalten.')
+        ->and($repair[0]->prompt)->toContain('Das Feld module.quiz muss mindestens 3 Elemente haben.')
         ->toContain('Gib diesen Teil korrigiert zurück: module')
         ->toContain('Zusammenfassung des Stoffs:')
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review)

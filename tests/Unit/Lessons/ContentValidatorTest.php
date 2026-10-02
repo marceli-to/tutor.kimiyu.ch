@@ -147,13 +147,22 @@ it('rejects an unknown origin on a sorting term', function () {
 });
 
 describe('strict mode', function () {
-    it('requires exactly five quiz questions', function () {
+    it('requires between three and eight quiz questions', function (int $count, bool $valid) {
         $content = lessonFixture();
-        array_pop($content['module']['quiz']);
+        $question = $content['module']['quiz'][0];
+        $content['module']['quiz'] = array_map(
+            fn (int $i) => [...$question, 'id' => 'q'.($i + 1), 'loesung' => $i % 3],
+            range(0, $count - 1),
+        );
 
         expect(ContentValidator::make($content)->passes())->toBeTrue()
-            ->and(ContentValidator::make($content, strict: true)->errors()->has('module.quiz'))->toBeTrue();
-    });
+            ->and(ContentValidator::make($content, strict: true)->passes())->toBe($valid);
+    })->with([
+        'two' => [2, false],
+        'three' => [3, true],
+        'eight' => [8, true],
+        'nine' => [9, false],
+    ]);
 
     it('rejects answers that are always in the same position', function () {
         $content = lessonFixture();
@@ -166,14 +175,46 @@ describe('strict mode', function () {
             ->toContain('Quiz: Die richtige Antwort steht immer an derselben Position.');
     });
 
-    it('requires at least one module besides the quiz', function () {
+    it('accepts a quiz as the only module', function () {
         $content = lessonFixture();
+        $content['module']['sortieren'] = null;
         $content['module']['karten'] = null;
         $content['module']['lueckentext'] = null;
 
-        expect(ContentValidator::errors($content, strict: true))
-            ->toContain('Neben dem Quiz braucht es mindestens ein weiteres Modul (Sortieren, Karteikarten oder Lückentext).');
+        expect(ContentValidator::errors($content, strict: true))->toBe([]);
     });
+});
+
+describe('optional quiz', function () {
+    it('accepts a page without quiz but with flashcards', function (bool $strict) {
+        $content = lessonFixture();
+        $content['module']['quiz'] = null;
+
+        expect($content['module']['karten'])->not->toBeNull()
+            ->and(ContentValidator::errors($content, strict: $strict))->toBe([]);
+    })->with(['non-strict' => false, 'strict' => true]);
+
+    it('still needs the quiz key', function () {
+        $content = lessonFixture();
+        unset($content['module']['quiz']);
+
+        expect(ContentValidator::make($content)->errors()->has('module.quiz'))->toBeTrue();
+    });
+
+    it('rejects an empty quiz list', function () {
+        $content = lessonFixture();
+        $content['module']['quiz'] = [];
+
+        expect(ContentValidator::make($content)->errors()->has('module.quiz'))->toBeTrue();
+    });
+
+    it('rejects a page without any module', function (bool $strict) {
+        $content = lessonFixture();
+        $content['module'] = ['quiz' => null, 'sortieren' => null, 'karten' => null, 'lueckentext' => null];
+
+        expect(ContentValidator::errors($content, strict: $strict))->toContain('Die Seite braucht mindestens ein Lernmodul.')
+            ->and(ContentValidator::errorsByPart($content, strict: $strict)['module'])->toContain('Die Seite braucht mindestens ein Lernmodul.');
+    })->with(['non-strict' => false, 'strict' => true]);
 });
 
 describe('graphic blocks', function () {

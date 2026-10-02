@@ -74,13 +74,14 @@ class GenerationPipeline
     }
 
     /**
-     * Eine Grafik lässt sich nur neu erstellen, wenn es für sie einen Plan gibt.
+     * Eine Grafik lässt sich nur neu erstellen, wenn es für sie einen Plan gibt, das Quiz nur, wenn es eines gibt.
      */
     public static function canRegenerate(Lesson $lesson, string $part, int $position = 1): bool
     {
         return in_array($lesson->status, [LessonStatus::Review, LessonStatus::Published], true)
             && $lesson->content !== null
-            && ($part !== 'grafik' || $lesson->graphic($position)?->plan !== null);
+            && ($part !== 'grafik' || $lesson->graphic($position)?->plan !== null)
+            && ($part !== 'quiz' || ! empty($lesson->content['module']['quiz']));
     }
 
     /**

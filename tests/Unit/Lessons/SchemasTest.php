@@ -14,7 +14,16 @@ it('only uses features the structured output supports', function (array $schema)
     'repair modules' => fn () => Schemas::part('module'),
     'check' => fn () => Schemas::checkResult(),
     'hero' => fn () => Schemas::hero(),
+    'quiz' => fn () => Schemas::quizResult(),
 ]);
+
+it('allows modules without quiz but a new quiz always has questions', function () {
+    $modules = FakeLanguageModel::defaultResponse('module');
+    $modules['module']['quiz'] = null;
+
+    expect(JsonSchema::errors($modules, Schemas::modulesResult()))->toBe([])
+        ->and(JsonSchema::errors(['quiz' => null], Schemas::quizResult()))->not->toBe([]);
+});
 
 it('never sends the whole page as one schema', function () {
     // Die API lehnt das Schema der ganzen Seite ab: «The compiled grammar is too large»
@@ -30,7 +39,7 @@ it('has a list of additions in the analysis and an origin on every item', functi
 
     expect($analysis)->toHaveKey('ergaenzungen')
         ->and($analysis['ergaenzungen']['items'])->toBe(['type' => 'string'])
-        ->and($modules['quiz']['items']['properties']['herkunft'])->toMatchArray($origin)
+        ->and($modules['quiz']['anyOf'][0]['items']['properties']['herkunft'])->toMatchArray($origin)
         ->and($modules['sortieren']['anyOf'][0]['properties']['begriffe']['items']['properties']['herkunft'])->toMatchArray($origin)
         ->and($modules['karten']['anyOf'][0]['properties']['eintraege']['items']['properties']['herkunft'])->toMatchArray($origin)
         ->and($modules['lueckentext']['anyOf'][0]['properties']['herkunft'])->toMatchArray($origin);

@@ -365,6 +365,16 @@ describe('regenerating', function () {
         expect($this->fake->requests)->toBe([]);
     });
 
+    it('does not create a quiz for a page without one', function () {
+        $content = $this->lesson->content;
+        $content['module']['quiz'] = null;
+        $this->lesson->update(['content' => $content]);
+
+        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']))->assertStatus(422);
+
+        expect($this->fake->requests)->toBe([]);
+    });
+
     it('is not possible while the lesson is being generated', function () {
         $this->lesson->update(['status' => LessonStatus::Generating]);
 

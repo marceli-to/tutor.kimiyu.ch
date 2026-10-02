@@ -97,7 +97,8 @@ class ContentValidator
 
             'module' => ['required', 'array'],
 
-            'module.quiz' => $strict ? ['required', 'array', 'size:5'] : ['required', 'array', 'min:1', 'max:10'],
+            // Das Quiz ist optional; die genaue Anzahl Fragen gibt der Prompt je nach Umfang vor
+            'module.quiz' => $strict ? ['present', 'nullable', 'array', 'min:3', 'max:8'] : ['present', 'nullable', 'array', 'min:1', 'max:10'],
             'module.quiz.*.id' => ['required', 'string', 'max:20'],
             'module.quiz.*.frage' => ['required', 'string', 'max:300'],
             'module.quiz.*.optionen' => ['required', 'array', 'min:3', 'max:4'],
@@ -150,6 +151,7 @@ class ContentValidator
     private function checkConsistency(): void
     {
         $this->checkBlocks();
+        $this->checkModules();
         $this->checkQuiz();
         $this->checkSort();
         $this->checkCloze();
@@ -192,9 +194,16 @@ class ContentValidator
         }
     }
 
+    private function checkModules(): void
+    {
+        if (array_filter(array_intersect_key($this->content['module'], array_flip(['quiz', 'sortieren', 'karten', 'lueckentext']))) === []) {
+            $this->fail('module', 'Die Seite braucht mindestens ein Lernmodul.');
+        }
+    }
+
     private function checkQuiz(): void
     {
-        foreach ($this->content['module']['quiz'] as $i => $question) {
+        foreach ($this->content['module']['quiz'] ?? [] as $i => $question) {
             $options = $question['optionen'];
 
             if ($question['loesung'] >= count($options)) {
@@ -273,7 +282,7 @@ class ContentValidator
         $module = $this->content['module'];
 
         $ids = [
-            ...array_column($module['quiz'], 'id'),
+            ...array_column($module['quiz'] ?? [], 'id'),
             ...array_column($module['sortieren']['begriffe'] ?? [], 'id'),
             ...array_column($module['karten']['eintraege'] ?? [], 'id'),
             ...array_column(array_filter($module['lueckentext']['segmente'] ?? [], fn ($s) => isset($s['id'])), 'id'),
@@ -307,13 +316,10 @@ class ContentValidator
     {
         $module = $this->content['module'];
 
-        $positions = array_column($module['quiz'], 'loesung');
-        if (count(array_unique($positions)) === 1) {
+        // Bei weniger als 3 Fragen kann die Position zufällig gleich sein
+        $positions = array_column($module['quiz'] ?? [], 'loesung');
+        if (count($positions) >= 3 && count(array_unique($positions)) === 1) {
             $this->fail('module.quiz', 'Quiz: Die richtige Antwort steht immer an derselben Position.');
-        }
-
-        if ($module['sortieren'] === null && $module['karten'] === null && $module['lueckentext'] === null) {
-            $this->fail('module', 'Neben dem Quiz braucht es mindestens ein weiteres Modul (Sortieren, Karteikarten oder Lückentext).');
         }
 
         foreach ($this->content['abschnitte'] as $i => $section) {

@@ -150,7 +150,7 @@ function toggleTheme() {
                 />
             </section>
 
-            <section>
+            <section v-if="module.quiz?.length">
                 <h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
                     Teste dich selbst
                 </h2>

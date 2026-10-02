@@ -151,6 +151,22 @@ describe('pages', function () {
             );
     });
 
+    it('works for a lesson without quiz', function () {
+        $content = $this->eco->content;
+        $content['module']['quiz'] = null;
+        $this->eco->update(['content' => $content]);
+        attempts($this->child, $this->eco, 'sortieren', 's6', [true, true]);
+
+        expect(Progress::forLesson($this->child, $this->eco->fresh()))->toHaveCount(12);
+
+        $this->actingAs($this->user)->get(route('children.progress', $this->child))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lessons.1.total', 12)
+                ->where('lessons.1.counts.sitzt', 1)
+            );
+    });
+
     it('keeps the progress private to the parent', function () {
         $this->actingAs(User::factory()->create())->get(route('children.progress', $this->child))->assertForbidden();
     });

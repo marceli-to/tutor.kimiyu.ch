@@ -54,7 +54,7 @@ class Schemas
      */
     public static function quizResult(): array
     {
-        return self::object(['quiz' => self::modules()['properties']['quiz']]);
+        return self::object(['quiz' => self::quiz()]);
     }
 
     /**
@@ -181,6 +181,29 @@ class Schemas
     }
 
     /**
+     * Fragen des Quiz.
+     *
+     * @return array<string, mixed>
+     */
+    private static function quiz(): array
+    {
+        $text = ['type' => 'string'];
+
+        return [
+            'type' => 'array',
+            'items' => self::object([
+                'id' => $text,
+                'frage' => $text,
+                'optionen' => ['type' => 'array', 'items' => $text],
+                'loesung' => ['type' => 'integer', 'description' => 'Index der richtigen Option, 0-basiert'],
+                'tipp' => self::nullable($text),
+                'erklaerung' => $text,
+                'herkunft' => self::origin(),
+            ]),
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function modules(): array
@@ -191,18 +214,8 @@ class Schemas
         $origin = self::origin();
 
         return self::object([
-            'quiz' => [
-                'type' => 'array',
-                'items' => self::object([
-                    'id' => $text,
-                    'frage' => $text,
-                    'optionen' => $texts,
-                    'loesung' => ['type' => 'integer', 'description' => 'Index der richtigen Option, 0-basiert'],
-                    'tipp' => self::nullable($text),
-                    'erklaerung' => $text,
-                    'herkunft' => $origin,
-                ]),
-            ],
+            // null, wenn die Eltern kein Quiz wollen
+            'quiz' => self::nullable(self::quiz()),
             'sortieren' => self::nullable(self::object([
                 'anleitung' => self::nullable($text),
                 'kategorien' => ['type' => 'array', 'items' => self::object([

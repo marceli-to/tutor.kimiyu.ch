@@ -90,7 +90,7 @@ const categories: { value: CategoryId; label: string }[] = [
 ];
 
 function addQuestion() {
-    c.value.module.quiz.push({
+    c.value.module.quiz?.push({
         id: newId('q'),
         frage: '',
         optionen: ['', '', '', ''],
@@ -325,7 +325,8 @@ function save() {
             />
         </section>
 
-        <section class="space-y-4">
+        <!-- Ohne Quiz kein Editor; ein Quiz hinzufügen gehört nicht hierher -->
+        <section v-if="c.module.quiz" class="space-y-4">
             <h2 class="text-lg font-semibold">Quiz</h2>
             <InputError :message="err('module.quiz')" />
             <fieldset

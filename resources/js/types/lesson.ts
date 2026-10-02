@@ -72,7 +72,8 @@ export type LessonContent = {
         alltagsvergleich?: string | null;
     } | null;
     module: {
-        quiz: QuizQuestion[];
+        // null, wenn die Eltern kein Quiz wollten
+        quiz: QuizQuestion[] | null;
         sortieren: SortModuleData | null;
         karten: FlashcardModuleData | null;
         lueckentext: ClozeModuleData | null;
