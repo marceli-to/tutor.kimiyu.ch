@@ -333,13 +333,52 @@ describe('display', function () {
     it('keeps appending a finished graphic that never had a block', function () {
         $this->lesson->update(['content' => withoutGraphicBlock($this->lesson->content, 2)]);
 
-        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $this->lesson->content])
-            ->assertSessionHasNoErrors();
-
-        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeFalse();
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'grafik'), 'nr') === [2])
+            );
+    });
+
+    it('shows a graphic without a block in the edit view, so the parent can keep or hide it', function () {
+        $this->lesson->update(['content' => withoutGraphicBlock($this->lesson->content, 2)]);
+
+        $edited = null;
+        $this->actingAs($this->user)->get(route('lessons.edit', $this->lesson))
+            ->assertInertia(function (Assert $page) use (&$edited) {
+                $page->where('lesson.content', function ($content) use (&$edited) {
+                    $edited = $content->toArray();
+
+                    $numbers = array_column(blocksOfType($edited, 'grafik'), 'nr');
+                    sort($numbers);
+
+                    return $numbers === [2, 3];
+                });
+            });
+
+        // Unverändert speichern: Grafik 2 bleibt sichtbar und hat jetzt einen festen Platz
+        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $edited])
+            ->assertSessionHasNoErrors();
+        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeFalse();
+
+        // Ohne den Baustein speichern: ausgeblendet
+        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => withoutGraphicBlock($edited, 2)])
+            ->assertSessionHasNoErrors();
+        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeTrue();
+    });
+
+    it('places a graphic without a block in a section that still has room', function () {
+        $content = withoutGraphicBlock($this->lesson->content, 2);
+        $last = array_key_last($content['abschnitte']);
+        $content['abschnitte'][$last]['bloecke'] = array_fill(0, 4, ['typ' => 'absatz', 'text' => 'Text.', 'herkunft' => 'foto']);
+        $this->lesson->update(['content' => $content]);
+
+        $this->actingAs($this->user)->get(route('lessons.edit', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.content', function ($content) use ($last) {
+                    $blocks = collect(blocksOfType($content->toArray(), 'grafik'))->firstWhere('nr', 2);
+
+                    return $blocks !== null && $blocks['abschnitt'] !== $last;
+                })
             );
     });
 

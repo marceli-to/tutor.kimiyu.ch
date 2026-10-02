@@ -35,7 +35,7 @@ class LessonContentController extends Controller
                 'id' => $lesson->id,
                 'status' => $lesson->status->value,
                 'childName' => $lesson->child->name,
-                'content' => $lesson->content,
+                'content' => $this->withUnplacedGraphics($lesson, $lesson->content),
             ],
             'showOrigin' => ! $lesson->isFromTopic(),
             'clozeMarkup' => $cloze ? ClozeParser::toMarkup($cloze['segmente']) : null,
@@ -84,7 +84,8 @@ class LessonContentController extends Controller
             );
         }
 
-        $this->hideRemovedGraphics($lesson, $lesson->content, $content);
+        // Verglichen wird mit dem, was die Bearbeiten-Ansicht gezeigt hat, inklusive der Grafiken ohne festen Platz
+        $this->hideRemovedGraphics($lesson, $this->withUnplacedGraphics($lesson, $lesson->content), $content);
 
         $lesson->update([
             'title' => $content['meta']['titel'],
@@ -134,6 +135,41 @@ class LessonContentController extends Controller
         if ($after !== []) {
             $lesson->graphics()->whereIn('position', $after)->update(['hidden' => false]);
         }
+    }
+
+    /**
+     * Fertige, sichtbare Grafiken 2 und 3 ohne Baustein zeigt die Seite am Ende des letzten Abschnitts.
+     * In der Bearbeiten-Ansicht bekommen sie einen Baustein, damit die Eltern sie ausblenden können.
+     * Er kommt in den letzten Abschnitt, der noch Platz hat (höchstens 4 Bausteine pro Abschnitt).
+     *
+     * @param  array<string, mixed>  $content
+     * @return array<string, mixed>
+     */
+    private function withUnplacedGraphics(Lesson $lesson, array $content): array
+    {
+        $placed = $this->graphicBlocks($content);
+
+        $unplaced = $lesson->graphics
+            ->filter(fn (LessonGraphic $graphic) => $graphic->position > 1
+                && $graphic->graphic !== null
+                && ! $graphic->hidden
+                && ! in_array($graphic->position, $placed, true))
+            ->pluck('position');
+
+        foreach ($unplaced as $nr) {
+            $section = collect($content['abschnitte'] ?? [])
+                ->filter(fn (array $section) => count($section['bloecke'] ?? []) < 4)
+                ->keys()
+                ->last();
+
+            if ($section === null) {
+                break;
+            }
+
+            $content['abschnitte'][$section]['bloecke'][] = ['typ' => 'grafik', 'nr' => $nr];
+        }
+
+        return $content;
     }
 
     /**
