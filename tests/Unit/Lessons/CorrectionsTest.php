@@ -54,3 +54,29 @@ it('keeps valid corrections and drops the ones that break the content', function
         ->and($result['applied'])->toHaveCount(1)
         ->and($result['rejected'])->toHaveCount(1);
 });
+
+it('applies corrections of the same item together', function () {
+    $this->content['module']['quiz'][0]['loesung'] = 3;
+
+    $result = Corrections::apply($this->content, [
+        correction('/module/quiz/0/optionen', '["Sauerstoff und Wasser","Kohlenstoffdioxid und Wasser","Traubenzucker und Sauerstoff"]'),
+        correction('/module/quiz/0/loesung', '1'),
+    ]);
+
+    expect($result['content']['module']['quiz'][0]['optionen'])->toHaveCount(3)
+        ->and($result['content']['module']['quiz'][0]['loesung'])->toBe(1)
+        ->and($result['applied'])->toHaveCount(2)
+        ->and($result['rejected'])->toBe([]);
+});
+
+it('rejects all corrections of an item when one of them is invalid', function () {
+    $result = Corrections::apply($this->content, [
+        correction('/module/quiz/0/tipp', 'Neuer Tipp.'),
+        correction('/module/quiz/0/loesung', '99'),
+    ]);
+
+    expect($result['content'])->toBe($this->content)
+        ->and($result['content']['module']['quiz'][0]['tipp'])->toBe($this->content['module']['quiz'][0]['tipp'])
+        ->and($result['applied'])->toBe([])
+        ->and($result['rejected'])->toHaveCount(2);
+});

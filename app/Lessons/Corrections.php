@@ -6,7 +6,9 @@ namespace App\Lessons;
  * Wendet die Korrekturen des Prüf-Schritts auf eine Lernseite an.
  *
  * Die Prüfung schickt nur, was sie ändert (JSON-Pointer + neuer Wert), statt die ganze Seite neu zu schreiben.
- * Jede Korrektur wird einzeln angewendet und nur behalten, wenn die Seite gültig bleibt.
+ * Korrekturen am selben Eintrag (gleicher Pointer ohne letztes Segment, z. B. /module/quiz/0) gehören zusammen:
+ * Optionen und Lösung einer Quizfrage etwa sind nur gemeinsam gültig. Jede Gruppe wird darum als Ganzes
+ * angewendet und nur behalten, wenn die Seite danach gültig ist; sonst wird die ganze Gruppe verworfen.
  */
 class Corrections
 {
@@ -20,20 +22,51 @@ class Corrections
         $applied = [];
         $rejected = [];
 
-        foreach ($corrections as $correction) {
-            $candidate = self::replace($content, $correction['pfad'], $correction['wert']);
+        foreach (self::groupByItem($corrections) as $group) {
+            $candidate = $content;
+
+            foreach ($group as $correction) {
+                $candidate = self::replace($candidate, $correction['pfad'], $correction['wert']);
+
+                if ($candidate === null) {
+                    break;
+                }
+            }
 
             if ($candidate === null || ContentValidator::errors($candidate) !== []) {
-                $rejected[] = $correction;
+                $rejected = [...$rejected, ...$group];
 
                 continue;
             }
 
             $content = $candidate;
-            $applied[] = $correction;
+            $applied = [...$applied, ...$group];
         }
 
         return ['content' => $content, 'applied' => $applied, 'rejected' => $rejected];
+    }
+
+    /**
+     * Gruppiert Korrekturen nach Eintrag (Pointer ohne letztes Segment), in der Reihenfolge des ersten Auftretens.
+     * Ungültige Pointer bilden je eine eigene Gruppe, damit sie keine gültigen Korrekturen mitreissen.
+     *
+     * @param  list<array{pfad: string, wert: string, bereich: string, aenderung: string}>  $corrections
+     * @return list<list<array{pfad: string, wert: string, bereich: string, aenderung: string}>>
+     */
+    private static function groupByItem(array $corrections): array
+    {
+        $groups = [];
+
+        foreach ($corrections as $i => $correction) {
+            $pointer = $correction['pfad'];
+            $key = str_starts_with($pointer, '/')
+                ? 'eintrag:'.substr($pointer, 0, (int) strrpos($pointer, '/'))
+                : "ungueltig:$i";
+
+            $groups[$key][] = $correction;
+        }
+
+        return array_values($groups);
     }
 
     /**
