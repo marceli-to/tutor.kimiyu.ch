@@ -8,7 +8,7 @@ namespace App\Lessons\Ai;
 final readonly class ModelRequest
 {
     /**
-     * @param  string  $step  analyse, reparatur, pruefung, grafik oder grafik-reparatur
+     * @param  string  $step  analyse, module, neu-quiz, reparatur-*, pruefung, grafik oder grafik-reparatur
      * @param  list<array{mime: string, data: string}>  $images  Bilder als Binärdaten
      * @param  array<string, mixed>  $schema  JSON-Schema der Antwort
      */
@@ -20,4 +20,31 @@ final readonly class ModelRequest
         public int $maxTokens,
         public array $images = [],
     ) {}
+
+    public function model(): string
+    {
+        return $this->setting('model') ?? config('services.anthropic.model');
+    }
+
+    public function effort(): string
+    {
+        return $this->setting('effort') ?? config('services.anthropic.effort');
+    }
+
+    /**
+     * Einstellung für diesen Schritt aus config/lessons.php: zuerst der genaue Schritt
+     * («grafik-reparatur»), dann der Teil vor dem Bindestrich («grafik»).
+     */
+    private function setting(string $key): ?string
+    {
+        foreach ([$this->step, strtok($this->step, '-')] as $name) {
+            $value = config("lessons.models.{$name}.{$key}");
+
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
 }

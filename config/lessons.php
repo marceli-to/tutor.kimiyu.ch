@@ -31,6 +31,21 @@ return [
     ],
 
     /*
+    | Modell und Effort pro Schritt. Leer: globaler Standard aus services.anthropic.
+    | Fotos lesen und interaktive Grafiken bauen braucht Opus; strukturiertes Schreiben
+    | und Prüfen aus vorhandenem Stoff schafft Sonnet zum halben Preis.
+    | Schritte ohne eigenen Eintrag nehmen den Teil vor dem Bindestrich (grafik-reparatur → grafik).
+    */
+    'models' => [
+        'analyse' => ['model' => env('LESSON_MODEL_ANALYSE'), 'effort' => env('LESSON_EFFORT_ANALYSE')],
+        'module' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
+        'neu-quiz' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
+        'reparatur' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
+        'pruefung' => ['model' => env('LESSON_MODEL_PRUEFUNG', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_PRUEFUNG', 'medium')],
+        'grafik' => ['model' => env('LESSON_MODEL_GRAFIK'), 'effort' => env('LESSON_EFFORT_GRAFIK', 'medium')],
+    ],
+
+    /*
     | Preise in USD pro Million Tokens, für das Kosten-Log.
     | Quelle: Anthropic-Preisliste, Stand September 2026. Cache-Schreiben kostet 1.25× Input.
     */
