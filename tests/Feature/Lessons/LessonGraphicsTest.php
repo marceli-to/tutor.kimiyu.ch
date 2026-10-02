@@ -8,11 +8,15 @@ use App\Models\LessonGraphic;
 use App\Models\User;
 use Database\Factories\LessonFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 describe('migration', function () {
     it('moves existing graphics to position 1 and sets the graphics mode', function () {
+        // Die späteren Migrationen zuerst zurücknehmen, damit die alten Spalten wieder da sind
+        (require database_path('migrations/2026_10_02_150000_drop_hero_columns_from_lessons_table.php'))->down();
+        (require database_path('migrations/2026_10_02_145000_add_hidden_to_lesson_graphics_table.php'))->down();
         $migration = require database_path('migrations/2026_10_02_140000_create_lesson_graphics_table.php');
         $migration->down();
 
@@ -43,6 +47,38 @@ describe('migration', function () {
             ->and($second->plan)->toBe(['muster' => 'schritte', 'idee' => 'Schritte'])
             ->and($second->graphic)->toBeNull()
             ->and($second->error)->toBe('Kaputt');
+    });
+});
+
+describe('dropping the old columns', function () {
+    it('removes the old columns and copies graphic 1 back on rollback', function () {
+        $migration = require database_path('migrations/2026_10_02_150000_drop_hero_columns_from_lessons_table.php');
+        $hero = LessonFactory::fixture('fotosynthese.hero');
+
+        expect(Schema::hasColumns('lessons', ['hero', 'hero_plan', 'hero_error', 'with_hero']))->toBeFalse();
+
+        $custom = Lesson::factory()->fromFixture()->create(['graphics_mode' => 'custom']);
+        $custom->graphic(1)->update(['error' => 'Kaputt']);
+        $custom->graphics()->create(['position' => 2, 'request' => 'Zwei', 'graphic' => $hero]);
+        $none = Lesson::factory()->create(['graphics_mode' => 'none']);
+
+        $migration->down();
+
+        $row = DB::table('lessons')->find($custom->id);
+        expect(json_decode($row->hero, true))->toBe($hero)
+            ->and(json_decode($row->hero_plan, true))->toBe($custom->graphic(1)->plan)
+            ->and($row->hero_error)->toBe('Kaputt')
+            ->and((bool) $row->with_hero)->toBeTrue()
+            ->and((bool) DB::table('lessons')->find($none->id)->with_hero)->toBeFalse()
+            ->and(DB::table('lessons')->find($none->id)->hero)->toBeNull()
+            ->and(LessonGraphic::count())->toBe(2);
+
+        $migration->up();
+
+        expect(Schema::hasColumn('lessons', 'hero'))->toBeFalse()
+            ->and(Schema::hasColumn('lessons', 'with_hero'))->toBeFalse()
+            ->and(Lesson::count())->toBe(2)
+            ->and(LessonGraphic::count())->toBe(2);
     });
 });
 

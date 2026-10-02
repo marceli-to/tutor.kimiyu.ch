@@ -78,8 +78,6 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
         ->and($lesson->graphic(1)->plan['muster'])->toBe('regler')
         ->and($lesson->graphic(1)->error)->toBeNull()
-        ->and($lesson->hero['muster'])->toBe('regler')
-        ->and($lesson->hero_plan['muster'])->toBe('regler')
         ->and($lesson->source_summary)->toContain('Fotosynthese')
         ->and($lesson->schema_version)->toBe(1);
 
@@ -410,8 +408,6 @@ it('publishes the page without a graphic when the hero stays broken', function (
     expect($lesson->status)->toBe(LessonStatus::Review)
         ->and($lesson->graphic(1)->graphic)->toBeNull()
         ->and($lesson->graphic(1)->error)->toContain('Inline-Event-Handler')
-        ->and($lesson->hero)->toBeNull()
-        ->and($lesson->hero_error)->toContain('Inline-Event-Handler')
         ->and($this->fake->requestsFor('grafik-reparatur'))->toHaveCount(1);
 });
 
@@ -421,8 +417,8 @@ it('repairs a broken hero once', function () {
     upload();
 
     $lesson = Lesson::sole();
-    expect($lesson->hero['script'])->toBe(LessonFactory::fixture('fotosynthese.hero')['script'])
-        ->and($lesson->hero_error)->toBeNull();
+    expect($lesson->graphic(1)->graphic['script'])->toBe(LessonFactory::fixture('fotosynthese.hero')['script'])
+        ->and($lesson->graphic(1)->error)->toBeNull();
 });
 
 it('creates the first child from the name', function () {
@@ -502,7 +498,6 @@ describe('retry', function () {
     it('only regenerates what is missing', function () {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create([
             'status' => LessonStatus::Failed,
-            'hero' => null,
         ]);
         $lesson->graphic(1)->update(['graphic' => null, 'error' => 'Die KI war nicht erreichbar.']);
 
@@ -706,10 +701,8 @@ describe('without a graphic', function () {
 
         $lesson = Lesson::sole();
         expect($lesson->graphics_mode)->toBe('none')
-            ->and($lesson->with_hero)->toBeFalse()
             ->and($lesson->status)->toBe(LessonStatus::Review)
-            ->and($lesson->hero)->toBeNull()
-            ->and($lesson->hero_error)->toBeNull()
+            ->and($lesson->graphics)->toBeEmpty()
             ->and($this->fake->requestsFor('grafik'))->toBe([])
             ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Grafiken: keine (von den Eltern abgewählt)');
 
@@ -727,9 +720,9 @@ describe('without a graphic', function () {
         upload();
 
         $lesson = Lesson::sole();
-        expect($lesson->with_hero)->toBeTrue()
-            ->and($lesson->hero)->toBeNull()
-            ->and($lesson->hero_error)->toBeNull()
+        expect($lesson->graphics_mode)->toBe('auto')
+            ->and($lesson->graphic(1)?->graphic)->toBeNull()
+            ->and($lesson->graphic(1)?->error)->toBeNull()
             ->and($this->fake->requestsFor('grafik'))->toBe([])
             ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht')
             ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
@@ -738,7 +731,7 @@ describe('without a graphic', function () {
     it('creates a graphic by default', function () {
         upload();
 
-        expect(Lesson::sole()->with_hero)->toBeTrue()
+        expect(Lesson::sole()->graphics_mode)->toBe('auto')
             ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
     });
 });
@@ -781,7 +774,6 @@ describe('graphics mode', function () {
 
         $lesson = Lesson::sole();
         expect($lesson->graphics_mode)->toBe($mode)
-            ->and($lesson->with_hero)->toBe($mode !== 'none')
             ->and($lesson->graphics()->count())->toBe(0);
     })->with(['none', 'auto']);
 
@@ -992,9 +984,7 @@ describe('graphic generation', function () {
             ->and($lesson->graphic(2)->graphic)->toBeNull()
             ->and($lesson->graphic(2)->error)->toContain('Inline-Event-Handler')
             ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
-            ->and($lesson->graphic(3)->error)->toBeNull()
-            ->and($lesson->hero)->toBe(LessonFactory::fixture('fotosynthese.hero'))
-            ->and($lesson->hero_error)->toBeNull();
+            ->and($lesson->graphic(3)->error)->toBeNull();
 
         expect($requests[0]->prompt)->toContain("Muster: regler\nDrei Regler")->not->toContain('nicht oben auf der Seite')
             ->and($requests[1]->prompt)->toContain("Muster: schritte\nVier Schritte")

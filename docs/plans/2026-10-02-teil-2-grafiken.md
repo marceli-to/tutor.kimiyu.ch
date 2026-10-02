@@ -117,7 +117,8 @@
 **Files:** `resources/js/pages/lessons/Edit.vue`, `LessonContentController` (if needed).
 
 - Show `grafik` blocks as a non-editable row «Grafik {nr}: {beschreibung or plan idea}» with the existing «Baustein entfernen» button; removing it hides that graphic on the page (it stays stored and can be regenerated). Make sure `update()` accepts `grafik` blocks (validator) and doesn't choke on them.
-- Test: saving content with and without a `grafik` block.
+- Because `LessonView` appends finished graphics without a block to the last section, «hidden» needs its own state: migration `2026_10_02_145000_add_hidden_to_lesson_graphics_table.php` adds `lesson_graphics.hidden`. `update()` hides graphics whose block disappeared and shows them again when the block comes back; hidden graphics get no block, no fallback placement, no URL, and the signed route returns 404. Regenerating sets `hidden = false`. `edit()` passes `graphicLabels` (nr → beschreibung, plan idea or wish, max. 120 characters); the toolbar marks hidden graphics «(ausgeblendet)».
+- Test: saving content with and without a `grafik` block; hidden graphic missing from parent and child props; re-added block and regenerating make it visible again; a graphic that never had a block is still appended.
 
 **Commit:** «Bearbeiten: Grafik-Bausteine»
 

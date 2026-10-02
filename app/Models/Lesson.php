@@ -25,13 +25,9 @@ use Illuminate\Support\Str;
  * @property string|null $notes
  * @property string|null $prompt Auftrag der Eltern, frei formuliert
  * @property int $photo_count
- * @property bool $with_hero
  * @property 'none'|'auto'|'custom' $graphics_mode Keine Grafik, die KI entscheidet oder nach Wunsch der Eltern
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
- * @property array{muster: string, idee: string}|null $hero_plan null: keine Grafik (abgewählt oder kein Muster passt)
- * @property array{muster: string, beschreibung: string, css: string, markup: string, script: string}|null $hero
- * @property string|null $hero_error
  * @property list<array{bereich: string, aenderung: string}>|null $check_notes
  * @property string|null $source_summary
  * @property list<string>|null $additions Was die KI aus eigenem Wissen ergänzt hat
@@ -41,7 +37,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at Weich gelöscht: Fotos sind weg, die Kosten bleiben erhalten
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'with_hero', 'graphics_mode', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
@@ -62,10 +58,7 @@ class Lesson extends Model
         return [
             'status' => LessonStatus::class,
             'photo_count' => 'integer',
-            'with_hero' => 'boolean',
             'content' => 'array',
-            'hero_plan' => 'array',
-            'hero' => 'array',
             'check_notes' => 'array',
             'additions' => 'array',
             'published_at' => 'datetime',

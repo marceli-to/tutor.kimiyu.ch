@@ -116,6 +116,8 @@ Zwei Fälle: Die Fotos sind zu dünn (z. B. nur ein Schema oder nur Aufgaben ohn
 
 ## Teil 2 – Grafiken selbst bestimmen
 
+Umgesetzt (2026-10-02), Plan: `docs/plans/2026-10-02-teil-2-grafiken.md`. Abweichungen und Entscheide unten unter «Umsetzung».
+
 ### Verhalten
 
 - Abschnitt «Grafiken» im Formular statt der Checkbox, mit drei Modi:
@@ -135,6 +137,7 @@ Zwei Fälle: Die Fotos sind zu dünn (z. B. nur ein Schema oder nur Aufgaben ohn
 - Neue Tabelle `lesson_graphics`: `lesson_id`, `position` (1 = Hero), `request` (Wunsch der Eltern, nullable), `pattern` (gewünscht, nullable), `plan` (json: muster, idee), `graphic` (json: muster, beschreibung, css, markup, script), `error`, Timestamps.
 - `lessons.with_hero` wird zu `lessons.graphics_mode` (`none` | `auto` | `custom`).
 - Migration: bestehendes `hero_plan`/`hero`/`hero_error` → `lesson_graphics` Position 1; danach Spalten entfernen.
+- `hidden` (boolean): von den Eltern ausgeblendet (siehe «Umsetzung»).
 
 ### Erzeugung
 
@@ -146,7 +149,17 @@ Zwei Fälle: Die Fotos sind zu dünn (z. B. nur ein Schema oder nur Aufgaben ohn
 ### Darstellung
 
 - `HeroFrame` wird für jede Grafik verwendet; `LessonBlock` rendert den Block `grafik` mit dem passenden Frame.
-- Bearbeiten-Ansicht: Grafik-Block verschieben oder entfernen.
+- Bearbeiten-Ansicht: Grafik-Block entfernen (verschieben ist nicht umgesetzt).
+
+### Umsetzung (Entscheide)
+
+- **Feste Jobs pro Position:** Die Pipeline stellt für jede mögliche Position einen `GenerateLessonGraphic`-Job ein (1 bei «KI entscheidet», 1–3 bei «Selbst beschreiben»). Ein Job ohne Plan für seine Position tut nichts. So bleibt die Pipeline unabhängig davon, wie viele Pläne die Analyse liefert.
+- **Ersatz-Platzierung:** `LessonView` entfernt Blöcke von Grafiken, die nicht fertig sind. Eine fertige Grafik 2 oder 3 ohne Block kommt ans Ende des letzten Abschnitts, damit sie nie verloren geht. Doppelte Blöcke derselben Grafik werden verworfen (jede Grafik erscheint einmal).
+- **Ausblenden:** Entfernen Eltern in der Bearbeiten-Ansicht den Block einer Grafik, wird sie ausgeblendet (`lesson_graphics.hidden`): kein Block, keine Ersatz-Platzierung, keine URL, die signierte Route antwortet mit 404. Sie bleibt gespeichert. Kommt der Block zurück oder wird die Grafik neu erstellt, ist sie wieder sichtbar (nach dem Neu-Erstellen am Ende des letzten Abschnitts). Im Menü steht «(ausgeblendet)».
+- **Alte URL entfernt:** Die frühere Route ohne Nummer (`lernseiten/{lesson}/neu/grafik`) gibt es nicht mehr; nur noch `lernseiten/{lesson}/grafik/{nr}/neu`.
+- **Kein Modus, kein Upload:** Ein Upload ohne `graphics_mode` wird abgelehnt (kein stiller Standard).
+- **Kein Menüpunkt ohne Grafik:** «Grafik neu erstellen» gibt es nur für Grafiken, die als Zeile existieren und einen Plan haben.
+- **Alte Spalten entfernt:** `lessons.hero`, `hero_plan`, `hero_error` und `with_hero` sind weg (Migration `2026_10_02_150000`). Beim Rollback kommen sie zurück, mit Grafik 1; Grafiken 2–3, Wünsche und «ausgeblendet» kennen die alten Spalten nicht. `LessonView` liefert weiterhin `hero` (= Grafik 1) für den Kopf der Seite.
 
 ---
 

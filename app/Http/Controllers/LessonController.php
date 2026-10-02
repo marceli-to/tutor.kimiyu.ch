@@ -71,8 +71,6 @@ class LessonController extends Controller
                 'prompt' => $request->string('prompt')->trim()->value() ?: null,
                 'photo_count' => count($images),
                 'graphics_mode' => $request->validated('graphics_mode'),
-                // Übergang bis Teil 2, Task 8: die alte Spalte noch mitführen
-                'with_hero' => $request->validated('graphics_mode') !== 'none',
             ]);
 
             // Wünsche der Eltern als Grafik 1 bis 3
@@ -134,9 +132,6 @@ class LessonController extends Controller
                 'topic' => null,
                 'source_summary' => null,
                 'additions' => null,
-                'hero' => null,
-                'hero_plan' => null,
-                'hero_error' => null,
                 'check_notes' => null,
                 'error' => null,
                 'step' => null,

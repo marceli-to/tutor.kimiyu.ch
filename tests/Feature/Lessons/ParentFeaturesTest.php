@@ -21,7 +21,6 @@ beforeEach(function () {
     $this->lesson = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create([
         'status' => LessonStatus::Review,
         'published_at' => null,
-        'hero_plan' => ['muster' => 'ansichten', 'idee' => 'Weiher'],
     ]);
 });
 
@@ -318,7 +317,6 @@ describe('regenerating', function () {
 
         $lesson = $this->lesson->fresh();
         expect($lesson->graphic(1)->graphic['muster'])->toBe('regler')
-            ->and($lesson->hero['muster'])->toBe('regler')
             ->and($lesson->status)->toBe(LessonStatus::Review)
             ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
     });
@@ -337,8 +335,6 @@ describe('regenerating', function () {
         $lesson = $this->lesson->fresh();
         expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
             ->and($lesson->graphic(1)->error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.')
-            ->and($lesson->hero)->toBe(LessonFactory::fixture('oekosystem.hero'))
-            ->and($lesson->hero_error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.')
             ->and($lesson->status)->toBe(LessonStatus::Review);
     });
 
@@ -355,8 +351,7 @@ describe('regenerating', function () {
             ->and($this->fake->requestsFor('grafik')[0]->prompt)->toContain("Muster: schritte\nVier Schritte")
             ->and($lesson->graphic(1)->only(['graphic', 'updated_at']))->toEqual($first)
             ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
-            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
-            ->and($lesson->hero)->toBe(LessonFactory::fixture('oekosystem.hero'));
+            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'));
     });
 
     it('only redraws graphics that exist and have a plan', function () {
@@ -414,8 +409,6 @@ it('removes the content and the progress of a deleted lesson but keeps its costs
         'topic' => 'Ökosystem',
         'source_summary' => 'Zusammenfassung',
         'additions' => ['Ergänzt.'],
-        'hero' => LessonFactory::fixture('fotosynthese.hero'),
-        'hero_error' => 'Fehler',
         'check_notes' => [['bereich' => 'Quiz', 'aenderung' => 'Korrigiert']],
         'error' => 'Alter Fehler',
         'step' => 'module',
@@ -431,7 +424,7 @@ it('removes the content and the progress of a deleted lesson but keeps its costs
     expect($deleted->trashed())->toBeTrue()
         ->and($deleted->status)->toBe(LessonStatus::Failed)
         ->and($deleted->published_at)->toBeNull()
-        ->and($deleted->only(['content', 'prompt', 'notes', 'topic', 'source_summary', 'additions', 'hero', 'hero_plan', 'hero_error', 'check_notes', 'error', 'step']))
+        ->and($deleted->only(['content', 'prompt', 'notes', 'topic', 'source_summary', 'additions', 'check_notes', 'error', 'step']))
         ->each->toBeNull()
         ->and($deleted->title)->toBe('Biotop + Biozönose = Ökosystem')
         ->and($deleted->subject)->toBe($this->lesson->subject)

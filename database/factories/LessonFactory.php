@@ -41,7 +41,6 @@ class LessonFactory extends Factory
             'title' => $content['meta']['titel'],
             'schema_version' => ContentValidator::SCHEMA_VERSION,
             'content' => $content,
-            'hero' => self::fixture("$name.hero"),
             'published_at' => now(),
         ])->afterCreating(function (Lesson $lesson) use ($name) {
             $hero = self::fixture("$name.hero");

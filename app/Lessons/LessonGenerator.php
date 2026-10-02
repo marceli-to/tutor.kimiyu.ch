@@ -9,7 +9,6 @@ use App\Lessons\Ai\ModelResponse;
 use App\Lessons\Ai\Prompts;
 use App\Lessons\Ai\UsageAwareModelException;
 use App\Models\Lesson;
-use App\Models\LessonGraphic;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -151,15 +150,6 @@ class LessonGenerator
                 'error' => 'Für diese Grafik hat die KI keinen Plan erstellt.',
             ]);
         }
-
-        $first = $lesson->graphic(1);
-
-        if ($first !== null) {
-            $this->mirrorFirstGraphic($lesson, $first);
-        } else {
-            // Übergang bis Teil 2, Task 8: ohne Grafik 1 auch kein Plan in der alten Spalte
-            $lesson->update(['hero_plan' => null]);
-        }
     }
 
     /**
@@ -240,14 +230,13 @@ class LessonGenerator
             return;
         }
 
-        $fail = function (string $message) use ($lesson, $graphic, $keepExisting) {
+        $fail = function (string $message) use ($graphic, $keepExisting) {
             $old = $keepExisting ? $graphic->graphic : null;
 
             $graphic->update([
                 'graphic' => $old,
                 'error' => $old ? $message.' Die bisherige Grafik bleibt.' : $message,
             ]);
-            $this->mirrorFirstGraphic($lesson, $graphic);
         };
 
         try {
@@ -281,23 +270,6 @@ class LessonGenerator
             'error' => null,
             // Eine neu erstellte Grafik ist wieder sichtbar (am Ende des letzten Abschnitts, ohne Baustein)
             'hidden' => false,
-        ]);
-        $this->mirrorFirstGraphic($lesson, $graphic);
-    }
-
-    /**
-     * Übergang bis Teil 2, Task 8: Grafik 1 auch in den alten Spalten, die Anzeige liest sie noch.
-     */
-    private function mirrorFirstGraphic(Lesson $lesson, LessonGraphic $graphic): void
-    {
-        if ($graphic->position !== 1) {
-            return;
-        }
-
-        $lesson->update([
-            'hero_plan' => $graphic->plan,
-            'hero' => $graphic->graphic,
-            'hero_error' => $graphic->error,
         ]);
     }
 
