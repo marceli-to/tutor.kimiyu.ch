@@ -22,6 +22,7 @@ defineProps<{
         step: string;
         model: string;
         calls: number;
+        failed: number;
         inputTokens: number;
         outputTokens: number;
         avgUsd: number;
@@ -172,6 +173,11 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
                             </td>
                             <td class="px-4 py-2 text-right tabular-nums">
                                 {{ s.calls }}
+                                <span
+                                    v-if="s.failed"
+                                    class="block text-destructive"
+                                    >{{ s.failed }} fehlgeschlagen</span
+                                >
                             </td>
                             <td class="px-4 py-2 text-right tabular-nums">
                                 {{ number(s.inputTokens) }}

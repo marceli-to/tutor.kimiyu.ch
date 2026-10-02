@@ -48,18 +48,24 @@ class CostController extends Controller
             ->values()
             ->take(50);
 
-        // Pro Schritt und Modell, teuerste zuerst: zeigt, wo sich Sparen lohnt
+        // Pro Schritt und Modell, teuerste zuerst: zeigt, wo sich Sparen lohnt.
+        // Der Durchschnitt zählt nur erfolgreiche Aufrufe, sonst drücken Fehlschläge ohne Tokens ihn nach unten.
         $steps = $generations
             ->groupBy(fn (Generation $g) => "{$g->step}|{$g->model}")
-            ->map(fn (Collection $items) => [
-                'step' => $items->first()->step,
-                'model' => $items->first()->model,
-                'calls' => $items->count(),
-                'inputTokens' => (int) round($items->avg('input_tokens')),
-                'outputTokens' => (int) round($items->avg('output_tokens')),
-                'avgUsd' => round((float) $items->avg('cost_usd'), 3),
-                'totalUsd' => round((float) $items->sum('cost_usd'), 2),
-            ])
+            ->map(function (Collection $items) {
+                $ok = $items->where('status', 'ok');
+
+                return [
+                    'step' => $items->first()->step,
+                    'model' => $items->first()->model,
+                    'calls' => $items->count(),
+                    'failed' => $items->where('status', 'error')->count(),
+                    'inputTokens' => (int) round($ok->avg('input_tokens') ?? 0),
+                    'outputTokens' => (int) round($ok->avg('output_tokens') ?? 0),
+                    'avgUsd' => round((float) ($ok->avg('cost_usd') ?? 0), 3),
+                    'totalUsd' => round((float) $items->sum('cost_usd'), 2),
+                ];
+            })
             ->sortByDesc('totalUsd')
             ->values();
 
