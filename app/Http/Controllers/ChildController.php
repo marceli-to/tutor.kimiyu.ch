@@ -6,14 +6,12 @@ use App\Actions\Children\CreateChild;
 use App\Actions\Children\DeleteChild;
 use App\Actions\Children\RenewShareLink;
 use App\Actions\Children\UpdateChild;
-use App\Enums\LessonStatus;
+use App\Http\PageData\ChildProgress;
+use App\Http\PageData\ChildrenIndex;
 use App\Http\Requests\ChildRequest;
-use App\Lessons\Progress;
 use App\Models\Child;
-use App\Models\Lesson;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,20 +20,7 @@ class ChildController extends Controller
 {
     public function index(Request $request): Response
     {
-        return Inertia::render('children/Index', [
-            'children' => $request->user()->children()
-                ->withCount(['lessons', 'lessons as published_count' => fn ($q) => $q->whereNotNull('published_at')])
-                ->orderBy('name')
-                ->get()
-                ->map(fn (Child $child) => [
-                    'id' => $child->id,
-                    'name' => $child->name,
-                    'level' => $child->level,
-                    'lessons' => $child->lessons_count,
-                    'published' => $child->published_count,
-                    'shareUrl' => route('shared.index', $child->share_token),
-                ]),
-        ]);
+        return Inertia::render('children/Index', (new ChildrenIndex($request->user()))->props());
     }
 
     public function store(ChildRequest $request, CreateChild $createChild): RedirectResponse
@@ -77,30 +62,7 @@ class ChildController extends Controller
     {
         Gate::authorize('update', $child);
 
-        $lessons = $child->lessons()
-            ->whereNotNull('content')
-            ->whereIn('status', [LessonStatus::Review, LessonStatus::Published])
-            ->latest()
-            ->get();
-
-        $summaries = Progress::summaries($child, $lessons);
-        $lastActivity = $child->attempts()->latest('created_at')->value('created_at');
-
-        return Inertia::render('children/Progress', [
-            'child' => [
-                'id' => $child->id,
-                'name' => $child->name,
-                'lastActivity' => $lastActivity ? Carbon::parse($lastActivity)->diffForHumans() : null,
-            ],
-            'lessons' => $lessons->map(fn (Lesson $lesson) => [
-                'id' => $lesson->id,
-                'title' => $lesson->title,
-                'subject' => $lesson->subjectLabel(),
-                'emoji' => $lesson->content['meta']['emoji'] ?? null,
-                'published' => $lesson->status === LessonStatus::Published,
-                ...$summaries[$lesson->id],
-            ])->values(),
-        ]);
+        return Inertia::render('children/Progress', (new ChildProgress($child))->props());
     }
 
     /**

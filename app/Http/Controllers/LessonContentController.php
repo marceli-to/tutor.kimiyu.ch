@@ -3,15 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Lessons\UpdateLessonContent;
-use App\Lessons\ClozeParser;
-use App\Lessons\GraphicBlocks;
-use App\Lessons\Palettes;
+use App\Http\PageData\EditLessonPage;
 use App\Models\Lesson;
-use App\Models\LessonGraphic;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,22 +22,7 @@ class LessonContentController extends Controller
 
         abort_unless($lesson->isEditable(), 404);
 
-        $cloze = $lesson->content['modules']['cloze'] ?? null;
-
-        return Inertia::render('lessons/Edit', [
-            'lesson' => [
-                'id' => $lesson->id,
-                'status' => $lesson->status->value,
-                'childName' => $lesson->child->name,
-                'content' => GraphicBlocks::withUnplaced($lesson, $lesson->content),
-            ],
-            'showOrigin' => ! $lesson->isFromTopic(),
-            'clozeMarkup' => $cloze ? ClozeParser::toMarkup($cloze['segments']) : null,
-            'graphicLabels' => $this->graphicLabels($lesson),
-            'palettes' => collect(Palettes::all())
-                ->map(fn (array $palette, string $key) => ['value' => $key, 'label' => $palette['label'], 'accent' => $palette['light']['accent']])
-                ->values(),
-        ]);
+        return Inertia::render('lessons/Edit', (new EditLessonPage($lesson))->props());
     }
 
     public function update(Request $request, Lesson $lesson, UpdateLessonContent $updateContent): RedirectResponse
@@ -60,22 +41,5 @@ class LessonContentController extends Controller
         $this->toast('Gespeichert.');
 
         return back();
-    }
-
-    /**
-     * Kurzer Text pro Grafik für die Bearbeiten-Ansicht: Beschreibung der fertigen Grafik,
-     * sonst die Idee aus dem Plan, sonst der Wunsch der Eltern.
-     *
-     * @return array<int, string>
-     */
-    private function graphicLabels(Lesson $lesson): array
-    {
-        return $lesson->graphics
-            ->mapWithKeys(fn (LessonGraphic $graphic) => [$graphic->position => Str::limit(
-                (string) ($graphic->graphic['description'] ?? $graphic->plan['idea'] ?? $graphic->request ?? ''),
-                120,
-                '…',
-            )])
-            ->all();
     }
 }

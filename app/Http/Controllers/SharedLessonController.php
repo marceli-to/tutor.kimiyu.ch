@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Actions\Progress\RecordAnswer;
 use App\Enums\LessonStatus;
+use App\Http\PageData\SharedLessonIndex;
 use App\Lessons\LessonView;
-use App\Lessons\Progress;
 use App\Models\Child;
 use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
@@ -23,35 +23,7 @@ class SharedLessonController extends Controller
     {
         $child = $this->child($token);
 
-        $lessons = $child->lessons()
-            ->where('status', LessonStatus::Published)
-            ->latest('published_at')
-            ->get();
-
-        $progress = Progress::summaries($child, $lessons);
-
-        return Inertia::render('shared/Index', [
-            'token' => $token,
-            'childName' => $child->name,
-            'subjects' => $lessons
-                // Freigegebene Lernseiten haben nach der Analyse immer ein Fach; trotzdem absichern
-                ->groupBy(fn (Lesson $lesson) => (string) $lesson->subject)
-                ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
-                ->map(fn ($lessons, string $subject) => [
-                    'name' => $subject !== '' ? $subject : 'Allgemein',
-                    'lessons' => $lessons->map(fn (Lesson $lesson) => [
-                        'id' => $lesson->id,
-                        'title' => $lesson->title,
-                        'emoji' => $lesson->content['meta']['emoji'] ?? null,
-                        'key_idea' => $lesson->content['meta']['key_idea'] ?? null,
-                        'progress' => [
-                            'sitzt' => $progress[$lesson->id]['counts']['sitzt'],
-                            'total' => $progress[$lesson->id]['total'],
-                        ],
-                    ])->values(),
-                ])
-                ->values(),
-        ]);
+        return Inertia::render('shared/Index', (new SharedLessonIndex($child))->props());
     }
 
     public function show(string $token, Lesson $lesson): Response
