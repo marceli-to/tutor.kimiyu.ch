@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ImagePlus, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import PhotoPicker from '@/components/PhotoPicker.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { resizeImage } from '@/lib/resizeImage';
 import { create, store } from '@/routes/lessons';
 
 defineOptions({
@@ -67,13 +66,8 @@ const form = useForm<{
     images: [],
 });
 
-const previews = ref<string[]>([]);
 const preparing = ref(false);
-const imageError = ref('');
-const fileInput = ref<HTMLInputElement | null>(null);
 const promptInput = ref<HTMLTextAreaElement | null>(null);
-
-const canAddMore = computed(() => form.images.length < props.maxImages);
 
 // Bausteine für den Auftrag, die «…» füllen die Eltern selbst aus
 const promptChips = [
@@ -126,39 +120,6 @@ watch(
     },
 );
 
-async function addImages(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-    input.value = '';
-    imageError.value = '';
-
-    const room = props.maxImages - form.images.length;
-
-    if (files.length > room) {
-        imageError.value = `Höchstens ${props.maxImages} Fotos pro Lernseite.`;
-    }
-
-    preparing.value = true;
-
-    for (const file of files.slice(0, room)) {
-        try {
-            const resized = await resizeImage(file, props.maxEdge);
-            form.images.push(resized);
-            previews.value.push(URL.createObjectURL(resized));
-        } catch (e) {
-            imageError.value = (e as Error).message;
-        }
-    }
-
-    preparing.value = false;
-}
-
-function removeImage(index: number) {
-    URL.revokeObjectURL(previews.value[index]);
-    previews.value.splice(index, 1);
-    form.images.splice(index, 1);
-}
-
 function imageErrors(): string | undefined {
     const errors = form.errors as Record<string, string | undefined>;
 
@@ -175,10 +136,6 @@ function submit() {
         child_name: props.children.length ? '' : data.child_name,
     })).post(store().url, { forceFormData: true });
 }
-
-onBeforeUnmount(() =>
-    previews.value.forEach((url) => URL.revokeObjectURL(url)),
-);
 </script>
 
 <template>
@@ -191,63 +148,13 @@ onBeforeUnmount(() =>
         />
 
         <form class="space-y-6" @submit.prevent="submit">
-            <div class="grid gap-2">
-                <Label for="images">Fotos (optional)</Label>
-                <p id="images-hint" class="text-sm text-muted-foreground">
-                    Die Fotos geben den Rahmen vor: Stoff, Begriffe, Niveau. Gut
-                    lesbar, gerade von oben, ganze Seite im Bild. Sie werden
-                    nach der Erstellung gelöscht.
-                </p>
-
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div
-                        v-for="(url, index) in previews"
-                        :key="url"
-                        class="relative aspect-[3/4] overflow-hidden rounded-lg border"
-                    >
-                        <img
-                            :src="url"
-                            :alt="`Foto ${index + 1}`"
-                            class="size-full object-cover"
-                        />
-                        <button
-                            type="button"
-                            class="absolute top-1.5 right-1.5 rounded-full bg-background/90 p-1 shadow"
-                            :aria-label="`Foto ${index + 1} entfernen`"
-                            @click="removeImage(index)"
-                        >
-                            <X class="size-4" aria-hidden="true" />
-                        </button>
-                    </div>
-
-                    <button
-                        v-if="canAddMore"
-                        type="button"
-                        class="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-sm text-muted-foreground hover:border-foreground/40 hover:text-foreground"
-                        :disabled="preparing"
-                        aria-describedby="images-hint"
-                        @click="fileInput?.click()"
-                    >
-                        <Spinner v-if="preparing" />
-                        <ImagePlus v-else class="size-6" aria-hidden="true" />
-                        {{
-                            preparing ? 'Wird vorbereitet …' : 'Foto hinzufügen'
-                        }}
-                    </button>
-                </div>
-
-                <input
-                    id="images"
-                    ref="fileInput"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    class="sr-only"
-                    tabindex="-1"
-                    @change="addImages"
-                />
-                <InputError :message="imageError || imageErrors()" />
-            </div>
+            <PhotoPicker
+                v-model="form.images"
+                :max-images="maxImages"
+                :max-edge="maxEdge"
+                :error="imageErrors()"
+                @busy="preparing = $event"
+            />
 
             <div class="grid gap-2">
                 <Label for="prompt">Auftrag (optional)</Label>
