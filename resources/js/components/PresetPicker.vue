@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { PRESETS, settingsSummary } from '@/lib/presets';
 import type { LessonSettings, PresetKey } from '@/lib/presets';
 
-export type PresetChoice = PresetKey | 'letztes' | 'eigene';
+export type PresetChoice = PresetKey | 'last' | 'custom';
 
 const props = defineProps<{
     // Einstellungen der letzten Lernseite des Kindes, nur wenn sie zu keiner Voreinstellung passen
@@ -25,7 +25,7 @@ const cards = computed(() => [
     ...(props.last
         ? [
               {
-                  value: 'letztes' as PresetChoice,
+                  value: 'last' as PresetChoice,
                   label: 'Wie letztes Mal',
                   hint: settingsSummary(props.last),
               },
@@ -34,7 +34,7 @@ const cards = computed(() => [
     ...(props.custom
         ? [
               {
-                  value: 'eigene' as PresetChoice,
+                  value: 'custom' as PresetChoice,
                   label: 'Eigene Einstellungen',
                   hint: settingsSummary(props.custom),
               },

@@ -226,8 +226,8 @@ describe('graphic blocks', function () {
         return $content;
     }
 
-    it('accepts a block for graphic 2 or 3', function (int $nr) {
-        expect(ContentValidator::errors(withGraphicBlock(['type' => 'graphic', 'number' => $nr, 'origin' => 'photo']), strict: true))->toBe([]);
+    it('accepts a block for graphic 2 or 3', function (int $number) {
+        expect(ContentValidator::errors(withGraphicBlock(['type' => 'graphic', 'number' => $number, 'origin' => 'photo']), strict: true))->toBe([]);
     })->with([2, 3]);
 
     it('rejects a block without a valid number', function (array $block) {

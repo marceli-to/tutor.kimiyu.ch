@@ -9,7 +9,6 @@ import type {
     GraphicState,
     LessonContent,
     LessonGraphics,
-    LessonHero,
     Palette,
 } from '@/types';
 
@@ -37,7 +36,6 @@ const props = defineProps<{
         level: string;
         content: LessonContent | null;
         palette: Palette | null;
-        hero: LessonHero | null;
         graphics: LessonGraphics;
         checkNotes: { area: string; change: string }[];
     };
@@ -99,7 +97,6 @@ watch(generating, (active) => (active ? start() : stop()));
         <LessonPage
             :content="lesson.content"
             :palette="lesson.palette"
-            :hero="lesson.hero"
             :graphics="lesson.graphics"
             :subject="lesson.subject"
             :level="lesson.level"

@@ -97,13 +97,13 @@ export type Palette = {
     dark: PaletteColors;
 };
 
-export type LessonHero = {
+export type LessonGraphic = {
     url: string;
     description: string;
 };
 
 // Fertige Grafiken nach Position (1 oben, 2 und 3 an ihrem Block im Inhalt)
-export type LessonGraphics = Partial<Record<number, LessonHero>>;
+export type LessonGraphics = Partial<Record<number, LessonGraphic>>;
 
 // Nur für Eltern: Zustand jeder Grafik, auch der fehlgeschlagenen
 export type GraphicState = {

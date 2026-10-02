@@ -3,7 +3,7 @@ import { Moon, Sun } from '@lucide/vue';
 import { computed } from 'vue';
 import ClozeModule from '@/components/lesson/ClozeModule.vue';
 import FlashcardModule from '@/components/lesson/FlashcardModule.vue';
-import HeroFrame from '@/components/lesson/HeroFrame.vue';
+import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import LessonBlock from '@/components/lesson/LessonBlock.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import QuizModule from '@/components/lesson/QuizModule.vue';
@@ -13,7 +13,6 @@ import { useIsDark } from '@/composables/useIsDark';
 import type {
     LessonContent,
     LessonGraphics,
-    LessonHero,
     ModuleAnswer,
     Palette,
 } from '@/types';
@@ -21,7 +20,6 @@ import type {
 const props = defineProps<{
     content: LessonContent;
     palette: Palette;
-    hero: LessonHero | null;
     graphics: LessonGraphics;
     subject: string;
     level: string;
@@ -80,7 +78,7 @@ function toggleTheme() {
                 {{ content.meta.instructions }}
             </p>
 
-            <HeroFrame v-if="hero" :hero="hero" />
+            <GraphicFrame v-if="graphics[1]" :graphic="graphics[1]" />
 
             <section v-for="(section, k) in content.sections" :key="k">
                 <h2 class="mt-12 mb-3 text-[1.6rem] font-bold">

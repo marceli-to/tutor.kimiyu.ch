@@ -29,7 +29,7 @@ class GraphicBlocks
                 && ! in_array($graphic->position, $placed, true))
             ->pluck('position');
 
-        foreach ($unplaced as $nr) {
+        foreach ($unplaced as $number) {
             $target = null;
 
             foreach ($content['sections'] ?? [] as $k => $section) {
@@ -42,7 +42,7 @@ class GraphicBlocks
                 break;
             }
 
-            $content['sections'][$target]['blocks'][] = ['type' => 'graphic', 'number' => $nr];
+            $content['sections'][$target]['blocks'][] = ['type' => 'graphic', 'number' => $number];
         }
 
         return $content;

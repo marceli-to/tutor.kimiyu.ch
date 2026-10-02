@@ -152,7 +152,7 @@ describe('publishing and sharing', function () {
             ->assertInertia(fn (Assert $page) => $page
                 ->component('shared/Show')
                 ->where('lesson.content.meta.title', 'Biotop + Biozönose = Ökosystem')
-                ->has('lesson.hero.url')
+                ->has('lesson.graphics.1.url')
                 ->missing('lesson.checkNotes')
                 ->missing('lesson.error')
             );
@@ -340,7 +340,7 @@ describe('regenerating', function () {
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
 
         $lesson = $this->lesson->fresh();
-        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.graphic'))
             ->and($lesson->graphic(1)->error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.')
             ->and($lesson->status)->toBe(LessonStatus::Review);
     });
@@ -379,7 +379,7 @@ describe('regenerating', function () {
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
 
         $lesson = $this->lesson->fresh();
-        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'))
             ->and($lesson->status)->toBe(LessonStatus::Review)
             ->and($lesson->published_at)->toBeNull()
             ->and($lesson->step)->toBeNull();
@@ -402,7 +402,7 @@ describe('regenerating', function () {
             ->and($lesson->published_at)->toEqual($publishedAt)
             ->and($lesson->step)->toBeNull()
             ->and($lesson->error)->toBeNull()
-            ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.graphic'))
             ->and($lesson->graphic(1)->error)->toEndWith('Die bisherige Grafik bleibt.');
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))->assertOk();
     })->with([
@@ -441,8 +441,8 @@ describe('regenerating', function () {
 
     it('only redraws the chosen graphic', function () {
         $first = $this->lesson->graphic(1)->only(['graphic', 'updated_at']);
-        $this->lesson->graphics()->create(['position' => 2, 'plan' => ['pattern' => 'steps', 'idea' => 'Vier Schritte'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
-        $this->lesson->graphics()->create(['position' => 3, 'plan' => ['pattern' => 'calculator', 'idea' => 'Ein Rechner'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
+        $this->lesson->graphics()->create(['position' => 2, 'plan' => ['pattern' => 'steps', 'idea' => 'Vier Schritte'], 'graphic' => LessonFactory::fixture('oekosystem.graphic')]);
+        $this->lesson->graphics()->create(['position' => 3, 'plan' => ['pattern' => 'calculator', 'idea' => 'Ein Rechner'], 'graphic' => LessonFactory::fixture('oekosystem.graphic')]);
         $this->travel(1)->minute();
 
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 2]));
@@ -451,8 +451,8 @@ describe('regenerating', function () {
         expect($this->fake->requestsFor('graphic'))->toHaveCount(1)
             ->and($this->fake->requestsFor('graphic')[0]->prompt)->toContain("Muster: steps\nVier Schritte")
             ->and($lesson->graphic(1)->only(['graphic', 'updated_at']))->toEqual($first)
-            ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
-            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'));
+            ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'))
+            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.graphic'));
     });
 
     it('only redraws graphics that exist and have a plan', function () {

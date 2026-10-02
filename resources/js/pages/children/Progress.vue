@@ -4,7 +4,7 @@ import Heading from '@/components/Heading.vue';
 import { index, progress } from '@/routes/children';
 import { show } from '@/routes/lessons';
 
-type Status = 'sitzt' | 'fast' | 'ueben' | 'offen';
+type Status = 'mastered' | 'almost' | 'practice' | 'open';
 
 const props = defineProps<{
     child: { id: number; name: string; lastActivity: string | null };
@@ -32,20 +32,20 @@ setLayoutProps({
 
 const statuses: { key: Status; label: string; bar: string; dot: string }[] = [
     {
-        key: 'sitzt',
+        key: 'mastered',
         label: 'sitzt',
         bar: 'bg-green-600 dark:bg-green-500',
         dot: 'bg-green-600 dark:bg-green-500',
     },
-    { key: 'fast', label: 'fast', bar: 'bg-amber-500', dot: 'bg-amber-500' },
+    { key: 'almost', label: 'fast', bar: 'bg-amber-500', dot: 'bg-amber-500' },
     {
-        key: 'ueben',
+        key: 'practice',
         label: 'üben',
         bar: 'bg-red-600 dark:bg-red-500',
         dot: 'bg-red-600 dark:bg-red-500',
     },
     {
-        key: 'offen',
+        key: 'open',
         label: 'noch offen',
         bar: 'bg-muted',
         dot: 'bg-muted-foreground/40',
@@ -89,13 +89,13 @@ const moduleLabel: Record<string, string> = {
                     <strong class="font-medium text-foreground">{{
                         s.label
                     }}</strong>
-                    <template v-if="s.key === 'sitzt'"
+                    <template v-if="s.key === 'mastered'"
                         >: zweimal nacheinander richtig</template
                     >
-                    <template v-else-if="s.key === 'fast'"
+                    <template v-else-if="s.key === 'almost'"
                         >: zuletzt richtig</template
                     >
-                    <template v-else-if="s.key === 'ueben'"
+                    <template v-else-if="s.key === 'practice'"
                         >: zuletzt falsch</template
                     >
                 </span>
@@ -151,12 +151,13 @@ const moduleLabel: Record<string, string> = {
                 />
             </div>
             <p class="text-sm text-muted-foreground">
-                {{ lesson.counts.sitzt }} von {{ lesson.total }} Aufgaben sitzen
-                <template v-if="lesson.counts.fast">
-                    · {{ lesson.counts.fast }} fast</template
+                {{ lesson.counts.mastered }} von {{ lesson.total }} Aufgaben
+                sitzen
+                <template v-if="lesson.counts.almost">
+                    · {{ lesson.counts.almost }} fast</template
                 >
-                <template v-if="lesson.counts.ueben">
-                    · {{ lesson.counts.ueben }} zum Üben</template
+                <template v-if="lesson.counts.practice">
+                    · {{ lesson.counts.practice }} zum Üben</template
                 >
             </p>
 
@@ -181,7 +182,11 @@ const moduleLabel: Record<string, string> = {
                             {{ item.text }}
                             <span class="text-muted-foreground">
                                 ({{ moduleLabel[item.module] }},
-                                {{ item.status === 'ueben' ? 'üben' : 'fast' }})
+                                {{
+                                    item.status === 'practice'
+                                        ? 'üben'
+                                        : 'fast'
+                                }})
                             </span>
                         </span>
                     </li>

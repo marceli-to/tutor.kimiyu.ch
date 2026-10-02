@@ -2,7 +2,7 @@
 
 namespace App\Http\PageData;
 
-use App\Lessons\HeroPattern;
+use App\Lessons\GraphicPattern;
 use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,8 +31,8 @@ class CreateLessonPage
             'maxImages' => config('lessons.images.max_count'),
             'maxEdge' => config('lessons.images.max_edge'),
             'patterns' => array_map(
-                fn (HeroPattern $pattern) => ['value' => $pattern->value, 'label' => $pattern->label()],
-                HeroPattern::cases(),
+                fn (GraphicPattern $pattern) => ['value' => $pattern->value, 'label' => $pattern->label()],
+                GraphicPattern::cases(),
             ),
             'lastSettings' => self::lastSettings($recent),
             'lastByChild' => self::lastByChild($recent),

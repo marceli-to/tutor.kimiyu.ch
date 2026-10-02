@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Lessons\HeroPattern;
+use App\Lessons\GraphicPattern;
 use App\Models\Lesson;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,7 +29,7 @@ class StoreLessonRequest extends FormRequest
             // Wünsche der Eltern, nur bei «Selbst beschreiben»
             'graphics' => ['exclude_unless:graphics_mode,custom', 'required', 'array', 'min:1', 'max:3'],
             'graphics.*.description' => ['exclude_unless:graphics_mode,custom', 'required', 'string', 'max:500'],
-            'graphics.*.pattern' => ['exclude_unless:graphics_mode,custom', 'nullable', Rule::enum(HeroPattern::class)],
+            'graphics.*.pattern' => ['exclude_unless:graphics_mode,custom', 'nullable', Rule::enum(GraphicPattern::class)],
             'purpose' => ['required', Rule::in(Lesson::PURPOSES)],
             'scope' => ['required', Rule::in(Lesson::SCOPES)],
             // Erlaubte Lernmodule: ein Quiz in der Liste kommt immer, die anderen nur, wenn sie zum Stoff passen

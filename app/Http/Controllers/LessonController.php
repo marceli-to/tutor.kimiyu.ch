@@ -14,7 +14,7 @@ use App\Http\PageData\CreateLessonPage;
 use App\Http\PageData\LessonPage;
 use App\Http\Requests\StoreLessonRequest;
 use App\Lessons\GenerationPipeline;
-use App\Lessons\HeroDocument;
+use App\Lessons\GraphicDocument;
 use App\Models\Lesson;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,13 +101,13 @@ class LessonController extends Controller
     /**
      * Nur eine Grafik neu erstellen lassen; die anderen bleiben.
      */
-    public function regenerateGraphic(Lesson $lesson, int $nr, RegenerateGraphic $regenerateGraphic): RedirectResponse
+    public function regenerateGraphic(Lesson $lesson, int $number, RegenerateGraphic $regenerateGraphic): RedirectResponse
     {
         Gate::authorize('update', $lesson);
 
-        abort_unless(GenerationPipeline::canRegenerate($lesson, 'graphic', $nr), 422, 'Das geht bei dieser Lernseite gerade nicht.');
+        abort_unless(GenerationPipeline::canRegenerate($lesson, 'graphic', $number), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
-        $regenerateGraphic->handle($lesson, $nr);
+        $regenerateGraphic->handle($lesson, $number);
 
         return to_route('lessons.show', $lesson);
     }
@@ -137,13 +137,13 @@ class LessonController extends Controller
      * Eine Grafik als eigenständiges Dokument für das sandboxed iframe.
      * Signierte URL statt Session, weil das iframe keinen eigenen Origin hat.
      */
-    public function graphic(Lesson $lesson, int $nr): HttpResponse
+    public function graphic(Lesson $lesson, int $number): HttpResponse
     {
-        $graphic = $lesson->graphic($nr);
+        $graphic = $lesson->graphic($number);
 
         // Ausgeblendete Grafiken sind auch über die signierte URL nicht erreichbar
         abort_unless($graphic?->graphic !== null && ! $graphic->hidden, 404);
 
-        return HeroDocument::response($lesson, $graphic->graphic);
+        return GraphicDocument::response($lesson, $graphic->graphic);
     }
 }

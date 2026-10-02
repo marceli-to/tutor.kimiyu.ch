@@ -43,12 +43,12 @@ class LessonFactory extends Factory
             'content' => $content,
             'published_at' => now(),
         ])->afterCreating(function (Lesson $lesson) use ($name) {
-            $hero = self::fixture("$name.hero");
+            $graphic = self::fixture("$name.graphic");
 
             $lesson->graphics()->create([
                 'position' => 1,
-                'plan' => ['pattern' => $hero['pattern'], 'idea' => $hero['description']],
-                'graphic' => $hero,
+                'plan' => ['pattern' => $graphic['pattern'], 'idea' => $graphic['description']],
+                'graphic' => $graphic,
             ]);
         });
     }

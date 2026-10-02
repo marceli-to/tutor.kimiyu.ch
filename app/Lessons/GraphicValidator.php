@@ -8,7 +8,7 @@ namespace App\Lessons;
  * Die eigentliche Sicherheit kommt vom sandboxed iframe und der CSP. Diese Prüfung fängt
  * Fehler ab, die die Grafik kaputt machen würden, und gibt der Reparatur klare Hinweise.
  */
-class HeroValidator
+class GraphicValidator
 {
     public const MAX_BYTES = [
         'css' => 30_000,
@@ -24,23 +24,23 @@ class HeroValidator
     ];
 
     /**
-     * @param  array<string, mixed>  $hero
+     * @param  array<string, mixed>  $graphic
      * @return list<string>
      */
-    public static function errors(array $hero): array
+    public static function errors(array $graphic): array
     {
         $errors = [];
 
-        if (HeroPattern::tryFrom((string) ($hero['pattern'] ?? '')) === null) {
+        if (GraphicPattern::tryFrom((string) ($graphic['pattern'] ?? '')) === null) {
             $errors[] = 'Das Feld «pattern» enthält kein bekanntes Hero-Muster.';
         }
 
-        if (trim((string) ($hero['description'] ?? '')) === '') {
+        if (trim((string) ($graphic['description'] ?? '')) === '') {
             $errors[] = 'Die Beschreibung fehlt.';
         }
 
         foreach (self::MAX_BYTES as $field => $max) {
-            $value = $hero[$field] ?? null;
+            $value = $graphic[$field] ?? null;
 
             if (! is_string($value)) {
                 $errors[] = "Das Feld «{$field}» fehlt.";
@@ -58,9 +58,9 @@ class HeroValidator
             }
         }
 
-        $markup = (string) ($hero['markup'] ?? '');
-        $css = (string) ($hero['css'] ?? '');
-        $script = (string) ($hero['script'] ?? '');
+        $markup = (string) ($graphic['markup'] ?? '');
+        $css = (string) ($graphic['css'] ?? '');
+        $script = (string) ($graphic['script'] ?? '');
 
         if (trim($markup) === '') {
             $errors[] = 'Das Markup ist leer.';

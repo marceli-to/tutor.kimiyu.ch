@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Es wird in einem iframe mit sandbox="allow-scripts" (ohne allow-same-origin) angezeigt
  * und bekommt eine CSP ohne jeden Netzwerkzugriff.
  */
-class HeroDocument
+class GraphicDocument
 {
     /**
      * @param  array{pattern: string, description: string, css: string, markup: string, script: string}  $graphic
@@ -22,13 +22,13 @@ class HeroDocument
     {
         $palette = Palettes::get($lesson->content['meta']['palette'] ?? null);
 
-        $html = view('lesson-hero', [
+        $html = view('lesson-graphic', [
             'title' => $lesson->title ?? 'Grafik',
-            'hero' => $graphic,
+            'graphic' => $graphic,
             'fontFaces' => self::fontFaces(),
             'paletteLight' => self::cssVariables($palette['light']),
             'paletteDark' => self::cssVariables($palette['dark']),
-            'baseCss' => File::get(resource_path('lesson/hero-base.css')),
+            'baseCss' => File::get(resource_path('lesson/graphic-base.css')),
         ])->render();
 
         return response($html)
@@ -74,7 +74,7 @@ class HeroDocument
             return '';
         }
 
-        return Cache::rememberForever('hero-font-faces:'.md5_file($manifest), function () use ($manifest) {
+        return Cache::rememberForever('graphic-font-faces:'.md5_file($manifest), function () use ($manifest) {
             $styles = json_decode(File::get($manifest), true)['style']['familyStyles'] ?? [];
 
             // Kursive Schnitte braucht die Grafik nicht

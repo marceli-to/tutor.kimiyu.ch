@@ -147,23 +147,26 @@ async function addChip(text: string) {
     }
 }
 
-type FormMode = 'einfach' | 'erweitert';
+type FormMode = 'simple' | 'advanced';
 
 const MODE_KEY = 'lernseite.formMode';
 
 // Gemerkter Modus; ohne Speicher (privates Fenster, blockiert) gilt «einfach»
 function storedMode(): FormMode {
     try {
-        return localStorage.getItem(MODE_KEY) === 'erweitert'
-            ? 'erweitert'
-            : 'einfach';
+        const stored = localStorage.getItem(MODE_KEY);
+
+        // 'erweitert' is the value stored before the rename
+        return stored === 'advanced' || stored === 'erweitert'
+            ? 'advanced'
+            : 'simple';
     } catch {
-        return 'einfach';
+        return 'simple';
     }
 }
 
 const mode = ref<FormMode>(storedMode());
-const advanced = computed(() => mode.value === 'erweitert');
+const advanced = computed(() => mode.value === 'advanced');
 
 const selectedChild = computed(() =>
     props.children.find((c) => c.id === form.child_id),
@@ -258,13 +261,13 @@ function defaultChoice(): PresetChoice {
         return 'normal';
     }
 
-    return matchPreset(last) ?? 'letztes';
+    return matchPreset(last) ?? 'last';
 }
 
 function selectPreset(choice: PresetChoice, byHand: boolean) {
     preset.value = choice;
 
-    if (choice === 'eigene') {
+    if (choice === 'custom') {
         if (customSettings.value) {
             applySettings(customSettings.value, byHand);
             form.graphics = customSettings.value.graphics.map((g) => ({
@@ -276,7 +279,7 @@ function selectPreset(choice: PresetChoice, byHand: boolean) {
     }
 
     const values =
-        choice === 'letztes' ? lastForChild.value : presetSettings(choice);
+        choice === 'last' ? lastForChild.value : presetSettings(choice);
 
     if (values) {
         applySettings(values, byHand);
@@ -297,12 +300,12 @@ watch(
     () => {
         if (!advanced.value && !presetByHand) {
             selectPreset(defaultChoice(), false);
-        } else if (!advanced.value && preset.value === 'letztes') {
+        } else if (!advanced.value && preset.value === 'last') {
             // «Wie letztes Mal» means the new child's last settings, never the previous child's.
             // Without them (or when they match a card) fall back to that card or «Normal».
             selectPreset(
                 lastCard.value
-                    ? 'letztes'
+                    ? 'last'
                     : (lastForChild.value && matchPreset(lastForChild.value)) ||
                           'normal',
                 true,
@@ -312,13 +315,13 @@ watch(
 );
 
 function setMode(next: FormMode, remember = true) {
-    if (next === 'einfach') {
+    if (next === 'simple') {
         // Passende Karte wählen; sonst «Eigene Einstellungen», damit nichts stillschweigend überschrieben wird
         const current = currentSettings();
         const match =
             matchPreset(current) ??
             (lastCard.value && sameSettings(current, lastCard.value)
-                ? 'letztes'
+                ? 'last'
                 : null);
 
         if (match) {
@@ -328,7 +331,7 @@ function setMode(next: FormMode, remember = true) {
                 ...current,
                 graphics: form.graphics.map((g) => ({ ...g })),
             };
-            preset.value = 'eigene';
+            preset.value = 'custom';
         }
     }
 
@@ -405,7 +408,7 @@ watch(
                     (key === 'level' && !needsLevel.value),
             )
         ) {
-            setMode('erweitert', false);
+            setMode('advanced', false);
         }
     },
 );
@@ -601,7 +604,7 @@ function submit() {
                     type="button"
                     variant="link"
                     class="px-0"
-                    @click="setMode(advanced ? 'einfach' : 'erweitert')"
+                    @click="setMode(advanced ? 'simple' : 'advanced')"
                 >
                     {{
                         advanced

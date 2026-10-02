@@ -14,7 +14,7 @@ it('only uses features the structured output supports', function (array $schema)
     'repair page' => fn () => Schemas::part('page'),
     'repair modules' => fn () => Schemas::part('modules'),
     'check' => fn () => Schemas::checkResult(),
-    'hero' => fn () => Schemas::hero(),
+    'graphic' => fn () => Schemas::graphic(),
     'quiz' => fn () => Schemas::quizResult(),
 ]);
 
@@ -54,7 +54,7 @@ it('keeps every other schema below the measured limit as well', function (array 
     'module part' => fn () => Schemas::part('modules'),
     'quiz' => fn () => Schemas::quizResult(),
     'check' => fn () => Schemas::checkResult(),
-    'graphic' => fn () => Schemas::hero(),
+    'graphic' => fn () => Schemas::graphic(),
 ]);
 
 it('has a list of additions in the analysis and an origin on every item', function () {
@@ -80,8 +80,8 @@ it('accepts both fixtures as page content', function (string $fixture) {
     expect(JsonSchema::errors(LessonFactory::fixture($fixture), Schemas::content()))->toBe([]);
 })->with(LessonFactory::FIXTURES);
 
-it('accepts both fixture heroes', function (string $fixture) {
-    expect(JsonSchema::errors(LessonFactory::fixture("$fixture.hero"), Schemas::hero()))->toBe([]);
+it('accepts both fixture graphics', function (string $fixture) {
+    expect(JsonSchema::errors(LessonFactory::fixture("$fixture.graphic"), Schemas::graphic()))->toBe([]);
 })->with(LessonFactory::FIXTURES);
 
 it('matches the responses of the fake model', function (string $step, Closure $schema) {
@@ -93,7 +93,7 @@ it('matches the responses of the fake model', function (string $step, Closure $s
     ['repair-page', fn () => Schemas::part('page')],
     ['repair-modules', fn () => Schemas::part('modules')],
     ['check', fn () => Schemas::checkResult()],
-    ['graphic', fn () => Schemas::hero()],
+    ['graphic', fn () => Schemas::graphic()],
 ]);
 
 it('rejects content with an unknown field', function () {

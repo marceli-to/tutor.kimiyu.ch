@@ -46,22 +46,22 @@ const props = defineProps<{
 type Confirm = 'quiz' | 'graphic' | 'delete' | null;
 const confirm = ref<Confirm>(null);
 // Welche Grafik neu erstellt werden soll
-const graphicNr = ref(1);
+const graphicNumber = ref(1);
 
-function graphicLabel(nr: number) {
+function graphicLabel(number: number) {
     const label =
-        nr === 1 && props.graphics.length > 1
+        number === 1 && props.graphics.length > 1
             ? 'Grafik 1 (oben)'
-            : `Grafik ${nr}`;
+            : `Grafik ${number}`;
     const hidden = props.graphics.find(
-        (graphic) => graphic.number === nr,
+        (graphic) => graphic.number === number,
     )?.hidden;
 
     return hidden ? `${label} (ausgeblendet)` : label;
 }
 
-function confirmGraphic(nr: number) {
-    graphicNr.value = nr;
+function confirmGraphic(number: number) {
+    graphicNumber.value = number;
     confirm.value = 'graphic';
 }
 
@@ -89,7 +89,10 @@ function confirmForm() {
         case 'quiz':
             return regenerate.form([props.lessonId, 'quiz']);
         case 'graphic':
-            return regenerateGraphic.form([props.lessonId, graphicNr.value]);
+            return regenerateGraphic.form([
+                props.lessonId,
+                graphicNumber.value,
+            ]);
         default:
             return destroy.form(props.lessonId);
     }
@@ -204,7 +207,7 @@ function confirmForm() {
                     <DialogTitle>
                         {{
                             confirm === 'graphic' && graphics.length > 1
-                                ? `${graphicLabel(graphicNr)} neu erstellen?`
+                                ? `${graphicLabel(graphicNumber)} neu erstellen?`
                                 : texts[confirm].title
                         }}
                     </DialogTitle>

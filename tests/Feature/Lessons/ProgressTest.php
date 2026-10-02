@@ -94,12 +94,12 @@ describe('status', function () {
 
         $status = collect(Progress::forLesson($this->child, $this->lesson))->pluck('status', 'id');
 
-        expect($status['q1'])->toBe('sitzt')
-            ->and($status['q2'])->toBe('fast')
-            ->and($status['q3'])->toBe('fast')
-            ->and($status['q4'])->toBe('ueben')
-            ->and($status['q5'])->toBe('offen')
-            ->and($status['g1'])->toBe('offen');
+        expect($status['q1'])->toBe('mastered')
+            ->and($status['q2'])->toBe('almost')
+            ->and($status['q3'])->toBe('almost')
+            ->and($status['q4'])->toBe('practice')
+            ->and($status['q5'])->toBe('open')
+            ->and($status['g1'])->toBe('open');
     });
 
     it('lists what still needs practice, hardest first', function () {
@@ -109,7 +109,7 @@ describe('status', function () {
         $summary = Progress::summaries($this->child, collect([$this->lesson]))[$this->lesson->id];
 
         expect($summary['total'])->toBe(10)
-            ->and($summary['counts'])->toBe(['sitzt' => 0, 'fast' => 1, 'ueben' => 1, 'offen' => 8])
+            ->and($summary['counts'])->toBe(['mastered' => 0, 'almost' => 1, 'practice' => 1, 'open' => 8])
             ->and(array_column($summary['open'], 'id'))->toBe(['g1', 'q2'])
             ->and($summary['open'][0]['text'])->toBe('Lücke: Kohlenstoffdioxid');
     });
@@ -118,7 +118,7 @@ describe('status', function () {
         $sibling = Child::factory()->for($this->user)->create();
         attempts($sibling, $this->lesson, 'quiz', 'q1', [true, true]);
 
-        expect(collect(Progress::forLesson($this->child, $this->lesson))->firstWhere('id', 'q1')['status'])->toBe('offen');
+        expect(collect(Progress::forLesson($this->child, $this->lesson))->firstWhere('id', 'q1')['status'])->toBe('open');
     });
 });
 
@@ -135,8 +135,8 @@ describe('pages', function () {
                 ->whereNot('child.lastActivity', null)
                 ->has('lessons', 2)
                 ->where('lessons.1.title', 'Biotop + Biozönose = Ökosystem')
-                ->where('lessons.1.counts.sitzt', 1)
-                ->where('lessons.1.counts.ueben', 1)
+                ->where('lessons.1.counts.mastered', 1)
+                ->where('lessons.1.counts.practice', 1)
                 ->where('lessons.1.total', 17)
                 ->where('lessons.1.open.0.text', 'Bakterien')
             );
@@ -165,7 +165,7 @@ describe('pages', function () {
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('lessons.1.total', 12)
-                ->where('lessons.1.counts.sitzt', 1)
+                ->where('lessons.1.counts.mastered', 1)
             );
     });
 
@@ -178,7 +178,7 @@ describe('pages', function () {
 
         $this->get(route('shared.index', $this->child->share_token))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('subjects.0.lessons', fn ($lessons) => collect($lessons)->firstWhere('id', $this->lesson->id)['progress'] === ['sitzt' => 1, 'total' => 10])
+                ->where('subjects.0.lessons', fn ($lessons) => collect($lessons)->firstWhere('id', $this->lesson->id)['progress'] === ['mastered' => 1, 'total' => 10])
             );
     });
 

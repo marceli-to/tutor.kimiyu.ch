@@ -39,9 +39,9 @@ it('rejects an empty gap', function () {
 it('rejects an unclosed bracket', function (string $markup) {
     ClozeParser::parse($markup);
 })->with([
-    'offen' => 'Die Pflanze nimmt [CO₂ auf.',
-    'geschlossen' => 'Die Pflanze nimmt CO₂] auf.',
-    'verschachtelt' => 'Die [Pflanze [nimmt]] auf.',
+    'opening only' => 'Die Pflanze nimmt [CO₂ auf.',
+    'closing only' => 'Die Pflanze nimmt CO₂] auf.',
+    'nested' => 'Die [Pflanze [nimmt]] auf.',
 ])->throws(InvalidArgumentException::class);
 
 it('turns segments back into the same markup', function () {

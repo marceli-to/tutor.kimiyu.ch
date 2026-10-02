@@ -149,20 +149,20 @@ class AnalyzeLesson
         $planned = [];
 
         foreach ($plans as $entry) {
-            $nr = is_array($entry) ? ($entry['number'] ?? null) : null;
+            $number = is_array($entry) ? ($entry['number'] ?? null) : null;
 
-            if (! is_int($nr) || ! in_array($nr, $positions, true) || isset($planned[$nr])) {
+            if (! is_int($number) || ! in_array($number, $positions, true) || isset($planned[$number])) {
                 continue;
             }
 
             $plan = is_array($entry['plan'] ?? null) ? $entry['plan'] : null;
             $hint = is_string($entry['note'] ?? null) && trim($entry['note']) !== '' ? trim($entry['note']) : null;
 
-            $lesson->graphics()->updateOrCreate(['position' => $nr], [
+            $lesson->graphics()->updateOrCreate(['position' => $number], [
                 'plan' => $plan,
                 'error' => $plan === null ? $hint : null,
             ]);
-            $planned[$nr] = $plan;
+            $planned[$number] = $plan;
         }
 
         // Die Eltern sollen wissen, warum ein Wunsch fehlt, auch wenn die KI ihn übergangen hat

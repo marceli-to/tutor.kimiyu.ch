@@ -26,7 +26,7 @@ function allKeys(array $data): array
 
 dataset('fixtures', fn () => [
     ...LessonFactory::FIXTURES,
-    ...array_map(fn (string $name) => "$name.hero", LessonFactory::FIXTURES),
+    ...array_map(fn (string $name) => "$name.graphic", LessonFactory::FIXTURES),
 ]);
 
 it('maps a German page to English and back without loss', function (string $name) {

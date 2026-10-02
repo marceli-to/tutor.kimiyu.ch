@@ -5,7 +5,7 @@ namespace App\Lessons;
 /**
  * Hero-Muster aus SKILL.md.
  */
-enum HeroPattern: string
+enum GraphicPattern: string
 {
     case Sliders = 'sliders';
     case Views = 'views';

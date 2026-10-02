@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useIsDark } from '@/composables/useIsDark';
-import type { LessonHero } from '@/types';
+import type { LessonGraphic } from '@/types';
 
 const props = defineProps<{
-    hero: LessonHero;
+    graphic: LessonGraphic;
 }>();
 
 const emit = defineEmits<{
@@ -18,18 +18,18 @@ const isDark = useIsDark();
 
 // Startwert per Hash, damit die Grafik nicht erst hell aufblitzt
 const src = computed(
-    () => `${props.hero.url}#${isDark.value ? 'dark' : 'light'}`,
+    () => `${props.graphic.url}#${isDark.value ? 'dark' : 'light'}`,
 );
 const initialSrc = ref('');
 
-type HeroMessage = {
+type GraphicMessage = {
     source?: string;
     type?: string;
     height?: number;
     message?: string;
 };
 
-function onMessage(event: MessageEvent<HeroMessage>) {
+function onMessage(event: MessageEvent<GraphicMessage>) {
     // Das iframe hat keinen eigenen Origin, also am Absender-Fenster erkennen
     if (!frame.value || event.source !== frame.value.contentWindow) {
         return;
@@ -37,7 +37,7 @@ function onMessage(event: MessageEvent<HeroMessage>) {
 
     const data = event.data;
 
-    if (data?.source !== 'lernseite-hero') {
+    if (data?.source !== 'lesson-graphic') {
         return;
     }
 
@@ -74,7 +74,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage));
             :src="initialSrc"
             sandbox="allow-scripts"
             referrerpolicy="no-referrer"
-            :title="`Interaktive Grafik: ${hero.description}`"
+            :title="`Interaktive Grafik: ${graphic.description}`"
             class="block w-full border-0"
             :style="{ height: `${height}px` }"
         />

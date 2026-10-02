@@ -41,7 +41,7 @@ class SharedLessonIndex
                         'emoji' => $lesson->content['meta']['emoji'] ?? null,
                         'key_idea' => $lesson->content['meta']['key_idea'] ?? null,
                         'progress' => [
-                            'sitzt' => $progress[$lesson->id]['counts']['sitzt'],
+                            'mastered' => $progress[$lesson->id]['counts']['mastered'],
                             'total' => $progress[$lesson->id]['total'],
                         ],
                     ])->values(),

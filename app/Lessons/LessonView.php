@@ -35,8 +35,6 @@ class LessonView
             'level' => $lesson->level,
             'content' => $content,
             'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,
-            // Grafik 1 steht oben, 2 und 3 an ihrem Block im Inhalt
-            'hero' => $graphics[1] ?? null,
             'graphics' => $graphics,
         ];
     }
@@ -55,7 +53,7 @@ class LessonView
                 // Signiert, weil das iframe ohne eigenen Origin keine Session hat
                 'url' => URL::signedRoute('lessons.graphic', [
                     'lesson' => $lesson,
-                    'nr' => $graphic->position,
+                    'number' => $graphic->position,
                     'v' => $graphic->updated_at?->timestamp,
                 ]),
                 'description' => $graphic->graphic['description'] ?? '',
@@ -83,14 +81,14 @@ class LessonView
                         return true;
                     }
 
-                    $nr = $block['number'] ?? null;
+                    $number = $block['number'] ?? null;
 
                     // Jede Grafik nur einmal zeigen
-                    if (! in_array($nr, $finished, true) || in_array($nr, $placed, true)) {
+                    if (! in_array($number, $finished, true) || in_array($number, $placed, true)) {
                         return false;
                     }
 
-                    $placed[] = $nr;
+                    $placed[] = $number;
 
                     return true;
                 },
@@ -107,9 +105,9 @@ class LessonView
 
         $last = array_key_last($content['sections'] ?? []);
 
-        foreach ($finished as $nr) {
-            if ($nr > 1 && $last !== null && ! in_array($nr, $placed, true)) {
-                $content['sections'][$last]['blocks'][] = ['type' => 'graphic', 'number' => $nr];
+        foreach ($finished as $number) {
+            if ($number > 1 && $last !== null && ! in_array($number, $placed, true)) {
+                $content['sections'][$last]['blocks'][] = ['type' => 'graphic', 'number' => $number];
             }
         }
 

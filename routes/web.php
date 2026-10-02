@@ -32,16 +32,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('lernseiten/{lesson}/neu/{part}', [LessonController::class, 'regenerate'])
         ->whereIn('part', ['quiz'])
         ->name('lessons.regenerate');
-    Route::post('lernseiten/{lesson}/grafik/{nr}/neu', [LessonController::class, 'regenerateGraphic'])
-        ->where('nr', '[1-3]')
+    Route::post('lernseiten/{lesson}/grafik/{number}/neu', [LessonController::class, 'regenerateGraphic'])
+        ->where('number', '[1-3]')
         ->name('lessons.graphic.regenerate');
 
     Route::get('lernseiten/{lesson}/bearbeiten', [LessonContentController::class, 'edit'])->name('lessons.edit');
     Route::put('lernseiten/{lesson}/inhalt', [LessonContentController::class, 'update'])->name('lessons.update');
 });
 
-Route::get('lernseiten/{lesson}/grafik/{nr}', [LessonController::class, 'graphic'])
-    ->whereNumber('nr')
+Route::get('lernseiten/{lesson}/grafik/{number}', [LessonController::class, 'graphic'])
+    ->whereNumber('number')
     ->middleware('signed')
     ->name('lessons.graphic');
 

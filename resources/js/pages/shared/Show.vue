@@ -7,7 +7,6 @@ import { answer as answerRoute, index } from '@/routes/shared';
 import type {
     LessonContent,
     LessonGraphics,
-    LessonHero,
     ModuleAnswer,
     Palette,
 } from '@/types';
@@ -20,7 +19,6 @@ const props = defineProps<{
         level: string;
         content: LessonContent;
         palette: Palette;
-        hero: LessonHero | null;
         graphics: LessonGraphics;
     };
 }>();
@@ -38,7 +36,6 @@ function onAnswer(answer: ModuleAnswer) {
     <LessonPage
         :content="lesson.content"
         :palette="lesson.palette"
-        :hero="lesson.hero"
         :graphics="lesson.graphics"
         :subject="lesson.subject"
         :level="lesson.level"

@@ -11,7 +11,7 @@
 {!! $baseCss !!}
 </style>
 <style>
-{!! $hero['css'] !!}
+{!! $graphic['css'] !!}
 </style>
 <script>
 /* Brücke zur Lernseite: Theme übernehmen, Höhe und Fehler melden. */
@@ -19,7 +19,7 @@
   var root=document.documentElement;
   var setTheme=function(t){root.setAttribute('data-theme',t==='dark'?'dark':'light');};
   setTheme(location.hash.slice(1));
-  var post=function(msg){msg.source='lernseite-hero';parent.postMessage(msg,'*');};
+  var post=function(msg){msg.source='lesson-graphic';parent.postMessage(msg,'*');};
   window.addEventListener('message',function(e){
     if(e.source===parent&&e.data&&e.data.type==='theme')setTheme(e.data.theme);
   });
@@ -32,9 +32,9 @@
 </script>
 </head>
 <body>
-{!! $hero['markup'] !!}
+{!! $graphic['markup'] !!}
 <script>
-{!! $hero['script'] !!}
+{!! $graphic['script'] !!}
 </script>
 </body>
 </html>

@@ -3,14 +3,14 @@
 namespace App\Lessons\Ai;
 
 use App\Lessons\ContentValidator;
-use App\Lessons\HeroPattern;
+use App\Lessons\GraphicPattern;
 use App\Lessons\Palettes;
 
 /**
  * JSON-Schemas für die strukturierte Ausgabe.
  *
  * Die API erzwingt nur Form und Typen (keine Längen oder Anzahlen). Alles Weitere
- * prüft der ContentValidator bzw. HeroValidator danach serverseitig.
+ * prüft der ContentValidator bzw. GraphicValidator danach serverseitig.
  */
 class Schemas
 {
@@ -32,7 +32,7 @@ class Schemas
             'additions' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Pro Ergänzung ein Satz: was auf den Fotos fehlte und was aus Fachwissen ergänzt wurde. Leer, wenn nichts ergänzt wurde oder es keine Fotos gibt.'],
             'graphic_plans' => ['type' => 'array', 'items' => self::object([
                 'number' => ['type' => 'integer'],
-                'plan' => self::nullable(self::heroPlan()),
+                'plan' => self::nullable(self::graphicPlan()),
                 'note' => self::nullable(['type' => 'string', 'description' => 'Warum der Wunsch nicht passt, ein Satz für die Eltern']),
             ])],
         ]);
@@ -92,10 +92,10 @@ class Schemas
     /**
      * @return array<string, mixed>
      */
-    public static function hero(): array
+    public static function graphic(): array
     {
         return self::object([
-            'pattern' => ['type' => 'string', 'enum' => array_column(HeroPattern::cases(), 'value')],
+            'pattern' => ['type' => 'string', 'enum' => array_column(GraphicPattern::cases(), 'value')],
             'description' => ['type' => 'string', 'description' => 'Ein bis zwei Sätze: Was zeigt die Grafik, was kann man tun? Wird als Alternativtext verwendet.'],
             'css' => ['type' => 'string'],
             'markup' => ['type' => 'string'],
@@ -106,10 +106,10 @@ class Schemas
     /**
      * @return array<string, mixed>
      */
-    public static function heroPlan(): array
+    public static function graphicPlan(): array
     {
         return self::object([
-            'pattern' => ['type' => 'string', 'enum' => array_column(HeroPattern::cases(), 'value')],
+            'pattern' => ['type' => 'string', 'enum' => array_column(GraphicPattern::cases(), 'value')],
             'idea' => ['type' => 'string', 'description' => 'Was die Grafik zeigt, welche Interaktion den Mechanismus sichtbar macht, welche Kategorie-Farbe (cat1–cat3) was bedeutet'],
         ]);
     }

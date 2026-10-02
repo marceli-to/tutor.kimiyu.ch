@@ -71,7 +71,7 @@ class FakeLanguageModel implements LanguageModel
     public static function defaultResponse(string $step, string $fixture = 'fotosynthese'): array
     {
         $content = LessonFactory::fixture($fixture);
-        $hero = LessonFactory::fixture("$fixture.hero");
+        $graphic = LessonFactory::fixture("$fixture.graphic");
 
         $page = Prompts::page($content);
 
@@ -81,12 +81,12 @@ class FakeLanguageModel implements LanguageModel
                 'subject' => 'Biologie',
                 'summary' => 'Zusammenfassung der Buchseite zum Thema '.$content['meta']['topic'].'.',
                 'additions' => [],
-                'graphic_plans' => [['number' => 1, 'plan' => ['pattern' => $hero['pattern'], 'idea' => $hero['description']], 'note' => null]],
+                'graphic_plans' => [['number' => 1, 'plan' => ['pattern' => $graphic['pattern'], 'idea' => $graphic['description']], 'note' => null]],
             ],
             'page', 'repair-page' => ['page' => $page],
             'modules', 'repair-modules' => ['modules' => $content['modules']],
             'check' => ['corrections' => []],
-            'graphic', 'graphic-repair' => $hero,
+            'graphic', 'graphic-repair' => $graphic,
             default => [],
         };
     }

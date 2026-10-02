@@ -21,7 +21,7 @@ it('shows a lesson to the parent', function () {
             ->where('lesson.content.meta.title', 'Biotop + Biozönose = Ökosystem')
             ->where('lesson.palette.light.accent', '#134E5E')
             ->where('lesson.subject', 'Biologie')
-            ->has('lesson.hero.url')
+            ->has('lesson.graphics.1.url')
         );
 });
 
@@ -80,7 +80,7 @@ describe('graphic document', function () {
             ->not->toContain('http');
     });
 
-    it('returns 404 when the lesson has no hero', function () {
+    it('returns 404 when the lesson has no graphic', function () {
         $this->lesson->graphic(1)->update(['graphic' => null]);
 
         $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))->assertNotFound();

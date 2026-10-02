@@ -82,7 +82,7 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->step)->toBeNull()
         ->and($lesson->title)->toBe('Wie macht ein Blatt Zucker aus Licht?')
         ->and($lesson->content)->toBe(LessonFactory::fixture('fotosynthese'))
-        ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+        ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'))
         ->and($lesson->graphic(1)->plan['pattern'])->toBe('sliders')
         ->and($lesson->graphic(1)->error)->toBeNull()
         ->and($lesson->source_summary)->toContain('Fotosynthese')
@@ -96,7 +96,7 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('lesson.status', 'review')
             ->where('lesson.content.meta.palette', 'green')
-            ->has('lesson.hero.url')
+            ->has('lesson.graphics.1.url')
             ->where('parent.graphics', [['number' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
         );
 });
@@ -475,8 +475,8 @@ it('logs the model of the step when a call fails without a response', function (
     expect(Lesson::sole()->generations()->where('step', 'analysis')->value('model'))->toBe('claude-test-analysis');
 });
 
-it('publishes the page without a graphic when the hero stays broken', function () {
-    $broken = [...LessonFactory::fixture('fotosynthese.hero'), 'markup' => '<button onclick="x()">Los</button>'];
+it('publishes the page without a graphic when the graphic stays broken', function () {
+    $broken = [...LessonFactory::fixture('fotosynthese.graphic'), 'markup' => '<button onclick="x()">Los</button>'];
 
     $this->fake->push('graphic', $broken);
     $this->fake->push('graphic-repair', $broken);
@@ -490,13 +490,13 @@ it('publishes the page without a graphic when the hero stays broken', function (
         ->and($this->fake->requestsFor('graphic-repair'))->toHaveCount(1);
 });
 
-it('repairs a broken hero once', function () {
-    $this->fake->push('graphic', [...LessonFactory::fixture('fotosynthese.hero'), 'script' => 'fetch("x")']);
+it('repairs a broken graphic once', function () {
+    $this->fake->push('graphic', [...LessonFactory::fixture('fotosynthese.graphic'), 'script' => 'fetch("x")']);
 
     upload();
 
     $lesson = Lesson::sole();
-    expect($lesson->graphic(1)->graphic['script'])->toBe(LessonFactory::fixture('fotosynthese.hero')['script'])
+    expect($lesson->graphic(1)->graphic['script'])->toBe(LessonFactory::fixture('fotosynthese.graphic')['script'])
         ->and($lesson->graphic(1)->error)->toBeNull();
 });
 
@@ -878,7 +878,7 @@ describe('without a graphic', function () {
         $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('lesson.plannedGraphics', [])
-                ->where('lesson.hero', null)
+                ->where('lesson.graphics', [])
                 ->where('parent.graphics', [])
             );
     });
@@ -1071,9 +1071,9 @@ describe('graphics mode', function () {
 });
 
 describe('graphic plans', function () {
-    function plan(string $muster, string $idee): array
+    function plan(string $pattern, string $idea): array
     {
-        return ['pattern' => $muster, 'idea' => $idee];
+        return ['pattern' => $pattern, 'idea' => $idea];
     }
 
     function wishes(): array
@@ -1173,7 +1173,7 @@ describe('graphic plans', function () {
 
         app(AnalyzeLessonAction::class)->handle($lesson);
 
-        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'));
+        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'));
     });
 
     it('stores no plan when the parents switched the graphics off', function () {
@@ -1223,13 +1223,13 @@ describe('graphic generation', function () {
     })->with([['none', 0], ['auto', 1], ['custom', 3]]);
 
     it('builds each graphic on its own and keeps the others when one breaks', function () {
-        $broken = [...LessonFactory::fixture('fotosynthese.hero'), 'markup' => '<button onclick="x()">Los</button>'];
+        $broken = [...LessonFactory::fixture('fotosynthese.graphic'), 'markup' => '<button onclick="x()">Los</button>'];
         $this->fake->push('analysis', threePlans());
         $this->fake->push('page', pageWithGraphic2());
         $this->fake->push('graphic', function (ModelRequest $request) {
             expect(Lesson::sole()->step)->toBe('graphic-1');
 
-            return LessonFactory::fixture('fotosynthese.hero');
+            return LessonFactory::fixture('fotosynthese.graphic');
         });
         $this->fake->push('graphic', function (ModelRequest $request) use ($broken) {
             expect(Lesson::sole()->step)->toBe('graphic-2');
@@ -1237,7 +1237,7 @@ describe('graphic generation', function () {
             return $broken;
         });
         $this->fake->push('graphic-repair', $broken);
-        $this->fake->push('graphic', LessonFactory::fixture('oekosystem.hero'));
+        $this->fake->push('graphic', LessonFactory::fixture('oekosystem.graphic'));
 
         upload(wishes());
 
@@ -1246,11 +1246,11 @@ describe('graphic generation', function () {
 
         expect($lesson->status)->toBe(LessonStatus::Review)
             ->and($requests)->toHaveCount(3)
-            ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'))
             ->and($lesson->graphic(1)->error)->toBeNull()
             ->and($lesson->graphic(2)->graphic)->toBeNull()
             ->and($lesson->graphic(2)->error)->toContain('Inline-Event-Handler')
-            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.graphic'))
             ->and($lesson->graphic(3)->error)->toBeNull();
 
         expect($requests[0]->prompt)->toContain("Muster: sliders\nDrei Regler")->not->toContain('nicht oben auf der Seite')
@@ -1294,7 +1294,7 @@ describe('graphic generation', function () {
         $lesson->refresh();
         expect(collect($this->fake->requests)->pluck('step')->all())->toBe(['graphic'])
             ->and($this->fake->requests[0]->prompt)->toContain("Muster: steps\nVier Schritte")
-            ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'))
             ->and($lesson->graphic(2)->error)->toBeNull()
             ->and($lesson->graphic(3)->error)->toBe('Passt nicht zu den Fotos.')
             ->and($lesson->status)->toBe(LessonStatus::Review);

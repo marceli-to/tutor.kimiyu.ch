@@ -10,14 +10,14 @@ use Illuminate\Support\Collection;
 /**
  * Lernstand: pro Aufgabe (Quizfrage, Sortier-Begriff, Lücke) ein Status aus den letzten Antworten.
  *
- * - sitzt: die letzten zwei Antworten waren richtig
- * - fast:  die letzte Antwort war richtig, davor falsch oder nur ein Versuch (beim Quiz kann das geraten sein)
- * - ueben: die letzte Antwort war falsch
- * - offen: noch nie beantwortet
+ * - mastered: die letzten zwei Antworten waren richtig
+ * - almost: die letzte Antwort war richtig, davor falsch oder nur ein Versuch (beim Quiz kann das geraten sein)
+ * - practice: die letzte Antwort war falsch
+ * - open: noch nie beantwortet
  */
 class Progress
 {
-    public const STATUSES = ['sitzt', 'fast', 'ueben', 'offen'];
+    public const STATUSES = ['mastered', 'almost', 'practice', 'open'];
 
     /**
      * Alle Aufgaben einer Lernseite, die der Lernstand erfasst.
@@ -103,8 +103,8 @@ class Progress
             }
 
             // Zuerst was geübt werden muss, dann was fast sitzt
-            $open = array_values(array_filter($items, fn ($item) => in_array($item['status'], ['ueben', 'fast'], true)));
-            usort($open, fn ($a, $b) => ($a['status'] === 'ueben' ? 0 : 1) <=> ($b['status'] === 'ueben' ? 0 : 1));
+            $open = array_values(array_filter($items, fn ($item) => in_array($item['status'], ['practice', 'almost'], true)));
+            usort($open, fn ($a, $b) => ($a['status'] === 'practice' ? 0 : 1) <=> ($b['status'] === 'practice' ? 0 : 1));
 
             $summaries[$lesson->id] = [
                 'counts' => $counts,
@@ -132,10 +132,10 @@ class Progress
             $last = array_slice($byItem[$item['module'].':'.$item['id']] ?? [], 0, 2);
 
             $status = match (true) {
-                $last === [] => 'offen',
-                ! $last[0] => 'ueben',
-                count($last) === 2 && $last[1] => 'sitzt',
-                default => 'fast',
+                $last === [] => 'open',
+                ! $last[0] => 'practice',
+                count($last) === 2 && $last[1] => 'mastered',
+                default => 'almost',
             };
 
             return [...$item, 'status' => $status];

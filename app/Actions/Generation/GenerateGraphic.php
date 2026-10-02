@@ -4,7 +4,7 @@ namespace App\Actions\Generation;
 
 use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\Prompts;
-use App\Lessons\HeroValidator;
+use App\Lessons\GraphicValidator;
 use App\Models\Lesson;
 
 class GenerateGraphic
@@ -36,12 +36,12 @@ class GenerateGraphic
         };
 
         try {
-            $hero = $this->callModel->handle($lesson, Prompts::hero($lesson, $graphic))->data;
-            $errors = HeroValidator::errors($hero);
+            $result = $this->callModel->handle($lesson, Prompts::graphic($lesson, $graphic))->data;
+            $errors = GraphicValidator::errors($result);
 
             if ($errors !== []) {
-                $hero = $this->callModel->handle($lesson, Prompts::heroRepair($graphic, $hero, $errors))->data;
-                $errors = HeroValidator::errors($hero);
+                $result = $this->callModel->handle($lesson, Prompts::graphicRepair($graphic, $result, $errors))->data;
+                $errors = GraphicValidator::errors($result);
             }
         } catch (ModelException $e) {
             $fail($e->getMessage());
@@ -57,11 +57,11 @@ class GenerateGraphic
 
         $graphic->update([
             'graphic' => [
-                'pattern' => $hero['pattern'],
-                'description' => $hero['description'],
-                'css' => $hero['css'],
-                'markup' => $hero['markup'],
-                'script' => $hero['script'],
+                'pattern' => $result['pattern'],
+                'description' => $result['description'],
+                'css' => $result['css'],
+                'markup' => $result['markup'],
+                'script' => $result['script'],
             ],
             'error' => null,
             // Eine neu erstellte Grafik ist wieder sichtbar (am Ende des letzten Abschnitts, ohne Baustein)

@@ -2,7 +2,7 @@
 
 namespace App\Lessons\Ai;
 
-use App\Lessons\HeroPattern;
+use App\Lessons\GraphicPattern;
 use App\Lessons\LessonView;
 use App\Lessons\Palettes;
 use App\Models\Lesson;
@@ -144,7 +144,7 @@ class Prompts
             system: $system,
             prompt: implode("\n\n", [
                 self::context($lesson),
-                self::heroPlanText($lesson, $page),
+                self::graphicPlansText($lesson, $page),
                 "Textteil der Lernseite:\n".self::json($page),
             ]),
             schema: Schemas::modulesResult(),
@@ -190,7 +190,7 @@ class Prompts
             prompt: implode("\n\n", array_filter([
                 self::context($lesson),
                 // The text part places the graphic blocks, so it needs the plans
-                $part === 'page' ? self::heroPlanText($lesson, $content) : null,
+                $part === 'page' ? self::graphicPlansText($lesson, $content) : null,
                 "Gib diesen Teil korrigiert zurück: {$part}",
                 "Diese Fehler müssen behoben werden:\n- ".implode("\n- ", $errors),
                 "Ganze Lernseite:\n".self::json($content),
@@ -235,10 +235,10 @@ class Prompts
     /**
      * Eine Grafik nach ihrem Plan. Grafik 1 steht oben, 2 und 3 im Abschnitt mit ihrem Baustein.
      */
-    public static function hero(Lesson $lesson, LessonGraphic $graphic): ModelRequest
+    public static function graphic(Lesson $lesson, LessonGraphic $graphic): ModelRequest
     {
         // Ein Beispiel reicht als Massstab; jedes weitere kostet nur Input
-        $example = '### '.LessonFactory::fixture('fotosynthese')['meta']['title']."\n\n```json\n".self::json(LessonFactory::fixture('fotosynthese.hero'))."\n```";
+        $example = '### '.LessonFactory::fixture('fotosynthese')['meta']['title']."\n\n```json\n".self::json(LessonFactory::fixture('fotosynthese.graphic'))."\n```";
 
         $place = null;
 
@@ -257,16 +257,16 @@ class Prompts
                 self::context($lesson, forChild: true),
                 "Inhalt der Lernseite:\n".self::json(LessonView::withoutOrigin($lesson->content ?? [])),
             ])),
-            schema: Schemas::hero(),
+            schema: Schemas::graphic(),
             maxTokens: config('lessons.max_tokens.graphic'),
         );
     }
 
     /**
-     * @param  array<string, mixed>  $hero
+     * @param  array<string, mixed>  $result
      * @param  list<string>  $errors
      */
-    public static function heroRepair(LessonGraphic $graphic, array $hero, array $errors): ModelRequest
+    public static function graphicRepair(LessonGraphic $graphic, array $result, array $errors): ModelRequest
     {
         return new ModelRequest(
             step: 'graphic-repair',
@@ -274,9 +274,9 @@ class Prompts
             prompt: implode("\n\n", [
                 self::graphicPlanText($graphic),
                 "Diese Probleme müssen behoben werden:\n- ".implode("\n- ", $errors),
-                "Bisheriges Ergebnis:\n".self::json($hero),
+                "Bisheriges Ergebnis:\n".self::json($result),
             ]),
-            schema: Schemas::hero(),
+            schema: Schemas::graphic(),
             maxTokens: config('lessons.max_tokens.graphic'),
         );
     }
@@ -296,7 +296,7 @@ class Prompts
             'custom' => implode("\n", [
                 'Grafiken nach Wunsch der Eltern:',
                 ...$lesson->graphics()->get()->map(function (LessonGraphic $graphic) {
-                    $pattern = HeroPattern::tryFrom((string) $graphic->pattern);
+                    $pattern = GraphicPattern::tryFrom((string) $graphic->pattern);
 
                     return "Grafik {$graphic->position}: {$graphic->request}"
                         .($pattern ? " (Muster: {$pattern->value} – {$pattern->label()})" : '');
@@ -336,7 +336,7 @@ class Prompts
      *
      * @param  array<string, mixed>  $page
      */
-    private static function heroPlanText(Lesson $lesson, array $page): string
+    private static function graphicPlansText(Lesson $lesson, array $page): string
     {
         $plans = $lesson->graphics()->whereNotNull('plan')->get()->map(function (LessonGraphic $graphic) use ($page) {
             $place = $graphic->position === 1
@@ -352,15 +352,15 @@ class Prompts
     }
 
     /**
-     * Titel des Abschnitts, in dem der Baustein für Grafik $nr steht.
+     * Titel des Abschnitts, in dem der Baustein für Grafik $number steht.
      *
      * @param  array<string, mixed>  $content
      */
-    public static function graphicSection(array $content, int $nr): ?string
+    public static function graphicSection(array $content, int $number): ?string
     {
         foreach ($content['sections'] ?? [] as $section) {
             foreach ($section['blocks'] ?? [] as $block) {
-                if (($block['type'] ?? null) === 'graphic' && ($block['number'] ?? null) === $nr) {
+                if (($block['type'] ?? null) === 'graphic' && ($block['number'] ?? null) === $number) {
                     return $section['title'] ?? null;
                 }
             }

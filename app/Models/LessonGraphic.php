@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $lesson_id
  * @property int $position 1–3
  * @property string|null $request Wunsch der Eltern
- * @property string|null $pattern Gewünschtes Muster (HeroPattern)
+ * @property string|null $pattern Gewünschtes Muster (GraphicPattern)
  * @property array{pattern: string, idea: string}|null $plan null: (noch) kein Plan, z. B. weil der Wunsch nicht zum Stoff passt
  * @property array{pattern: string, description: string, css: string, markup: string, script: string}|null $graphic
  * @property string|null $error Hinweis für die Eltern, warum die Grafik fehlt

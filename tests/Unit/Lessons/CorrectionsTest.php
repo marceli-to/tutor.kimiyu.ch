@@ -3,9 +3,9 @@
 use App\Lessons\Corrections;
 use Database\Factories\LessonFactory;
 
-function correction(string $pfad, string $wert): array
+function correction(string $path, string $value): array
 {
-    return ['path' => $pfad, 'value' => $wert, 'area' => 'Test', 'change' => 'Test.'];
+    return ['path' => $path, 'value' => $value, 'area' => 'Test', 'change' => 'Test.'];
 }
 
 beforeEach(fn () => $this->content = LessonFactory::fixture('fotosynthese'));
@@ -24,8 +24,8 @@ it('decodes json for values that are not strings', function () {
     expect($result['content']['modules']['quiz'][0]['answer'])->toBe(2);
 });
 
-it('rejects paths that do not exist', function (string $pfad) {
-    $result = Corrections::apply($this->content, [correction($pfad, 'x')]);
+it('rejects paths that do not exist', function (string $path) {
+    $result = Corrections::apply($this->content, [correction($path, 'x')]);
 
     expect($result['content'])->toBe($this->content)
         ->and($result['rejected'])->toHaveCount(1);
@@ -37,9 +37,9 @@ it('rejects changes to ids', function () {
     expect($result['content'])->toBe($this->content);
 });
 
-it('rejects changes to the origin', function (string $pfad) {
+it('rejects changes to the origin', function (string $path) {
     // Die Herkunft bestimmt, was die Eltern als ergänzt sehen; die Prüfung darf sie nicht umschreiben
-    $result = Corrections::apply($this->content, [correction($pfad, 'added')]);
+    $result = Corrections::apply($this->content, [correction($path, 'added')]);
 
     expect($result['content'])->toBe($this->content)
         ->and($result['rejected'])->toHaveCount(1);
@@ -146,8 +146,8 @@ it('rejects filling a text that is null', function () {
         ->and($result['rejected'])->toHaveCount(1);
 });
 
-it('rejects an empty list or a list with objects for a list of texts', function (string $wert) {
-    $result = Corrections::apply($this->content, [correction('/modules/quiz/0/options', $wert)]);
+it('rejects an empty list or a list with objects for a list of texts', function (string $value) {
+    $result = Corrections::apply($this->content, [correction('/modules/quiz/0/options', $value)]);
 
     expect($result['content'])->toBe($this->content)
         ->and($result['rejected'])->toHaveCount(1);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import HeroFrame from '@/components/lesson/HeroFrame.vue';
+import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { categoryClasses } from '@/lib/lesson';
 import type { LessonBlock, LessonGraphics } from '@/types';
@@ -78,7 +78,7 @@ defineProps<{
         v-else-if="block.type === 'graphic' && graphics[block.number]"
         class="m-0"
     >
-        <HeroFrame :hero="graphics[block.number]!" />
+        <GraphicFrame :graphic="graphics[block.number]!" />
         <figcaption
             v-if="graphics[block.number]!.description"
             class="mt-2 max-w-[66ch] text-base text-ls-muted"

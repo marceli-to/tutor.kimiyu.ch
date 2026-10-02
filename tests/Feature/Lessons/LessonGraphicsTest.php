@@ -21,7 +21,7 @@ describe('migration', function () {
         $migration->down();
 
         $child = Child::factory()->create();
-        $hero = LessonFactory::fixture('fotosynthese.hero');
+        $hero = LessonFactory::fixture('fotosynthese.graphic');
         $base = ['child_id' => $child->id, 'status' => 'review', 'subject' => 'Biologie', 'level' => '2. Sek', 'created_at' => now(), 'updated_at' => now()];
 
         $withHero = DB::table('lessons')->insertGetId([...$base, 'hero_plan' => json_encode(['pattern' => 'sliders', 'idea' => 'Regler']), 'hero' => json_encode($hero)]);
@@ -53,7 +53,7 @@ describe('migration', function () {
 describe('dropping the old columns', function () {
     it('removes the old columns and copies graphic 1 back on rollback', function () {
         $migration = require database_path('migrations/2026_10_02_150000_drop_hero_columns_from_lessons_table.php');
-        $hero = LessonFactory::fixture('fotosynthese.hero');
+        $hero = LessonFactory::fixture('fotosynthese.graphic');
 
         expect(Schema::hasColumns('lessons', ['hero', 'hero_plan', 'hero_error', 'with_hero']))->toBeFalse();
 
@@ -102,12 +102,12 @@ describe('model', function () {
 
     it('creates graphic 1 for a lesson from a fixture', function () {
         $lesson = Lesson::factory()->fromFixture('oekosystem')->create();
-        $hero = LessonFactory::fixture('oekosystem.hero');
+        $expected = LessonFactory::fixture('oekosystem.graphic');
 
         $graphic = $lesson->graphic(1);
         expect($lesson->graphics)->toHaveCount(1)
-            ->and($graphic->graphic)->toBe($hero)
-            ->and($graphic->plan)->toBe(['pattern' => $hero['pattern'], 'idea' => $hero['description']])
+            ->and($graphic->graphic)->toBe($expected)
+            ->and($graphic->plan)->toBe(['pattern' => $expected['pattern'], 'idea' => $expected['description']])
             ->and($graphic->error)->toBeNull();
     });
 });
@@ -133,7 +133,7 @@ describe('display', function () {
             'position' => 2,
             'request' => 'Nahrungskette zum Durchklicken',
             'plan' => ['pattern' => 'steps', 'idea' => 'Vier Schritte'],
-            'graphic' => [...LessonFactory::fixture('fotosynthese.hero'), 'description' => 'Die Nahrungskette', 'markup' => '<p id="graphic-zwei">Zwei</p>'],
+            'graphic' => [...LessonFactory::fixture('fotosynthese.graphic'), 'description' => 'Die Nahrungskette', 'markup' => '<p id="graphic-zwei">Zwei</p>'],
         ]);
         $this->lesson->graphics()->create([
             'position' => 3,
@@ -148,7 +148,7 @@ describe('display', function () {
         return collect($content['sections'])
             ->flatMap(fn (array $section, int $k) => collect($section['blocks'])
                 ->filter(fn (array $block) => $block['type'] === $type)
-                ->map(fn (array $block) => [...$block, 'abschnitt' => $k]))
+                ->map(fn (array $block) => [...$block, 'section' => $k]))
             ->values()
             ->all();
     }
@@ -160,7 +160,6 @@ describe('display', function () {
                 ->has('lesson.graphics.1.url')
                 ->where('lesson.graphics.2.description', 'Die Nahrungskette')
                 ->missing('lesson.graphics.3')
-                ->where('lesson.hero', fn ($hero) => $hero['url'] === $page->toArray()['props']['lesson']['graphics'][1]['url'])
                 ->where('parent.graphics', [
                     ['number' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
                     ['number' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
@@ -177,7 +176,7 @@ describe('display', function () {
         $response->assertInertia(fn (Assert $page) => $page
             ->has('lesson.graphics', 2)
             ->has('lesson.graphics.2.url')
-            ->has('lesson.hero.url')
+            ->has('lesson.graphics.1.url')
         );
 
         $keys = [];
@@ -228,7 +227,7 @@ describe('display', function () {
 
                     return count($blocks) === 1
                         && $blocks[0]['number'] === 2
-                        && $blocks[0]['abschnitt'] === count($content['sections']) - 1;
+                        && $blocks[0]['section'] === count($content['sections']) - 1;
                 })
             );
     });
@@ -241,7 +240,7 @@ describe('display', function () {
 
         $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))
             ->assertOk()
-            ->assertSee(LessonFactory::fixture('oekosystem.hero')['markup'], escape: false);
+            ->assertSee(LessonFactory::fixture('oekosystem.graphic')['markup'], escape: false);
 
         $this->get(route('lessons.graphic', [$this->lesson, 2]))->assertForbidden();
         $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 3]))->assertNotFound();
@@ -275,12 +274,12 @@ describe('display', function () {
             ->assertInertia(fn (Assert $page) => $page->where('lesson.plannedGraphics', []));
     });
 
-    function withoutGraphicBlock(array $content, int $nr): array
+    function withoutGraphicBlock(array $content, int $number): array
     {
         foreach ($content['sections'] as $k => $section) {
             $content['sections'][$k]['blocks'] = array_values(array_filter(
                 $section['blocks'],
-                fn (array $block) => $block['type'] !== 'graphic' || $block['number'] !== $nr,
+                fn (array $block) => $block['type'] !== 'graphic' || $block['number'] !== $number,
             ));
         }
 
@@ -322,7 +321,7 @@ describe('display', function () {
         $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lesson.graphics', 1)
-                ->has('lesson.hero.url')
+                ->has('lesson.graphics.1.url')
                 ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'graphic') === [])
                 ->where('parent.graphics.1', ['number' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => true])
             );
@@ -395,7 +394,7 @@ describe('display', function () {
                 ->where('lesson.content', function ($content) use ($last) {
                     $blocks = collect(blocksOfType($content->toArray(), 'graphic'))->firstWhere('number', 2);
 
-                    return $blocks !== null && $blocks['abschnitt'] !== $last;
+                    return $blocks !== null && $blocks['section'] !== $last;
                 })
             );
     });
@@ -415,7 +414,7 @@ describe('display', function () {
                 ->where('lesson.content', function ($content) {
                     $blocks = blocksOfType($content->toArray(), 'graphic');
 
-                    return count($blocks) === 1 && $blocks[0]['abschnitt'] === count($content['sections']) - 1;
+                    return count($blocks) === 1 && $blocks[0]['section'] === count($content['sections']) - 1;
                 })
             );
     });

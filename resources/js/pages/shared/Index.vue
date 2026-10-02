@@ -12,7 +12,7 @@ defineProps<{
             title: string;
             emoji: string | null;
             key_idea: string | null;
-            progress: { sitzt: number; total: number };
+            progress: { mastered: number; total: number };
         }[];
     }[];
 }>();
@@ -86,11 +86,11 @@ defineProps<{
                                         <span
                                             class="block h-full rounded-full bg-ls-ok"
                                             :style="{
-                                                width: `${(lesson.progress.sitzt / lesson.progress.total) * 100}%`,
+                                                width: `${(lesson.progress.mastered / lesson.progress.total) * 100}%`,
                                             }"
                                         />
                                     </span>
-                                    {{ lesson.progress.sitzt }} von
+                                    {{ lesson.progress.mastered }} von
                                     {{ lesson.progress.total }} Aufgaben sitzen
                                 </span>
                             </span>
