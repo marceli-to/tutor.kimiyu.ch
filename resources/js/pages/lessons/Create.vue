@@ -87,15 +87,28 @@ const hasSource = computed(
     () => form.images.length > 0 || form.prompt.trim() !== '',
 );
 
-function addChip(text: string) {
+const PROMPT_MAX = 1000;
+
+function withChip(text: string): string {
     const current = form.prompt.trimEnd();
 
     if (current === '') {
-        form.prompt = text;
-    } else {
-        form.prompt = /[.!?]$/.test(current)
-            ? `${current} ${text}`
-            : `${current}. ${text}`;
+        return text;
+    }
+
+    return /[.!?]$/.test(current)
+        ? `${current} ${text}`
+        : `${current}. ${text}`;
+}
+
+// Ein Baustein darf den Auftrag nicht über die erlaubte Länge schieben
+function chipFits(text: string): boolean {
+    return withChip(text).length <= PROMPT_MAX;
+}
+
+function addChip(text: string) {
+    if (chipFits(text)) {
+        form.prompt = withChip(text);
     }
 
     promptInput.value?.focus();
@@ -243,7 +256,8 @@ onBeforeUnmount(() =>
                         v-for="chip in promptChips"
                         :key="chip"
                         type="button"
-                        class="rounded-full border px-3 py-1 text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        class="rounded-full border px-3 py-1 text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                        :disabled="!chipFits(chip)"
                         @click="addChip(chip)"
                     >
                         {{ chip }}
@@ -254,7 +268,7 @@ onBeforeUnmount(() =>
                     ref="promptInput"
                     v-model="form.prompt"
                     rows="4"
-                    maxlength="1000"
+                    :maxlength="PROMPT_MAX"
                     class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
                     placeholder="z. B. Prüfung am Freitag, vor allem die Begriffe auf Seite 2. Auch die Zellatmung, die kommt auch dran."
                     aria-describedby="prompt-hint"
@@ -269,7 +283,7 @@ onBeforeUnmount(() =>
                     <span
                         class="shrink-0 text-sm text-muted-foreground tabular-nums"
                     >
-                        {{ form.prompt.length }}/1000
+                        {{ form.prompt.length }}/{{ PROMPT_MAX }}
                     </span>
                 </div>
                 <InputError :message="form.errors.prompt" />
