@@ -50,23 +50,19 @@ const levels = [
 ];
 
 const form = useForm<{
-    source: 'fotos' | 'thema';
-    topic: string;
+    prompt: string;
     child_id: number | null;
     child_name: string;
     subject: string;
     level: string;
-    notes: string;
     with_hero: boolean;
     images: File[];
 }>({
-    source: 'fotos',
-    topic: '',
+    prompt: '',
     child_id: props.children[0]?.id ?? null,
     child_name: '',
     subject: '',
     level: props.children[0]?.level ?? '',
-    notes: '',
     with_hero: true,
     images: [],
 });
@@ -75,17 +71,35 @@ const previews = ref<string[]>([]);
 const preparing = ref(false);
 const imageError = ref('');
 const fileInput = ref<HTMLInputElement | null>(null);
+const promptInput = ref<HTMLTextAreaElement | null>(null);
 
 const canAddMore = computed(() => form.images.length < props.maxImages);
 
-const sources = [
-    { value: 'fotos', label: 'Fotos vom Schulbuch' },
-    { value: 'thema', label: 'Nur ein Thema' },
-] as const;
+// Bausteine für den Auftrag, die «…» füllen die Eltern selbst aus
+const promptChips = [
+    'Prüfung am …',
+    'Nur die Fachbegriffe',
+    'Mit Beispielen aus dem Alltag',
+    'Auch das Thema … ergänzen',
+];
 
-const hasSource = computed(() =>
-    form.source === 'fotos' ? form.images.length > 0 : form.topic.trim() !== '',
+const hasSource = computed(
+    () => form.images.length > 0 || form.prompt.trim() !== '',
 );
+
+function addChip(text: string) {
+    const current = form.prompt.trimEnd();
+
+    if (current === '') {
+        form.prompt = text;
+    } else {
+        form.prompt = /[.!?]$/.test(current)
+            ? `${current} ${text}`
+            : `${current}. ${text}`;
+    }
+
+    promptInput.value?.focus();
+}
 
 // Stufe vom gewählten Kind übernehmen, solange nichts anderes eingetragen ist
 watch(
@@ -144,8 +158,6 @@ function imageErrors(): string | undefined {
 function submit() {
     form.transform((data) => ({
         ...data,
-        images: data.source === 'fotos' ? data.images : [],
-        topic: data.source === 'thema' ? data.topic : '',
         child_id: props.children.length ? data.child_id : null,
         child_name: props.children.length ? '' : data.child_name,
     })).post(store().url, { forceFormData: true });
@@ -162,57 +174,16 @@ onBeforeUnmount(() =>
     <div class="mx-auto w-full max-w-2xl p-4 md:p-6">
         <Heading
             title="Neue Lernseite"
-            description="Aus Fotos vom Schulbuch oder aus einem Thema entsteht eine Lernseite mit Grafik, Quiz und Übungen."
+            description="Aus Fotos vom Schulbuch, einem Auftrag oder beidem entsteht eine Lernseite mit Grafik, Quiz und Übungen."
         />
 
         <form class="space-y-6" @submit.prevent="submit">
-            <fieldset class="grid gap-2">
-                <legend class="mb-2 text-sm font-medium">Woraus?</legend>
-                <div class="inline-flex w-full rounded-lg border p-1 sm:w-auto">
-                    <label
-                        v-for="option in sources"
-                        :key="option.value"
-                        class="flex-1 cursor-pointer rounded-md px-4 py-1.5 text-center text-sm has-focus-visible:ring-2 has-focus-visible:ring-ring sm:flex-none"
-                        :class="
-                            form.source === option.value
-                                ? 'bg-primary text-primary-foreground'
-                                : 'text-muted-foreground hover:text-foreground'
-                        "
-                    >
-                        <input
-                            v-model="form.source"
-                            type="radio"
-                            name="source"
-                            :value="option.value"
-                            class="sr-only"
-                        />
-                        {{ option.label }}
-                    </label>
-                </div>
-            </fieldset>
-
-            <div v-if="form.source === 'thema'" class="grid gap-2">
-                <Label for="topic">Thema</Label>
-                <Input
-                    id="topic"
-                    v-model="form.topic"
-                    maxlength="120"
-                    autocomplete="off"
-                    placeholder="z. B. Biodiversität"
-                />
-                <p class="text-sm text-muted-foreground">
-                    Ohne Buchseite schreibt die KI den Stoff aus ihrem
-                    Fachwissen. Für die Prüfung sind Fotos besser, weil sie der
-                    Definition im Buch folgen.
-                </p>
-                <InputError :message="form.errors.topic" />
-            </div>
-
-            <div v-else class="grid gap-2">
-                <Label for="images">Fotos</Label>
+            <div class="grid gap-2">
+                <Label for="images">Fotos (optional)</Label>
                 <p id="images-hint" class="text-sm text-muted-foreground">
-                    Gut lesbar, gerade von oben, ganze Seite im Bild. Die Fotos
-                    werden nach der Erstellung gelöscht.
+                    Die Fotos geben den Rahmen vor: Stoff, Begriffe, Niveau. Gut
+                    lesbar, gerade von oben, ganze Seite im Bild. Sie werden
+                    nach der Erstellung gelöscht.
                 </p>
 
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -263,6 +234,45 @@ onBeforeUnmount(() =>
                     @change="addImages"
                 />
                 <InputError :message="imageError || imageErrors()" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="prompt">Auftrag (optional)</Label>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        v-for="chip in promptChips"
+                        :key="chip"
+                        type="button"
+                        class="rounded-full border px-3 py-1 text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        @click="addChip(chip)"
+                    >
+                        {{ chip }}
+                    </button>
+                </div>
+                <textarea
+                    id="prompt"
+                    ref="promptInput"
+                    v-model="form.prompt"
+                    rows="4"
+                    maxlength="1000"
+                    class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+                    placeholder="z. B. Prüfung am Freitag, vor allem die Begriffe auf Seite 2. Auch die Zellatmung, die kommt auch dran."
+                    aria-describedby="prompt-hint"
+                />
+                <div class="flex items-start justify-between gap-4">
+                    <p id="prompt-hint" class="text-sm text-muted-foreground">
+                        Ohne Fotos schreibt die KI aus ihrem Fachwissen. Mit
+                        Fotos bleibt sie beim Stoff der Fotos und ergänzt nur,
+                        was fehlt. Ergänzungen sind für dich markiert. Bitte
+                        keine Namen oder persönlichen Angaben.
+                    </p>
+                    <span
+                        class="shrink-0 text-sm text-muted-foreground tabular-nums"
+                    >
+                        {{ form.prompt.length }}/1000
+                    </span>
+                </div>
+                <InputError :message="form.errors.prompt" />
             </div>
 
             <div v-if="children.length" class="grid gap-2">
@@ -350,22 +360,6 @@ onBeforeUnmount(() =>
                         Stoff, lässt die KI sie auch von sich aus weg.
                     </p>
                 </div>
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="notes">Hinweise (optional)</Label>
-                <textarea
-                    id="notes"
-                    v-model="form.notes"
-                    rows="3"
-                    maxlength="500"
-                    class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
-                    placeholder="z. B. Prüfung am Freitag, vor allem die Begriffe auf Seite 2"
-                />
-                <p class="text-sm text-muted-foreground">
-                    Bitte keine Namen oder persönlichen Angaben.
-                </p>
-                <InputError :message="form.errors.notes" />
             </div>
 
             <div class="flex items-center gap-4">
