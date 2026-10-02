@@ -31,11 +31,11 @@ class HeroValidator
     {
         $errors = [];
 
-        if (HeroPattern::tryFrom((string) ($hero['muster'] ?? '')) === null) {
-            $errors[] = 'Das Feld «muster» enthält kein bekanntes Hero-Muster.';
+        if (HeroPattern::tryFrom((string) ($hero['pattern'] ?? '')) === null) {
+            $errors[] = 'Das Feld «pattern» enthält kein bekanntes Hero-Muster.';
         }
 
-        if (trim((string) ($hero['beschreibung'] ?? '')) === '') {
+        if (trim((string) ($hero['description'] ?? '')) === '') {
             $errors[] = 'Die Beschreibung fehlt.';
         }
 

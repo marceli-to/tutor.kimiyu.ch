@@ -90,32 +90,32 @@ const categories: { value: CategoryId; label: string }[] = [
 ];
 
 function addQuestion() {
-    c.value.module.quiz?.push({
+    c.value.modules.quiz?.push({
         id: newId('q'),
-        frage: '',
-        optionen: ['', '', '', ''],
-        loesung: 0,
-        tipp: '',
-        erklaerung: '',
+        question: '',
+        options: ['', '', '', ''],
+        answer: 0,
+        hint: '',
+        explanation: '',
     });
 }
 
 function addTerm() {
-    const sort = c.value.module.sortieren;
+    const sort = c.value.modules.sorting;
 
-    sort?.begriffe.push({
+    sort?.terms.push({
         id: newId('s'),
         text: '',
-        kategorie: sort.kategorien[0]?.id ?? 'cat1',
-        erklaerung: '',
+        category: sort.categories[0]?.id ?? 'cat1',
+        explanation: '',
     });
 }
 
 function addCard() {
-    c.value.module.karten?.eintraege.push({
+    c.value.modules.flashcards?.entries.push({
         id: newId('k'),
-        vorne: '',
-        hinten: '',
+        front: '',
+        back: '',
     });
 }
 
@@ -134,21 +134,21 @@ function save() {
         @submit.prevent="save"
     >
         <Heading
-            :title="lesson.content.meta.titel"
+            :title="lesson.content.meta.title"
             description="Korrigiere Texte, Quizfragen und Lösungen. Die Änderungen gelten sofort, auch wenn die Seite schon freigegeben ist."
         />
 
         <section class="space-y-4">
             <h2 class="text-lg font-semibold">Kopf</h2>
             <EditField
-                v-model="c.meta.titel"
+                v-model="c.meta.title"
                 label="Titel"
-                :error="err('meta.titel')"
+                :error="err('meta.title')"
             />
             <EditField
-                v-model="c.meta.anleitung"
+                v-model="c.meta.instructions"
                 label="Anleitung zur Grafik"
-                :error="err('meta.anleitung')"
+                :error="err('meta.instructions')"
             />
             <div class="grid gap-4 sm:grid-cols-[8rem_1fr]">
                 <EditField
@@ -178,57 +178,55 @@ function save() {
         <section class="space-y-6">
             <h2 class="text-lg font-semibold">Erklärungen</h2>
             <div
-                v-for="(section, s) in c.abschnitte"
+                v-for="(section, s) in c.sections"
                 :key="s"
                 class="space-y-4 rounded-xl border p-4"
             >
                 <EditField
-                    v-model="section.titel"
+                    v-model="section.title"
                     label="Überschrift"
-                    :error="err(`abschnitte.${s}.titel`)"
+                    :error="err(`sections.${s}.title`)"
                 />
 
                 <div
-                    v-for="(block, b) in section.bloecke"
+                    v-for="(block, b) in section.blocks"
                     :key="blockKey(block)"
                     class="space-y-3 border-l-2 pl-4"
                 >
                     <div
-                        v-if="showOrigin && block.herkunft === 'ergaenzt'"
+                        v-if="showOrigin && block.origin === 'added'"
                         class="flex justify-end"
                     >
-                        <OriginBadge :origin="block.herkunft" variant="app" />
+                        <OriginBadge :origin="block.origin" variant="app" />
                     </div>
-                    <InputError
-                        :message="err(`abschnitte.${s}.bloecke.${b}`)"
-                    />
+                    <InputError :message="err(`sections.${s}.blocks.${b}`)" />
 
                     <EditField
-                        v-if="block.typ === 'absatz'"
+                        v-if="block.type === 'paragraph'"
                         v-model="block.text"
                         label="Absatz"
                         multiline
                     />
 
-                    <template v-else-if="block.typ === 'formel'">
+                    <template v-else-if="block.type === 'formula'">
                         <EditField
                             v-model="block.text"
                             label="Formel oder Merksatz"
                         />
                         <EditField
-                            v-model="block.zusatz"
+                            v-model="block.addendum"
                             label="Zusatz (klein darunter)"
                         />
                     </template>
 
-                    <template v-else-if="block.typ === 'fakten'">
+                    <template v-else-if="block.type === 'facts'">
                         <div
-                            v-for="(fact, f) in block.eintraege"
+                            v-for="(fact, f) in block.entries"
                             :key="f"
                             class="space-y-2"
                         >
                             <EditField
-                                v-model="fact.titel"
+                                v-model="fact.title"
                                 :label="`Fakt ${f + 1}: Titel`"
                             />
                             <EditField
@@ -239,51 +237,51 @@ function save() {
                         </div>
                     </template>
 
-                    <template v-else-if="block.typ === 'spalten'">
+                    <template v-else-if="block.type === 'columns'">
                         <div
-                            v-for="(column, k) in block.eintraege"
+                            v-for="(column, k) in block.entries"
                             :key="k"
                             class="space-y-2"
                         >
                             <EditField
-                                v-model="column.titel"
+                                v-model="column.title"
                                 :label="`Spalte ${k + 1}: Titel`"
                             />
                             <EditField
-                                :model-value="joinParagraphs(column.absaetze)"
+                                :model-value="joinParagraphs(column.paragraphs)"
                                 :label="`Spalte ${k + 1}: Text`"
                                 hint="Neuer Absatz: eine Leerzeile."
                                 multiline
                                 :rows="4"
                                 @update:model-value="
-                                    column.absaetze = splitParagraphs($event)
+                                    column.paragraphs = splitParagraphs($event)
                                 "
                             />
                         </div>
                     </template>
 
-                    <template v-else-if="block.typ === 'box'">
+                    <template v-else-if="block.type === 'box'">
                         <EditField
-                            v-model="block.titel"
+                            v-model="block.title"
                             label="Kasten: Titel"
                         />
                         <EditField
-                            :model-value="joinParagraphs(block.absaetze)"
+                            :model-value="joinParagraphs(block.paragraphs)"
                             label="Kasten: Text"
                             hint="Neuer Absatz: eine Leerzeile."
                             multiline
                             :rows="4"
                             @update:model-value="
-                                block.absaetze = splitParagraphs($event)
+                                block.paragraphs = splitParagraphs($event)
                             "
                         />
                     </template>
 
-                    <div v-else-if="block.typ === 'grafik'" class="space-y-1">
+                    <div v-else-if="block.type === 'graphic'" class="space-y-1">
                         <p class="text-sm font-medium">
-                            Grafik {{ block.nr
-                            }}<template v-if="graphicLabels[block.nr]"
-                                >: {{ graphicLabels[block.nr] }}</template
+                            Grafik {{ block.number
+                            }}<template v-if="graphicLabels[block.number]"
+                                >: {{ graphicLabels[block.number] }}</template
                             >
                         </p>
                         <p class="text-sm text-muted-foreground">
@@ -297,40 +295,40 @@ function save() {
                         variant="ghost"
                         size="sm"
                         class="text-destructive"
-                        :disabled="section.bloecke.length <= 1"
-                        @click="section.bloecke.splice(b, 1)"
+                        :disabled="section.blocks.length <= 1"
+                        @click="section.blocks.splice(b, 1)"
                     >
                         <Trash2 class="size-4" aria-hidden="true" />
                         Baustein entfernen
                     </Button>
                 </div>
-                <InputError :message="err(`abschnitte.${s}.bloecke`)" />
+                <InputError :message="err(`sections.${s}.blocks`)" />
             </div>
         </section>
 
-        <section v-if="c.probieren" class="space-y-4">
+        <section v-if="c.try_it" class="space-y-4">
             <h2 class="text-lg font-semibold">Probier es aus</h2>
             <EditField
-                v-for="(experiment, e) in c.probieren.experimente"
+                v-for="(experiment, e) in c.try_it.experiments"
                 :key="e"
-                v-model="c.probieren.experimente[e]"
+                v-model="c.try_it.experiments[e]"
                 :label="`Experiment ${e + 1}`"
-                :error="err(`probieren.experimente.${e}`)"
+                :error="err(`try_it.experiments.${e}`)"
                 multiline
             />
             <EditField
-                v-model="c.probieren.alltagsvergleich"
+                v-model="c.try_it.everyday_comparison"
                 label="Alltagsvergleich"
                 multiline
             />
         </section>
 
         <!-- Ohne Quiz kein Editor; ein Quiz hinzufügen gehört nicht hierher -->
-        <section v-if="c.module.quiz" class="space-y-4">
+        <section v-if="c.modules.quiz" class="space-y-4">
             <h2 class="text-lg font-semibold">Quiz</h2>
-            <InputError :message="err('module.quiz')" />
+            <InputError :message="err('modules.quiz')" />
             <fieldset
-                v-for="(question, q) in c.module.quiz"
+                v-for="(question, q) in c.modules.quiz"
                 :key="question.id"
                 class="space-y-3 rounded-xl border p-4"
             >
@@ -338,15 +336,15 @@ function save() {
                     Frage {{ q + 1 }}
                     <OriginBadge
                         v-if="showOrigin"
-                        :origin="question.herkunft"
+                        :origin="question.origin"
                         variant="app"
                         class="ml-1"
                     />
                 </legend>
                 <EditField
-                    v-model="question.frage"
+                    v-model="question.question"
                     label="Frage"
-                    :error="err(`module.quiz.${q}.frage`)"
+                    :error="err(`modules.quiz.${q}.question`)"
                     multiline
                     :rows="2"
                 />
@@ -359,25 +357,25 @@ function save() {
                         >
                     </p>
                     <div
-                        v-for="(_, o) in question.optionen"
+                        v-for="(_, o) in question.options"
                         :key="o"
                         class="flex items-center gap-2"
                     >
                         <input
-                            v-model="question.loesung"
+                            v-model="question.answer"
                             type="radio"
-                            :name="`loesung-${question.id}`"
+                            :name="`answer-${question.id}`"
                             :value="o"
                             :aria-label="`Antwort ${o + 1} ist richtig`"
                             class="size-4 accent-primary"
                         />
                         <input
-                            v-model="question.optionen[o]"
+                            v-model="question.options[o]"
                             type="text"
                             :aria-label="`Antwort ${o + 1}`"
                             :class="[
                                 'h-9 flex-1 rounded-md border bg-transparent px-3 text-sm shadow-xs',
-                                question.loesung === o
+                                question.answer === o
                                     ? 'border-green-600 dark:border-green-500'
                                     : 'border-input',
                             ]"
@@ -385,17 +383,17 @@ function save() {
                     </div>
                     <InputError
                         :message="
-                            err(`module.quiz.${q}.optionen`) ??
-                            err(`module.quiz.${q}.loesung`)
+                            err(`modules.quiz.${q}.options`) ??
+                            err(`modules.quiz.${q}.answer`)
                         "
                     />
                 </div>
 
-                <EditField v-model="question.tipp" label="Tipp" />
+                <EditField v-model="question.hint" label="Tipp" />
                 <EditField
-                    v-model="question.erklaerung"
+                    v-model="question.explanation"
                     label="Erklärung nach der Antwort"
-                    :error="err(`module.quiz.${q}.erklaerung`)"
+                    :error="err(`modules.quiz.${q}.explanation`)"
                     multiline
                     :rows="2"
                 />
@@ -405,8 +403,8 @@ function save() {
                     variant="ghost"
                     size="sm"
                     class="text-destructive"
-                    :disabled="c.module.quiz.length <= 1"
-                    @click="c.module.quiz.splice(q, 1)"
+                    :disabled="c.modules.quiz.length <= 1"
+                    @click="c.modules.quiz.splice(q, 1)"
                 >
                     <Trash2 class="size-4" aria-hidden="true" />
                     Frage entfernen
@@ -416,7 +414,7 @@ function save() {
                 type="button"
                 variant="outline"
                 size="sm"
-                :disabled="c.module.quiz.length >= 10"
+                :disabled="c.modules.quiz.length >= 10"
                 @click="addQuestion"
             >
                 <Plus class="size-4" aria-hidden="true" />
@@ -424,29 +422,29 @@ function save() {
             </Button>
         </section>
 
-        <section v-if="c.module.sortieren" class="space-y-4">
+        <section v-if="c.modules.sorting" class="space-y-4">
             <h2 class="text-lg font-semibold">Sortier-Spiel</h2>
             <EditField
-                v-model="c.module.sortieren.anleitung"
+                v-model="c.modules.sorting.instructions"
                 label="Frage zum Sortieren"
             />
             <div class="grid gap-3 sm:grid-cols-3">
                 <div
-                    v-for="(category, k) in c.module.sortieren.kategorien"
+                    v-for="(category, k) in c.modules.sorting.categories"
                     :key="category.id"
                     class="space-y-2 rounded-xl border p-3"
                 >
                     <EditField
                         v-model="category.label"
                         :label="`Korb ${k + 1}`"
-                        :error="err(`module.sortieren.kategorien.${k}.label`)"
+                        :error="err(`modules.sorting.categories.${k}.label`)"
                     />
                     <EditField v-model="category.sub" label="Untertitel" />
                 </div>
             </div>
-            <InputError :message="err('module.sortieren.begriffe')" />
+            <InputError :message="err('modules.sorting.terms')" />
             <div
-                v-for="(term, t) in c.module.sortieren.begriffe"
+                v-for="(term, t) in c.modules.sorting.terms"
                 :key="term.id"
                 class="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_12rem_auto] sm:items-start"
             >
@@ -455,23 +453,23 @@ function save() {
                         v-model="term.text"
                         :label="`Begriff ${t + 1}`"
                         :error="
-                            err(`module.sortieren.begriffe.${t}.text`) ??
-                            err(`module.sortieren.begriffe.${t}.kategorie`)
+                            err(`modules.sorting.terms.${t}.text`) ??
+                            err(`modules.sorting.terms.${t}.category`)
                         "
                     />
-                    <div v-if="showOrigin && term.herkunft === 'ergaenzt'">
-                        <OriginBadge :origin="term.herkunft" variant="app" />
+                    <div v-if="showOrigin && term.origin === 'added'">
+                        <OriginBadge :origin="term.origin" variant="app" />
                     </div>
                 </div>
                 <div class="grid gap-1.5">
                     <Label :for="`korb-${term.id}`">Gehört in</Label>
                     <select
                         :id="`korb-${term.id}`"
-                        v-model="term.kategorie"
+                        v-model="term.category"
                         class="h-9 rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
                     >
                         <option
-                            v-for="category in c.module.sortieren.kategorien"
+                            v-for="category in c.modules.sorting.categories"
                             :key="category.id"
                             :value="category.id"
                         >
@@ -489,13 +487,13 @@ function save() {
                     size="icon"
                     class="text-destructive sm:mt-6"
                     :aria-label="`Begriff ${t + 1} entfernen`"
-                    @click="c.module.sortieren.begriffe.splice(t, 1)"
+                    @click="c.modules.sorting.terms.splice(t, 1)"
                 >
                     <Trash2 class="size-4" aria-hidden="true" />
                 </Button>
                 <div class="sm:col-span-3">
                     <EditField
-                        v-model="term.erklaerung"
+                        v-model="term.explanation"
                         label="Erklärung bei falscher Antwort (optional)"
                     />
                 </div>
@@ -506,28 +504,28 @@ function save() {
             </Button>
         </section>
 
-        <section v-if="c.module.karten" class="space-y-4">
+        <section v-if="c.modules.flashcards" class="space-y-4">
             <h2 class="text-lg font-semibold">Karteikarten</h2>
-            <InputError :message="err('module.karten.eintraege')" />
+            <InputError :message="err('modules.flashcards.entries')" />
             <div
-                v-for="(card, k) in c.module.karten.eintraege"
+                v-for="(card, k) in c.modules.flashcards.entries"
                 :key="card.id"
                 class="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_2fr_auto] sm:items-start"
             >
                 <div class="grid gap-1">
                     <EditField
-                        v-model="card.vorne"
+                        v-model="card.front"
                         label="Vorderseite"
-                        :error="err(`module.karten.eintraege.${k}.vorne`)"
+                        :error="err(`modules.flashcards.entries.${k}.front`)"
                     />
-                    <div v-if="showOrigin && card.herkunft === 'ergaenzt'">
-                        <OriginBadge :origin="card.herkunft" variant="app" />
+                    <div v-if="showOrigin && card.origin === 'added'">
+                        <OriginBadge :origin="card.origin" variant="app" />
                     </div>
                 </div>
                 <EditField
-                    v-model="card.hinten"
+                    v-model="card.back"
                     label="Rückseite"
-                    :error="err(`module.karten.eintraege.${k}.hinten`)"
+                    :error="err(`modules.flashcards.entries.${k}.back`)"
                     multiline
                     :rows="2"
                 />
@@ -537,7 +535,7 @@ function save() {
                     size="icon"
                     class="text-destructive sm:mt-6"
                     :aria-label="`Karte ${k + 1} entfernen`"
-                    @click="c.module.karten.eintraege.splice(k, 1)"
+                    @click="c.modules.flashcards.entries.splice(k, 1)"
                 >
                     <Trash2 class="size-4" aria-hidden="true" />
                 </Button>
@@ -548,12 +546,12 @@ function save() {
             </Button>
         </section>
 
-        <section v-if="c.module.lueckentext" class="space-y-4">
+        <section v-if="c.modules.cloze" class="space-y-4">
             <h2 class="text-lg font-semibold">
                 Lückentext
                 <OriginBadge
                     v-if="showOrigin"
-                    :origin="c.module.lueckentext.herkunft"
+                    :origin="c.modules.cloze.origin"
                     variant="app"
                     class="ml-1"
                 />
@@ -564,18 +562,16 @@ function save() {
                 hint="Lücken in eckigen Klammern, andere richtige Schreibweisen mit | trennen: [Kohlenstoffdioxid|CO2]"
                 multiline
                 :rows="6"
-                :error="
-                    errors.clozeMarkup ?? err('module.lueckentext.segmente')
-                "
+                :error="errors.clozeMarkup ?? err('modules.cloze.segments')"
             />
         </section>
 
         <section class="space-y-4">
             <h2 class="text-lg font-semibold">Zum Nachdenken</h2>
             <EditField
-                v-model="c.nachdenken.frage"
+                v-model="c.reflect.question"
                 label="Frage"
-                :error="err('nachdenken.frage')"
+                :error="err('reflect.question')"
                 multiline
                 :rows="2"
             />

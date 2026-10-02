@@ -18,7 +18,7 @@ class RegenerateGraphic extends LessonStep
 
     protected function step(): string
     {
-        return 'neu-grafik';
+        return 'regenerate-graphic';
     }
 
     protected function run(LessonGenerator $generator): void

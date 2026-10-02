@@ -56,7 +56,7 @@ php artisan tinker --execute 'App\Models\User::create(["name" => "Name", "email"
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://tutor.kimiyu.ch`
 - `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`
 - `LESSON_FAKE_AI=false`, `LESSON_CHECK_ENABLED`, `LESSON_DELETE_IMAGES`
-- Optional pro Schritt: `LESSON_MODEL_ANALYSE|MODULE|PRUEFUNG|GRAFIK` und `LESSON_EFFORT_ANALYSE|MODULE|PRUEFUNG|GRAFIK` (Standard siehe `config/lessons.php`: Module und Prüfung auf Sonnet, Grafik mit Effort `medium`)
+- Optional pro Schritt: `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` und `LESSON_EFFORT_ANALYSIS|MODULES|CHECK|GRAPHIC` (Standard siehe `config/lessons.php`: Module und Prüfung auf Sonnet, Grafik mit Effort `medium`)
 - `MAIL_MAILER=log` (keine E-Mails, Passwort-Reset funktioniert deshalb nicht)
 
 ## Logs und Fehler

@@ -76,17 +76,17 @@ class FakeLanguageModel implements LanguageModel
         $page = Prompts::page($content);
 
         return match ($step) {
-            'analyse' => [
-                'quelle' => ['lesbar' => true, 'problem' => null],
-                'fach' => 'Biologie',
-                'zusammenfassung' => 'Zusammenfassung der Buchseite zum Thema '.$content['meta']['thema'].'.',
-                'ergaenzungen' => [],
-                'grafik_plaene' => [['nr' => 1, 'plan' => ['muster' => $hero['muster'], 'idee' => $hero['beschreibung']], 'hinweis' => null]],
+            'analysis' => [
+                'source' => ['readable' => true, 'problem' => null],
+                'subject' => 'Biologie',
+                'summary' => 'Zusammenfassung der Buchseite zum Thema '.$content['meta']['topic'].'.',
+                'additions' => [],
+                'graphic_plans' => [['number' => 1, 'plan' => ['pattern' => $hero['pattern'], 'idea' => $hero['description']], 'note' => null]],
             ],
-            'seite', 'reparatur-seite' => ['seite' => $page],
-            'module', 'reparatur-module' => ['module' => $content['module']],
-            'pruefung' => ['korrekturen' => []],
-            'grafik', 'grafik-reparatur' => $hero,
+            'page', 'repair-page' => ['page' => $page],
+            'modules', 'repair-modules' => ['modules' => $content['modules']],
+            'check' => ['corrections' => []],
+            'graphic', 'graphic-repair' => $hero,
             default => [],
         };
     }

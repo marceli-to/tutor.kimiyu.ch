@@ -22,7 +22,7 @@
             "cat3-bg": "#2B2548"
         }
     },
-    "gruen": {
+    "green": {
         "label": "Grün (Pflanzen, Biologie)",
         "light": {
             "accent": "#1F4D2B",
@@ -45,7 +45,7 @@
             "cat3-bg": "#2B2548"
         }
     },
-    "blau": {
+    "blue": {
         "label": "Blau (Wasser, Physik, Geografie)",
         "light": {
             "accent": "#1F5F8B",
@@ -68,7 +68,7 @@
             "cat3-bg": "#3F2033"
         }
     },
-    "erde": {
+    "earth": {
         "label": "Erdig (Geschichte, Gesellschaft)",
         "light": {
             "accent": "#7A4A22",
@@ -91,7 +91,7 @@
             "cat3-bg": "#3E2219"
         }
     },
-    "violett": {
+    "violet": {
         "label": "Violett (Sprachen, Grammatik)",
         "light": {
             "accent": "#4A3A96",
@@ -114,7 +114,7 @@
             "cat3-bg": "#17324A"
         }
     },
-    "rot": {
+    "red": {
         "label": "Rot (Chemie, Energie, Körper)",
         "light": {
             "accent": "#8C3419",
@@ -137,7 +137,7 @@
             "cat3-bg": "#2B2548"
         }
     },
-    "anthrazit": {
+    "anthracite": {
         "label": "Anthrazit (Mathematik, Informatik)",
         "light": {
             "accent": "#2B3A45",

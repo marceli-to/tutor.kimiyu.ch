@@ -24,8 +24,8 @@ describe('migration', function () {
         $hero = LessonFactory::fixture('fotosynthese.hero');
         $base = ['child_id' => $child->id, 'status' => 'review', 'subject' => 'Biologie', 'level' => '2. Sek', 'created_at' => now(), 'updated_at' => now()];
 
-        $withHero = DB::table('lessons')->insertGetId([...$base, 'hero_plan' => json_encode(['muster' => 'regler', 'idee' => 'Regler']), 'hero' => json_encode($hero)]);
-        $failed = DB::table('lessons')->insertGetId([...$base, 'hero_plan' => json_encode(['muster' => 'schritte', 'idee' => 'Schritte']), 'hero_error' => 'Kaputt']);
+        $withHero = DB::table('lessons')->insertGetId([...$base, 'hero_plan' => json_encode(['pattern' => 'sliders', 'idea' => 'Regler']), 'hero' => json_encode($hero)]);
+        $failed = DB::table('lessons')->insertGetId([...$base, 'hero_plan' => json_encode(['pattern' => 'steps', 'idea' => 'Schritte']), 'hero_error' => 'Kaputt']);
         $switchedOff = DB::table('lessons')->insertGetId([...$base, 'with_hero' => false]);
         $nothingFits = DB::table('lessons')->insertGetId($base);
 
@@ -37,14 +37,14 @@ describe('migration', function () {
 
         $first = LessonGraphic::where('lesson_id', $withHero)->sole();
         expect($first->position)->toBe(1)
-            ->and($first->plan)->toBe(['muster' => 'regler', 'idee' => 'Regler'])
+            ->and($first->plan)->toBe(['pattern' => 'sliders', 'idea' => 'Regler'])
             ->and($first->graphic)->toBe($hero)
             ->and($first->error)->toBeNull()
             ->and($first->request)->toBeNull();
 
         $second = LessonGraphic::where('lesson_id', $failed)->sole();
         expect($second->position)->toBe(1)
-            ->and($second->plan)->toBe(['muster' => 'schritte', 'idee' => 'Schritte'])
+            ->and($second->plan)->toBe(['pattern' => 'steps', 'idea' => 'Schritte'])
             ->and($second->graphic)->toBeNull()
             ->and($second->error)->toBe('Kaputt');
     });
@@ -107,7 +107,7 @@ describe('model', function () {
         $graphic = $lesson->graphic(1);
         expect($lesson->graphics)->toHaveCount(1)
             ->and($graphic->graphic)->toBe($hero)
-            ->and($graphic->plan)->toBe(['muster' => $hero['muster'], 'idee' => $hero['beschreibung']])
+            ->and($graphic->plan)->toBe(['pattern' => $hero['pattern'], 'idea' => $hero['description']])
             ->and($graphic->error)->toBeNull();
     });
 });
@@ -119,11 +119,11 @@ describe('display', function () {
 
         // Grafik 2 im zweiten Abschnitt; Grafik 3 ist fehlgeschlagen, hat aber einen Platz
         $content = LessonFactory::fixture('oekosystem');
-        $content['abschnitte'][] = ['titel' => 'Die Nahrungskette', 'bloecke' => [
-            ['typ' => 'absatz', 'text' => 'Pflanzen werden von Tieren gefressen.', 'herkunft' => 'foto'],
-            ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'],
+        $content['sections'][] = ['title' => 'Die Nahrungskette', 'blocks' => [
+            ['type' => 'paragraph', 'text' => 'Pflanzen werden von Tieren gefressen.', 'origin' => 'photo'],
+            ['type' => 'graphic', 'number' => 2, 'origin' => 'photo'],
         ]];
-        $content['abschnitte'][0]['bloecke'][] = ['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto'];
+        $content['sections'][0]['blocks'][] = ['type' => 'graphic', 'number' => 3, 'origin' => 'photo'];
 
         $this->lesson = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create([
             'graphics_mode' => 'custom',
@@ -132,22 +132,22 @@ describe('display', function () {
         $this->lesson->graphics()->create([
             'position' => 2,
             'request' => 'Nahrungskette zum Durchklicken',
-            'plan' => ['muster' => 'schritte', 'idee' => 'Vier Schritte'],
-            'graphic' => [...LessonFactory::fixture('fotosynthese.hero'), 'beschreibung' => 'Die Nahrungskette', 'markup' => '<p id="grafik-zwei">Zwei</p>'],
+            'plan' => ['pattern' => 'steps', 'idea' => 'Vier Schritte'],
+            'graphic' => [...LessonFactory::fixture('fotosynthese.hero'), 'description' => 'Die Nahrungskette', 'markup' => '<p id="graphic-zwei">Zwei</p>'],
         ]);
         $this->lesson->graphics()->create([
             'position' => 3,
             'request' => 'Kreislauf',
-            'plan' => ['muster' => 'kreislauf', 'idee' => 'Kreislauf'],
+            'plan' => ['pattern' => 'kreislauf', 'idea' => 'Kreislauf'],
             'error' => 'Die KI war nicht erreichbar.',
         ]);
     });
 
     function blocksOfType(array $content, string $type): array
     {
-        return collect($content['abschnitte'])
-            ->flatMap(fn (array $section, int $k) => collect($section['bloecke'])
-                ->filter(fn (array $block) => $block['typ'] === $type)
+        return collect($content['sections'])
+            ->flatMap(fn (array $section, int $k) => collect($section['blocks'])
+                ->filter(fn (array $block) => $block['type'] === $type)
                 ->map(fn (array $block) => [...$block, 'abschnitt' => $k]))
             ->values()
             ->all();
@@ -158,13 +158,13 @@ describe('display', function () {
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lesson.graphics', 2)
                 ->has('lesson.graphics.1.url')
-                ->where('lesson.graphics.2.beschreibung', 'Die Nahrungskette')
+                ->where('lesson.graphics.2.description', 'Die Nahrungskette')
                 ->missing('lesson.graphics.3')
                 ->where('lesson.hero', fn ($hero) => $hero['url'] === $page->toArray()['props']['lesson']['graphics'][1]['url'])
                 ->where('parent.graphics', [
-                    ['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
-                    ['nr' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
-                    ['nr' => 3, 'error' => 'Die KI war nicht erreichbar.', 'canRegenerate' => true, 'hidden' => false],
+                    ['number' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
+                    ['number' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
+                    ['number' => 3, 'error' => 'Die KI war nicht erreichbar.', 'canRegenerate' => true, 'hidden' => false],
                 ])
                 ->where('parent.canRegenerate', ['quiz' => true])
                 ->where('lesson.plannedGraphics', [1, 2, 3])
@@ -195,24 +195,24 @@ describe('display', function () {
     it('removes the block of an unfinished graphic', function () {
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'grafik'), 'nr') === [2])
+                ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'graphic'), 'number') === [2])
             );
     });
 
     it('drops a section that only held an unfinished graphic', function () {
         $content = $this->lesson->content;
-        $content['abschnitte'][] = ['titel' => 'Der Kreislauf', 'bloecke' => [['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto']]];
+        $content['sections'][] = ['title' => 'Der Kreislauf', 'blocks' => [['type' => 'graphic', 'number' => 3, 'origin' => 'photo']]];
         $this->lesson->update(['content' => $content]);
         $this->lesson->graphic(2)->update(['hidden' => true]);
 
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('lesson.content.abschnitte', function ($sections) use ($content) {
-                    $titles = array_column($sections->toArray(), 'titel');
+                ->where('lesson.content.sections', function ($sections) use ($content) {
+                    $titles = array_column($sections->toArray(), 'title');
 
                     // «Die Nahrungskette» keeps its text, only the hidden graphic is gone
-                    return $titles === array_column(array_slice($content['abschnitte'], 0, -1), 'titel')
-                        && collect($sections)->every(fn ($section) => count($section['bloecke']) > 0);
+                    return $titles === array_column(array_slice($content['sections'], 0, -1), 'title')
+                        && collect($sections)->every(fn ($section) => count($section['blocks']) > 0);
                 })
             );
     });
@@ -224,11 +224,11 @@ describe('display', function () {
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('lesson.content', function ($content) {
-                    $blocks = blocksOfType($content->toArray(), 'grafik');
+                    $blocks = blocksOfType($content->toArray(), 'graphic');
 
                     return count($blocks) === 1
-                        && $blocks[0]['nr'] === 2
-                        && $blocks[0]['abschnitt'] === count($content['abschnitte']) - 1;
+                        && $blocks[0]['number'] === 2
+                        && $blocks[0]['abschnitt'] === count($content['sections']) - 1;
                 })
             );
     });
@@ -237,7 +237,7 @@ describe('display', function () {
         $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 2]))
             ->assertOk()
             ->assertHeader('Content-Security-Policy')
-            ->assertSee('<p id="grafik-zwei">', escape: false);
+            ->assertSee('<p id="graphic-zwei">', escape: false);
 
         $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))
             ->assertOk()
@@ -254,7 +254,7 @@ describe('display', function () {
 
         $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('parent.graphics.2', ['nr' => 3, 'error' => 'Passt nicht zum Stoff.', 'canRegenerate' => false, 'hidden' => false])
+                ->where('parent.graphics.2', ['number' => 3, 'error' => 'Passt nicht zum Stoff.', 'canRegenerate' => false, 'hidden' => false])
                 ->where('lesson.plannedGraphics', [1, 2])
             );
     });
@@ -277,10 +277,10 @@ describe('display', function () {
 
     function withoutGraphicBlock(array $content, int $nr): array
     {
-        foreach ($content['abschnitte'] as $k => $section) {
-            $content['abschnitte'][$k]['bloecke'] = array_values(array_filter(
-                $section['bloecke'],
-                fn (array $block) => $block['typ'] !== 'grafik' || $block['nr'] !== $nr,
+        foreach ($content['sections'] as $k => $section) {
+            $content['sections'][$k]['blocks'] = array_values(array_filter(
+                $section['blocks'],
+                fn (array $block) => $block['type'] !== 'graphic' || $block['number'] !== $nr,
             ));
         }
 
@@ -306,7 +306,7 @@ describe('display', function () {
         $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $this->lesson->content])
             ->assertSessionHasNoErrors();
 
-        expect($this->lesson->fresh()->content['abschnitte'][1]['bloecke'])->toContain(['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'])
+        expect($this->lesson->fresh()->content['sections'][1]['blocks'])->toContain(['type' => 'graphic', 'number' => 2, 'origin' => 'photo'])
             ->and($this->lesson->graphics()->where('hidden', true)->count())->toBe(0);
     });
 
@@ -323,14 +323,14 @@ describe('display', function () {
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lesson.graphics', 1)
                 ->has('lesson.hero.url')
-                ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'grafik') === [])
-                ->where('parent.graphics.1', ['nr' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => true])
+                ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'graphic') === [])
+                ->where('parent.graphics.1', ['number' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => true])
             );
 
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lesson.graphics', 1)
-                ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'grafik') === [])
+                ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'graphic') === [])
             );
 
         $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 2]))->assertNotFound();
@@ -353,7 +353,7 @@ describe('display', function () {
 
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'grafik'), 'nr') === [2])
+                ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'graphic'), 'number') === [2])
             );
     });
 
@@ -366,7 +366,7 @@ describe('display', function () {
                 $page->where('lesson.content', function ($content) use (&$edited) {
                     $edited = $content->toArray();
 
-                    $numbers = array_column(blocksOfType($edited, 'grafik'), 'nr');
+                    $numbers = array_column(blocksOfType($edited, 'graphic'), 'number');
                     sort($numbers);
 
                     return $numbers === [2, 3];
@@ -386,14 +386,14 @@ describe('display', function () {
 
     it('places a graphic without a block in a section that still has room', function () {
         $content = withoutGraphicBlock($this->lesson->content, 2);
-        $last = array_key_last($content['abschnitte']);
-        $content['abschnitte'][$last]['bloecke'] = array_fill(0, 4, ['typ' => 'absatz', 'text' => 'Text.', 'herkunft' => 'foto']);
+        $last = array_key_last($content['sections']);
+        $content['sections'][$last]['blocks'] = array_fill(0, 4, ['type' => 'paragraph', 'text' => 'Text.', 'origin' => 'photo']);
         $this->lesson->update(['content' => $content]);
 
         $this->actingAs($this->user)->get(route('lessons.edit', $this->lesson))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('lesson.content', function ($content) use ($last) {
-                    $blocks = collect(blocksOfType($content->toArray(), 'grafik'))->firstWhere('nr', 2);
+                    $blocks = collect(blocksOfType($content->toArray(), 'graphic'))->firstWhere('number', 2);
 
                     return $blocks !== null && $blocks['abschnitt'] !== $last;
                 })
@@ -413,9 +413,9 @@ describe('display', function () {
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lesson.graphics.2.url')
                 ->where('lesson.content', function ($content) {
-                    $blocks = blocksOfType($content->toArray(), 'grafik');
+                    $blocks = blocksOfType($content->toArray(), 'graphic');
 
-                    return count($blocks) === 1 && $blocks[0]['abschnitt'] === count($content['abschnitte']) - 1;
+                    return count($blocks) === 1 && $blocks[0]['abschnitt'] === count($content['sections']) - 1;
                 })
             );
     });

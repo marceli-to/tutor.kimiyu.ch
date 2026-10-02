@@ -5,24 +5,24 @@ use App\Lessons\ClozeParser;
 it('splits text and gaps into segments', function () {
     expect(ClozeParser::parse('Die Pflanze nimmt [CO₂|CO2] und [Wasser] auf.'))->toBe([
         ['text' => 'Die Pflanze nimmt '],
-        ['id' => 'g1', 'loesungen' => ['CO₂', 'CO2']],
+        ['id' => 'g1', 'answers' => ['CO₂', 'CO2']],
         ['text' => ' und '],
-        ['id' => 'g2', 'loesungen' => ['Wasser']],
+        ['id' => 'g2', 'answers' => ['Wasser']],
         ['text' => ' auf.'],
     ]);
 });
 
 it('handles gaps at the start and end', function () {
     expect(ClozeParser::parse('[Licht] ist Energie für [Pflanzen]'))->toBe([
-        ['id' => 'g1', 'loesungen' => ['Licht']],
+        ['id' => 'g1', 'answers' => ['Licht']],
         ['text' => ' ist Energie für '],
-        ['id' => 'g2', 'loesungen' => ['Pflanzen']],
+        ['id' => 'g2', 'answers' => ['Pflanzen']],
     ]);
 });
 
 it('trims alternatives and drops empty ones', function () {
     expect(ClozeParser::parse('[ Sauerstoff | O₂ || ]'))->toBe([
-        ['id' => 'g1', 'loesungen' => ['Sauerstoff', 'O₂']],
+        ['id' => 'g1', 'answers' => ['Sauerstoff', 'O₂']],
     ]);
 });
 

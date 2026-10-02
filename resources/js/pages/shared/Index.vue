@@ -11,7 +11,7 @@ defineProps<{
             id: number;
             title: string;
             emoji: string | null;
-            kernidee: string | null;
+            key_idea: string | null;
             progress: { sitzt: number; total: number };
         }[];
     }[];
@@ -70,10 +70,10 @@ defineProps<{
                                     {{ lesson.title }}
                                 </span>
                                 <span
-                                    v-if="lesson.kernidee"
+                                    v-if="lesson.key_idea"
                                     class="mt-1 block text-base text-ls-muted"
                                 >
-                                    {{ lesson.kernidee }}
+                                    {{ lesson.key_idea }}
                                 </span>
                                 <span
                                     v-if="lesson.progress.total"

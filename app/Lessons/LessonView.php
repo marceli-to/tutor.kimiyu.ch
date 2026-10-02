@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\URL;
 class LessonView
 {
     /**
-     * Die Herkunft (foto/ergaenzt) sehen nur Eltern, und nur bei Lernseiten mit Fotos.
+     * Die Herkunft (photo/added) sehen nur Eltern, und nur bei Lernseiten mit Fotos.
      *
      * @return array<string, mixed>
      */
@@ -44,7 +44,7 @@ class LessonView
     /**
      * Nur fertige, nicht ausgeblendete Grafiken, nur URL und Beschreibung: Fehler, Wünsche und Pläne sehen nur die Eltern.
      *
-     * @return array<int, array{url: string, beschreibung: string}>
+     * @return array<int, array{url: string, description: string}>
      */
     private static function graphics(Lesson $lesson): array
     {
@@ -58,7 +58,7 @@ class LessonView
                     'nr' => $graphic->position,
                     'v' => $graphic->updated_at?->timestamp,
                 ]),
-                'beschreibung' => $graphic->graphic['beschreibung'] ?? '',
+                'description' => $graphic->graphic['description'] ?? '',
             ]])
             ->all();
     }
@@ -75,15 +75,15 @@ class LessonView
     {
         $placed = [];
 
-        foreach ($content['abschnitte'] ?? [] as $k => $section) {
-            $content['abschnitte'][$k]['bloecke'] = array_values(array_filter(
-                $section['bloecke'] ?? [],
+        foreach ($content['sections'] ?? [] as $k => $section) {
+            $content['sections'][$k]['blocks'] = array_values(array_filter(
+                $section['blocks'] ?? [],
                 function (array $block) use ($finished, &$placed) {
-                    if (($block['typ'] ?? null) !== 'grafik') {
+                    if (($block['type'] ?? null) !== 'graphic') {
                         return true;
                     }
 
-                    $nr = $block['nr'] ?? null;
+                    $nr = $block['number'] ?? null;
 
                     // Jede Grafik nur einmal zeigen
                     if (! in_array($nr, $finished, true) || in_array($nr, $placed, true)) {
@@ -98,18 +98,18 @@ class LessonView
         }
 
         // Without its graphic a section may be empty: the child never sees an empty heading
-        if (isset($content['abschnitte'])) {
-            $content['abschnitte'] = array_values(array_filter(
-                $content['abschnitte'],
-                fn (array $section) => ($section['bloecke'] ?? []) !== [],
+        if (isset($content['sections'])) {
+            $content['sections'] = array_values(array_filter(
+                $content['sections'],
+                fn (array $section) => ($section['blocks'] ?? []) !== [],
             ));
         }
 
-        $last = array_key_last($content['abschnitte'] ?? []);
+        $last = array_key_last($content['sections'] ?? []);
 
         foreach ($finished as $nr) {
             if ($nr > 1 && $last !== null && ! in_array($nr, $placed, true)) {
-                $content['abschnitte'][$last]['bloecke'][] = ['typ' => 'grafik', 'nr' => $nr];
+                $content['sections'][$last]['blocks'][] = ['type' => 'graphic', 'number' => $nr];
             }
         }
 
@@ -117,14 +117,14 @@ class LessonView
     }
 
     /**
-     * Entfernt «herkunft» in jeder Tiefe.
+     * Entfernt «origin» in jeder Tiefe.
      *
      * @param  array<mixed>  $data
      * @return array<mixed>
      */
     public static function withoutOrigin(array $data): array
     {
-        unset($data['herkunft']);
+        unset($data['origin']);
 
         foreach ($data as $key => $value) {
             if (is_array($value)) {

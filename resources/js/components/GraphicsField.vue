@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
 export type GraphicsMode = 'none' | 'auto' | 'custom';
-export type GraphicWish = { beschreibung: string; muster: string | null };
+export type GraphicWish = { description: string; pattern: string | null };
 
 const props = defineProps<{
     patterns: { value: string; label: string }[];
@@ -41,7 +41,7 @@ function selectMode(value: GraphicsMode) {
     mode.value = value;
 
     if (value === 'custom' && graphics.value.length === 0) {
-        graphics.value = [{ beschreibung: '', muster: null }];
+        graphics.value = [{ description: '', pattern: null }];
     }
 }
 
@@ -50,7 +50,7 @@ async function addGraphic() {
         return;
     }
 
-    graphics.value = [...graphics.value, { beschreibung: '', muster: null }];
+    graphics.value = [...graphics.value, { description: '', pattern: null }];
 
     await nextTick();
     document.getElementById(`graphic-${graphics.value.length - 1}`)?.focus();
@@ -128,24 +128,24 @@ function rowError(index: number, field: keyof GraphicWish) {
                 </div>
                 <textarea
                     :id="`graphic-${index}`"
-                    :value="graphic.beschreibung"
+                    :value="graphic.description"
                     rows="3"
                     :maxlength="DESCRIPTION_MAX"
                     class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
                     placeholder="z. B. Ein Blatt, bei dem man Licht und Wasser mit Reglern verändert und sieht, wie viel Zucker entsteht."
                     @input="
                         update(index, {
-                            beschreibung: ($event.target as HTMLTextAreaElement)
+                            description: ($event.target as HTMLTextAreaElement)
                                 .value,
                         })
                     "
                 />
                 <div class="flex items-start justify-between gap-4">
-                    <InputError :message="rowError(index, 'beschreibung')" />
+                    <InputError :message="rowError(index, 'description')" />
                     <span
                         class="ml-auto shrink-0 text-sm text-muted-foreground tabular-nums"
                     >
-                        {{ graphic.beschreibung.length }}/{{ DESCRIPTION_MAX }}
+                        {{ graphic.description.length }}/{{ DESCRIPTION_MAX }}
                     </span>
                 </div>
 
@@ -153,11 +153,11 @@ function rowError(index: number, field: keyof GraphicWish) {
                     <Label :for="`graphic-${index}-pattern`">Muster</Label>
                     <select
                         :id="`graphic-${index}-pattern`"
-                        :value="graphic.muster ?? ''"
+                        :value="graphic.pattern ?? ''"
                         class="h-9 w-full rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
                         @change="
                             update(index, {
-                                muster:
+                                pattern:
                                     ($event.target as HTMLSelectElement)
                                         .value || null,
                             })
@@ -172,7 +172,7 @@ function rowError(index: number, field: keyof GraphicWish) {
                             {{ pattern.label }}
                         </option>
                     </select>
-                    <InputError :message="rowError(index, 'muster')" />
+                    <InputError :message="rowError(index, 'pattern')" />
                 </div>
             </div>
 

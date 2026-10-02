@@ -67,8 +67,8 @@ describe('children', function () {
 
     it('keeps the costs when a child is deleted', function () {
         $this->lesson->generations()->createMany([
-            ['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4],
-            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2],
+            ['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4],
+            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2],
         ]);
 
         $this->actingAs($this->user)->delete(route('children.destroy', $this->child))->assertRedirect();
@@ -151,7 +151,7 @@ describe('publishing and sharing', function () {
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('shared/Show')
-                ->where('lesson.content.meta.titel', 'Biotop + Biozönose = Ökosystem')
+                ->where('lesson.content.meta.title', 'Biotop + Biozönose = Ökosystem')
                 ->has('lesson.hero.url')
                 ->missing('lesson.checkNotes')
                 ->missing('lesson.error')
@@ -193,10 +193,10 @@ describe('publishing and sharing', function () {
                 ->where('parent.shareUrl', null)
                 ->where('parent.canRegenerate', ['quiz' => true])
                 ->where('parent.quizCount', 5)
-                ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
+                ->where('parent.graphics', [['number' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
             );
 
-        $this->lesson->update(['scope' => 'ausfuehrlich']);
+        $this->lesson->update(['scope' => 'detailed']);
         $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
             ->assertInertia(fn (Assert $page) => $page->where('parent.quizCount', 8));
 
@@ -217,7 +217,7 @@ describe('editing', function () {
         $this->actingAs($this->user)->get(route('lessons.edit', $lesson))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('lessons/Edit')
-                ->where('lesson.content.meta.titel', 'Wie macht ein Blatt Zucker aus Licht?')
+                ->where('lesson.content.meta.title', 'Wie macht ein Blatt Zucker aus Licht?')
                 ->where('clozeMarkup', 'Die Pflanze nimmt [Kohlenstoffdioxid|CO₂|CO2] aus der Luft und [Wasser] aus dem Boden auf. Mit der Energie des [Lichts|Sonnenlichts|Licht] stellt sie daraus [Traubenzucker|Glucose|Glukose] her. Dabei entsteht [Sauerstoff|O₂|O2].')
                 ->has('palettes', 7)
             );
@@ -225,9 +225,9 @@ describe('editing', function () {
 
     it('saves corrected texts and answers', function () {
         $content = $this->lesson->content;
-        $content['meta']['titel'] = 'Was ist ein Ökosystem?';
-        $content['module']['quiz'][0]['loesung'] = 3;
-        $content['module']['sortieren']['begriffe'][0]['kategorie'] = 'cat2';
+        $content['meta']['title'] = 'Was ist ein Ökosystem?';
+        $content['modules']['quiz'][0]['answer'] = 3;
+        $content['modules']['sorting']['terms'][0]['category'] = 'cat2';
 
         $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $content])
             ->assertSessionHasNoErrors()
@@ -235,8 +235,8 @@ describe('editing', function () {
 
         $lesson = $this->lesson->fresh();
         expect($lesson->title)->toBe('Was ist ein Ökosystem?')
-            ->and($lesson->content['module']['quiz'][0]['loesung'])->toBe(3)
-            ->and($lesson->content['module']['sortieren']['begriffe'][0]['kategorie'])->toBe('cat2');
+            ->and($lesson->content['modules']['quiz'][0]['answer'])->toBe(3)
+            ->and($lesson->content['modules']['sorting']['terms'][0]['category'])->toBe('cat2');
     });
 
     it('turns the cloze markup into gaps', function () {
@@ -247,26 +247,26 @@ describe('editing', function () {
             'clozeMarkup' => 'Blätter sind [grün|gruen] wegen [Chlorophyll].',
         ])->assertSessionHasNoErrors();
 
-        expect($lesson->fresh()->content['module']['lueckentext']['segmente'])->toBe([
+        expect($lesson->fresh()->content['modules']['cloze']['segments'])->toBe([
             ['text' => 'Blätter sind '],
-            ['id' => 'g1', 'loesungen' => ['grün', 'gruen']],
+            ['id' => 'g1', 'answers' => ['grün', 'gruen']],
             ['text' => ' wegen '],
-            ['id' => 'g2', 'loesungen' => ['Chlorophyll']],
+            ['id' => 'g2', 'answers' => ['Chlorophyll']],
             ['text' => '.'],
         ]);
     });
 
     it('explains what is wrong', function () {
         $content = $this->lesson->content;
-        $content['meta']['titel'] = '';
-        $content['module']['quiz'][1]['optionen'][0] = 'Straße';
+        $content['meta']['title'] = '';
+        $content['modules']['quiz'][1]['options'][0] = 'Straße';
 
         $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $content])
-            ->assertSessionHasErrors(['content.meta.titel']);
+            ->assertSessionHasErrors(['content.meta.title']);
 
-        $content['meta']['titel'] = 'Titel';
+        $content['meta']['title'] = 'Titel';
         $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $content])
-            ->assertSessionHasErrors(['content.module.quiz.1.optionen.0' => 'Im Feld module.quiz.1.optionen.0 steht ein «ß». In der Schweiz schreibt man «ss».']);
+            ->assertSessionHasErrors(['content.modules.quiz.1.options.0' => 'Im Feld modules.quiz.1.options.0 steht ein «ß». In der Schweiz schreibt man «ss».']);
 
         expect($this->lesson->fresh()->title)->toBe('Biotop + Biozönose = Ökosystem');
     });
@@ -291,23 +291,23 @@ describe('editing', function () {
 describe('regenerating', function () {
     it('replaces the quiz and asks the parent to check again', function () {
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
-        $newQuiz = LessonFactory::fixture('fotosynthese')['module']['quiz'];
-        $this->fake->push('neu-quiz', ['quiz' => $newQuiz]);
+        $newQuiz = LessonFactory::fixture('fotosynthese')['modules']['quiz'];
+        $this->fake->push('regenerate-quiz', ['quiz' => $newQuiz]);
 
         $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']))
             ->assertRedirect(route('lessons.show', $this->lesson));
 
         $lesson = $this->lesson->fresh();
-        expect($lesson->content['module']['quiz'])->toBe($newQuiz)
-            ->and($lesson->content['module']['sortieren'])->toBe(LessonFactory::fixture('oekosystem')['module']['sortieren'])
+        expect($lesson->content['modules']['quiz'])->toBe($newQuiz)
+            ->and($lesson->content['modules']['sorting'])->toBe(LessonFactory::fixture('oekosystem')['modules']['sorting'])
             ->and($lesson->status)->toBe(LessonStatus::Review)
             ->and($lesson->published_at)->toBeNull()
-            ->and($this->fake->requestsFor('neu-quiz')[0]->prompt)->toContain('Bisheriges Quiz:');
+            ->and($this->fake->requestsFor('regenerate-quiz')[0]->prompt)->toContain('Bisheriges Quiz:');
     });
 
     it('keeps the old quiz and the published state when the new one is broken', function () {
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
-        $this->fake->push('neu-quiz', ['quiz' => []]);
+        $this->fake->push('regenerate-quiz', ['quiz' => []]);
 
         $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']));
 
@@ -323,19 +323,19 @@ describe('regenerating', function () {
             ->assertRedirect(route('lessons.show', $this->lesson));
 
         $lesson = $this->lesson->fresh();
-        expect($lesson->graphic(1)->graphic['muster'])->toBe('regler')
+        expect($lesson->graphic(1)->graphic['pattern'])->toBe('sliders')
             ->and($lesson->status)->toBe(LessonStatus::Review)
-            ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
+            ->and($this->fake->requestsFor('graphic'))->toHaveCount(1);
     });
 
     it('no longer draws a graphic from the old address', function () {
         $this->actingAs($this->user)->post('/lernseiten/'.$this->lesson->id.'/neu/grafik')->assertNotFound();
 
-        expect($this->fake->requestsFor('grafik'))->toBe([]);
+        expect($this->fake->requestsFor('graphic'))->toBe([]);
     });
 
     it('keeps the old graphic when the new one fails', function () {
-        $this->fake->push('grafik', new ModelException('Die KI war nicht erreichbar.'));
+        $this->fake->push('graphic', new ModelException('Die KI war nicht erreichbar.'));
 
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
 
@@ -370,10 +370,10 @@ describe('regenerating', function () {
 
     it('keeps a published page online while drawing a graphic and asks for a new check afterwards', function () {
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
-        $this->fake->push('grafik', function () {
-            expectStillOnline($this->lesson, 'neu-grafik');
+        $this->fake->push('graphic', function () {
+            expectStillOnline($this->lesson, 'regenerate-graphic');
 
-            return FakeLanguageModel::defaultResponse('grafik');
+            return FakeLanguageModel::defaultResponse('graphic');
         });
 
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
@@ -388,12 +388,12 @@ describe('regenerating', function () {
     it('leaves a published page as it was when the new graphic fails', function (Closure|Throwable $response) {
         $publishedAt = now()->subDay()->startOfSecond();
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => $publishedAt]);
-        $this->fake->push('grafik', function () use ($response) {
-            expectStillOnline($this->lesson, 'neu-grafik');
+        $this->fake->push('graphic', function () use ($response) {
+            expectStillOnline($this->lesson, 'regenerate-graphic');
 
             return $response instanceof Closure ? $response() : throw $response;
         });
-        $this->fake->push('grafik-reparatur', ['muster' => 'regler']);
+        $this->fake->push('graphic-repair', ['pattern' => 'sliders']);
 
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
 
@@ -407,13 +407,13 @@ describe('regenerating', function () {
         $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))->assertOk();
     })->with([
         'api error' => [new ModelException('Die KI war nicht erreichbar.')],
-        'broken graphic' => [fn () => fn () => ['muster' => 'regler']],
+        'broken graphic' => [fn () => fn () => ['pattern' => 'sliders']],
     ]);
 
     it('keeps a published page online while writing a new quiz', function () {
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
-        $this->fake->push('neu-quiz', function () {
-            expectStillOnline($this->lesson, 'neu-quiz');
+        $this->fake->push('regenerate-quiz', function () {
+            expectStillOnline($this->lesson, 'regenerate-quiz');
 
             return ['quiz' => []];
         });
@@ -427,7 +427,7 @@ describe('regenerating', function () {
     });
 
     it('clears the running regeneration after an unexpected error', function (string $job) {
-        $step = $job === RegenerateQuiz::class ? 'neu-quiz' : 'neu-grafik';
+        $step = $job === RegenerateQuiz::class ? 'regenerate-quiz' : 'regenerate-graphic';
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now(), 'step' => $step]);
 
         (new $job($this->lesson, 1))->failed(new RuntimeException('Timeout'));
@@ -441,15 +441,15 @@ describe('regenerating', function () {
 
     it('only redraws the chosen graphic', function () {
         $first = $this->lesson->graphic(1)->only(['graphic', 'updated_at']);
-        $this->lesson->graphics()->create(['position' => 2, 'plan' => ['muster' => 'schritte', 'idee' => 'Vier Schritte'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
-        $this->lesson->graphics()->create(['position' => 3, 'plan' => ['muster' => 'rechner', 'idee' => 'Ein Rechner'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
+        $this->lesson->graphics()->create(['position' => 2, 'plan' => ['pattern' => 'steps', 'idea' => 'Vier Schritte'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
+        $this->lesson->graphics()->create(['position' => 3, 'plan' => ['pattern' => 'calculator', 'idea' => 'Ein Rechner'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
         $this->travel(1)->minute();
 
         $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 2]));
 
         $lesson = $this->lesson->fresh();
-        expect($this->fake->requestsFor('grafik'))->toHaveCount(1)
-            ->and($this->fake->requestsFor('grafik')[0]->prompt)->toContain("Muster: schritte\nVier Schritte")
+        expect($this->fake->requestsFor('graphic'))->toHaveCount(1)
+            ->and($this->fake->requestsFor('graphic')[0]->prompt)->toContain("Muster: steps\nVier Schritte")
             ->and($lesson->graphic(1)->only(['graphic', 'updated_at']))->toEqual($first)
             ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
             ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'));
@@ -467,18 +467,18 @@ describe('regenerating', function () {
     });
 
     it('asks for as many questions as the scope wants', function () {
-        $this->lesson->update(['scope' => 'kurz']);
-        $this->fake->push('neu-quiz', ['quiz' => array_slice(LessonFactory::fixture('fotosynthese')['module']['quiz'], 0, 3)]);
+        $this->lesson->update(['scope' => 'short']);
+        $this->fake->push('regenerate-quiz', ['quiz' => array_slice(LessonFactory::fixture('fotosynthese')['modules']['quiz'], 0, 3)]);
 
         $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']));
 
-        expect($this->fake->requestsFor('neu-quiz')[0]->prompt)->toContain('Erstelle nur ein neues Quiz mit genau 3 Fragen (IDs q1–q3).')
-            ->and($this->lesson->fresh()->content['module']['quiz'])->toHaveCount(3);
+        expect($this->fake->requestsFor('regenerate-quiz')[0]->prompt)->toContain('Erstelle nur ein neues Quiz mit genau 3 Fragen (IDs q1–q3).')
+            ->and($this->lesson->fresh()->content['modules']['quiz'])->toHaveCount(3);
     });
 
     it('does not create a quiz for a page without one', function () {
         $content = $this->lesson->content;
-        $content['module']['quiz'] = null;
+        $content['modules']['quiz'] = null;
         $this->lesson->update(['content' => $content]);
 
         $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']))->assertStatus(422);
@@ -498,7 +498,7 @@ it('deletes a lesson', function () {
     $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
     Storage::disk('lesson-images')->put("{$this->lesson->id}/a.jpg", 'x');
     $this->lesson->images()->create(['path' => "{$this->lesson->id}/a.jpg", 'mime_type' => 'image/jpeg', 'size' => 1]);
-    $this->lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4]);
+    $this->lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4]);
 
     $this->actingAs($this->user)->delete(route('lessons.destroy', $this->lesson))
         ->assertRedirect(route('dashboard'));
@@ -530,11 +530,11 @@ it('removes the content and the progress of a deleted lesson but keeps its costs
         'topic' => 'Ökosystem',
         'source_summary' => 'Zusammenfassung',
         'additions' => ['Ergänzt.'],
-        'check_notes' => [['bereich' => 'Quiz', 'aenderung' => 'Korrigiert']],
+        'check_notes' => [['area' => 'Quiz', 'change' => 'Korrigiert']],
         'error' => 'Alter Fehler',
-        'step' => 'module',
+        'step' => 'modules',
     ]);
-    $this->lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4]);
+    $this->lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4]);
     $other = Lesson::factory()->for($this->child)->fromFixture('fotosynthese')->create(['status' => LessonStatus::Published, 'published_at' => now()]);
     $old = Attempt::forceCreate(['child_id' => $this->child->id, 'lesson_id' => $other->id, 'module' => 'quiz', 'item_id' => 'q1', 'correct' => true, 'created_at' => now()->subDays(3)]);
     Attempt::forceCreate(['child_id' => $this->child->id, 'lesson_id' => $this->lesson->id, 'module' => 'quiz', 'item_id' => 'q1', 'correct' => true, 'created_at' => now()]);

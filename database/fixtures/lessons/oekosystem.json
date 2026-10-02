@@ -1,221 +1,221 @@
 {
     "meta": {
-        "titel": "Biotop + Biozönose = Ökosystem",
-        "anleitung": "Tippe auf die drei Begriffe und schau, was sich am Weiher verändert.",
-        "thema": "Ökosystem",
-        "kernidee": "Ein Ökosystem entsteht, wenn ein Lebensraum (Biotop) und seine Lebewesen (Biozönose) sich gegenseitig beeinflussen.",
+        "title": "Biotop + Biozönose = Ökosystem",
+        "instructions": "Tippe auf die drei Begriffe und schau, was sich am Weiher verändert.",
+        "topic": "Ökosystem",
+        "key_idea": "Ein Ökosystem entsteht, wenn ein Lebensraum (Biotop) und seine Lebewesen (Biozönose) sich gegenseitig beeinflussen.",
         "emoji": "🐸",
         "palette": "petrol"
     },
-    "abschnitte": [
+    "sections": [
         {
-            "titel": "Die drei Begriffe",
-            "bloecke": [
+            "title": "Die drei Begriffe",
+            "blocks": [
                 {
-                    "typ": "spalten",
-                    "eintraege": [
+                    "type": "columns",
+                    "entries": [
                         {
-                            "titel": "Biotop = Lebensraum",
-                            "kategorie": "cat1",
-                            "absaetze": [
+                            "title": "Biotop = Lebensraum",
+                            "category": "cat1",
+                            "paragraphs": [
                                 "Der Ort mit allen unbelebten Bedingungen: Licht, Temperatur, Wasser, Boden, Wind, Sauerstoff- und Mineralstoffgehalt.",
                                 "Diese nennt man abiotische Faktoren (a-biotisch = nicht belebt)."
                             ]
                         },
                         {
-                            "titel": "Biozönose = Lebensgemeinschaft",
-                            "kategorie": "cat2",
-                            "absaetze": [
+                            "title": "Biozönose = Lebensgemeinschaft",
+                            "category": "cat2",
+                            "paragraphs": [
                                 "Alle Lebewesen, die in diesem Biotop leben: Pflanzen, Tiere, Pilze und Bakterien.",
                                 "Sie beeinflussen sich gegenseitig. Das nennt man biotische Faktoren (biotisch = belebt)."
                             ]
                         }
                     ],
-                    "herkunft": "foto"
+                    "origin": "photo"
                 },
                 {
-                    "typ": "box",
-                    "titel": "Ökosystem = Biotop + Biozönose",
-                    "absaetze": [
+                    "type": "box",
+                    "title": "Ökosystem = Biotop + Biozönose",
+                    "paragraphs": [
                         "Erst wenn Lebensraum und Lebensgemeinschaft zusammenkommen und sich gegenseitig beeinflussen, spricht man von einem Ökosystem. Der Frosch frisst Libellen, die Pflanzen liefern Sauerstoff ins Wasser, abgestorbene Pflanzen werden zu Schlamm und verändern so den Lebensraum.",
                         "Weitere Beispiele: Wald, Wiese, Moor, Bergbach, Korallenriff."
                     ],
-                    "herkunft": "foto"
+                    "origin": "photo"
                 }
             ]
         }
     ],
-    "probieren": null,
-    "module": {
-        "sortieren": {
-            "anleitung": "Gehört das zum Biotop (unbelebt) oder zur Biozönose (belebt)?",
-            "kategorien": [
+    "try_it": null,
+    "modules": {
+        "sorting": {
+            "instructions": "Gehört das zum Biotop (unbelebt) oder zur Biozönose (belebt)?",
+            "categories": [
                 { "id": "cat1", "label": "Biotop", "sub": "unbelebt" },
                 { "id": "cat2", "label": "Biozönose", "sub": "belebt" }
             ],
-            "begriffe": [
+            "terms": [
                 {
                     "id": "s1",
                     "text": "Sonnenlicht",
-                    "kategorie": "cat1",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s2",
                     "text": "Frosch",
-                    "kategorie": "cat2",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s3",
                     "text": "Wassertemperatur",
-                    "kategorie": "cat1",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s4",
                     "text": "Schilf",
-                    "kategorie": "cat2",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s5",
                     "text": "Steine am Grund",
-                    "kategorie": "cat1",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s6",
                     "text": "Bakterien",
-                    "kategorie": "cat2",
-                    "erklaerung": "Auch winzige Lebewesen gehören zur Lebensgemeinschaft.",
-                    "herkunft": "foto"
+                    "category": "cat2",
+                    "explanation": "Auch winzige Lebewesen gehören zur Lebensgemeinschaft.",
+                    "origin": "photo"
                 },
                 {
                     "id": "s7",
                     "text": "Regen",
-                    "kategorie": "cat1",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s8",
                     "text": "Libellenlarve",
-                    "kategorie": "cat2",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s9",
                     "text": "Sauerstoff im Wasser",
-                    "kategorie": "cat1",
-                    "erklaerung": "Sauerstoff ist ein Stoff, kein Lebewesen.",
-                    "herkunft": "foto"
+                    "category": "cat1",
+                    "explanation": "Sauerstoff ist ein Stoff, kein Lebewesen.",
+                    "origin": "photo"
                 },
                 {
                     "id": "s10",
                     "text": "Algen",
-                    "kategorie": "cat2",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s11",
                     "text": "Wind",
-                    "kategorie": "cat1",
-                    "erklaerung": null,
-                    "herkunft": "foto"
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
                 },
                 {
                     "id": "s12",
                     "text": "Pilze im Waldboden",
-                    "kategorie": "cat2",
-                    "erklaerung": "Pilze sind Lebewesen, auch wenn sie keine Pflanzen sind.",
-                    "herkunft": "foto"
+                    "category": "cat2",
+                    "explanation": "Pilze sind Lebewesen, auch wenn sie keine Pflanzen sind.",
+                    "origin": "photo"
                 }
             ]
         },
-        "karten": null,
-        "lueckentext": null,
+        "flashcards": null,
+        "cloze": null,
         "quiz": [
             {
                 "id": "q1",
-                "frage": "Was ist ein Biotop?",
-                "optionen": [
+                "question": "Was ist ein Biotop?",
+                "options": [
                     "Alle Tiere in einem Wald",
                     "Der Lebensraum mit seinen unbelebten Bedingungen",
                     "Eine einzelne Pflanzenart",
                     "Die Nahrungskette in einem See"
                 ],
-                "loesung": 1,
-                "tipp": "Bio-top: «topos» heisst auf Griechisch «Ort».",
-                "erklaerung": "Das Biotop ist der Lebensraum: der Ort mit Licht, Wasser, Boden, Temperatur und weiteren unbelebten Faktoren.",
-                "herkunft": "foto"
+                "answer": 1,
+                "hint": "Bio-top: «topos» heisst auf Griechisch «Ort».",
+                "explanation": "Das Biotop ist der Lebensraum: der Ort mit Licht, Wasser, Boden, Temperatur und weiteren unbelebten Faktoren.",
+                "origin": "photo"
             },
             {
                 "id": "q2",
-                "frage": "Was gehört alles zur Biozönose eines Weihers?",
-                "optionen": [
+                "question": "Was gehört alles zur Biozönose eines Weihers?",
+                "options": [
                     "Nur die Fische",
                     "Nur die Pflanzen",
                     "Alle Lebewesen: Pflanzen, Tiere, Pilze und Bakterien",
                     "Das Wasser und der Schlamm"
                 ],
-                "loesung": 2,
-                "tipp": "Lebensgemeinschaft heisst: alles, was lebt.",
-                "erklaerung": "Zur Biozönose gehören alle Lebewesen, auch die winzigen wie Bakterien und Algen.",
-                "herkunft": "foto"
+                "answer": 2,
+                "hint": "Lebensgemeinschaft heisst: alles, was lebt.",
+                "explanation": "Zur Biozönose gehören alle Lebewesen, auch die winzigen wie Bakterien und Algen.",
+                "origin": "photo"
             },
             {
                 "id": "q3",
-                "frage": "Was ist ein Ökosystem?",
-                "optionen": [
+                "question": "Was ist ein Ökosystem?",
+                "options": [
                     "Biotop und Biozönose, die sich gegenseitig beeinflussen",
                     "Ein Naturschutzgebiet",
                     "Nur die Lebewesen eines Ortes",
                     "Eine Gruppe gleicher Tiere"
                 ],
-                "loesung": 0,
-                "tipp": "Denk an die Formel ganz oben.",
-                "erklaerung": "Biotop + Biozönose = Ökosystem. Wichtig ist, dass Lebensraum und Lebewesen aufeinander wirken.",
-                "herkunft": "foto"
+                "answer": 0,
+                "hint": "Denk an die Formel ganz oben.",
+                "explanation": "Biotop + Biozönose = Ökosystem. Wichtig ist, dass Lebensraum und Lebewesen aufeinander wirken.",
+                "origin": "photo"
             },
             {
                 "id": "q4",
-                "frage": "Welches ist ein abiotischer Faktor?",
-                "optionen": [
+                "question": "Welches ist ein abiotischer Faktor?",
+                "options": [
                     "Die Libelle",
                     "Die Wassertemperatur",
                     "Die Seerose",
                     "Die Bakterien"
                 ],
-                "loesung": 1,
-                "tipp": "Abiotisch = unbelebt.",
-                "erklaerung": "Die Temperatur lebt nicht, also ist sie ein abiotischer Faktor und gehört zum Biotop. Alles andere sind Lebewesen.",
-                "herkunft": "foto"
+                "answer": 1,
+                "hint": "Abiotisch = unbelebt.",
+                "explanation": "Die Temperatur lebt nicht, also ist sie ein abiotischer Faktor und gehört zum Biotop. Alles andere sind Lebewesen.",
+                "origin": "photo"
             },
             {
                 "id": "q5",
-                "frage": "Jedes Jahr sterben viele Pflanzen im Weiher ab und sinken auf den Grund. Der Schlamm wird dicker. Was zeigt das?",
-                "optionen": [
+                "question": "Jedes Jahr sterben viele Pflanzen im Weiher ab und sinken auf den Grund. Der Schlamm wird dicker. Was zeigt das?",
+                "options": [
                     "Dass der Weiher kein Ökosystem ist",
                     "Dass nur das Biotop die Lebewesen beeinflusst",
                     "Dass auch die Lebewesen den Lebensraum verändern",
                     "Dass Pflanzen zum Biotop gehören"
                 ],
-                "loesung": 2,
-                "tipp": "Wer verändert hier wen?",
-                "erklaerung": "Die Biozönose (abgestorbene Pflanzen) verändert das Biotop (mehr Schlamm). Die Beeinflussung geht in beide Richtungen, genau das macht ein Ökosystem aus.",
-                "herkunft": "foto"
+                "answer": 2,
+                "hint": "Wer verändert hier wen?",
+                "explanation": "Die Biozönose (abgestorbene Pflanzen) verändert das Biotop (mehr Schlamm). Die Beeinflussung geht in beide Richtungen, genau das macht ein Ökosystem aus.",
+                "origin": "photo"
             }
         ]
     },
-    "nachdenken": {
-        "frage": "Ist ein Aquarium im Wohnzimmer ein Ökosystem? Was spricht dafür, was dagegen?"
+    "reflect": {
+        "question": "Ist ein Aquarium im Wohnzimmer ein Ökosystem? Was spricht dafür, was dagegen?"
     }
 }

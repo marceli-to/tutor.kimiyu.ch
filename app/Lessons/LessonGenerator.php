@@ -55,9 +55,9 @@ class LessonGenerator
 
         $data = $this->call($lesson, Prompts::analysis($lesson, $images))->data;
 
-        if (! ($data['quelle']['lesbar'] ?? false)) {
+        if (! ($data['source']['readable'] ?? false)) {
             throw new GenerationFailed(
-                ($data['quelle']['problem'] ?? null) ?: match (true) {
+                ($data['source']['problem'] ?? null) ?: match (true) {
                     ! $lesson->isFromTopic() => 'Auf den Fotos war kein Schulstoff zu erkennen.',
                     $lesson->prompt !== null => 'Zu diesem Auftrag konnte keine Lernseite erstellt werden.',
                     // Alte Lernseiten aus einem Thema
@@ -70,26 +70,26 @@ class LessonGenerator
         // Das Fach nur, wenn die Eltern keines angegeben haben.
         $lesson->update([
             'subject_detected' => $lesson->subject === null,
-            'subject' => $lesson->subject ?? self::detectedSubject($data['fach'] ?? null),
-            'source_summary' => (string) ($data['zusammenfassung'] ?? ''),
+            'subject' => $lesson->subject ?? self::detectedSubject($data['subject'] ?? null),
+            'source_summary' => (string) ($data['summary'] ?? ''),
             // Ohne Fotos ist alles ergänzt, eine Liste wäre bedeutungslos
             'additions' => $lesson->isFromTopic()
                 ? null
-                : (array_values(array_filter((array) ($data['ergaenzungen'] ?? []), 'is_string')) ?: null),
+                : (array_values(array_filter((array) ($data['additions'] ?? []), 'is_string')) ?: null),
         ]);
 
-        $this->storeGraphicPlans($lesson, (array) ($data['grafik_plaene'] ?? []));
+        $this->storeGraphicPlans($lesson, (array) ($data['graphic_plans'] ?? []));
 
         // Der Textteil mit denselben Fotos, damit die Begriffe dem Buch folgen
-        $page = $this->call($lesson, Prompts::pageRequest($lesson, $images))->data['seite'] ?? null;
+        $page = $this->call($lesson, Prompts::pageRequest($lesson, $images))->data['page'] ?? null;
 
         if (! is_array($page)) {
             throw new GenerationFailed('Die KI hat keinen gültigen Inhalt geliefert.', 'Der Textteil fehlt in der Antwort.');
         }
 
         // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
-        $lesson->update(['step' => 'module']);
-        $modules = $this->call($lesson, Prompts::modules($lesson, $page))->data['module'] ?? [];
+        $lesson->update(['step' => 'modules']);
+        $modules = $this->call($lesson, Prompts::modules($lesson, $page))->data['modules'] ?? [];
         $content = self::assemble($page, self::onlyAllowed($lesson, $modules));
 
         // Fehlerhafte Teile einmal reparieren
@@ -101,7 +101,7 @@ class LessonGenerator
             $repaired = $this->call($lesson, Prompts::repair($lesson, $content, $part, $errors))->data[$part] ?? null;
 
             if (is_array($repaired)) {
-                $content = $part === 'module' ? self::assemble($content, self::onlyAllowed($lesson, $repaired)) : self::assemble($repaired, $content['module']);
+                $content = $part === 'modules' ? self::assemble($content, self::onlyAllowed($lesson, $repaired)) : self::assemble($repaired, $content['modules']);
             }
         }
 
@@ -116,7 +116,7 @@ class LessonGenerator
         }
 
         $lesson->update([
-            'title' => $content['meta']['titel'],
+            'title' => $content['meta']['title'],
             'content' => $content,
             'schema_version' => ContentValidator::SCHEMA_VERSION,
         ]);
@@ -148,14 +148,14 @@ class LessonGenerator
         $planned = [];
 
         foreach ($plans as $entry) {
-            $nr = is_array($entry) ? ($entry['nr'] ?? null) : null;
+            $nr = is_array($entry) ? ($entry['number'] ?? null) : null;
 
             if (! is_int($nr) || ! in_array($nr, $positions, true) || isset($planned[$nr])) {
                 continue;
             }
 
             $plan = is_array($entry['plan'] ?? null) ? $entry['plan'] : null;
-            $hint = is_string($entry['hinweis'] ?? null) && trim($entry['hinweis']) !== '' ? trim($entry['hinweis']) : null;
+            $hint = is_string($entry['note'] ?? null) && trim($entry['note']) !== '' ? trim($entry['note']) : null;
 
             $lesson->graphics()->updateOrCreate(['position' => $nr], [
                 'plan' => $plan,
@@ -183,7 +183,7 @@ class LessonGenerator
     public function check(Lesson $lesson): void
     {
         try {
-            $corrections = $this->call($lesson, Prompts::check($lesson, $lesson->content))->data['korrekturen'] ?? [];
+            $corrections = $this->call($lesson, Prompts::check($lesson, $lesson->content))->data['corrections'] ?? [];
         } catch (ModelException $e) {
             Log::warning('Prüf-Call fehlgeschlagen', ['lesson' => $lesson->id, 'error' => $e->detail ?? $e->getMessage()]);
 
@@ -197,11 +197,11 @@ class LessonGenerator
         }
 
         $lesson->update([
-            'title' => $result['content']['meta']['titel'],
+            'title' => $result['content']['meta']['title'],
             'content' => $result['content'],
             // Eine Änderung kann mehrere Korrekturen brauchen (z. B. Optionen und Lösung): ein Hinweis genügt.
             'check_notes' => array_values(array_unique(array_map(
-                fn (array $c) => ['bereich' => $c['bereich'], 'aenderung' => $c['aenderung']],
+                fn (array $c) => ['area' => $c['area'], 'change' => $c['change']],
                 $result['applied'],
             ), SORT_REGULAR)),
         ]);
@@ -226,10 +226,10 @@ class LessonGenerator
      */
     private static function assemble(array $page, array $modules): array
     {
-        $nachdenken = $page['nachdenken'] ?? null;
-        unset($page['module'], $page['nachdenken']);
+        $reflect = $page['reflect'] ?? null;
+        unset($page['modules'], $page['reflect']);
 
-        return [...$page, 'module' => $modules, 'nachdenken' => $nachdenken];
+        return [...$page, 'modules' => $modules, 'reflect' => $reflect];
     }
 
     /**
@@ -258,7 +258,7 @@ class LessonGenerator
         $quiz = $this->call($lesson, Prompts::quiz($lesson))->data['quiz'] ?? null;
 
         $content = $lesson->content;
-        $content['module']['quiz'] = $quiz;
+        $content['modules']['quiz'] = $quiz;
 
         if (! is_array($quiz) || ($errors = ContentValidator::errors($content)) !== []) {
             throw new GenerationFailed('Das neue Quiz war fehlerhaft. Das bisherige Quiz bleibt.', implode(' | ', $errors ?? []));
@@ -313,8 +313,8 @@ class LessonGenerator
 
         $graphic->update([
             'graphic' => [
-                'muster' => $hero['muster'],
-                'beschreibung' => $hero['beschreibung'],
+                'pattern' => $hero['pattern'],
+                'description' => $hero['description'],
                 'css' => $hero['css'],
                 'markup' => $hero['markup'],
                 'script' => $hero['script'],

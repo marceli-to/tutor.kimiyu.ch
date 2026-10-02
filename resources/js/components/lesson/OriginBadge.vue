@@ -3,7 +3,7 @@
 // darum kann die Marke überall ohne weitere Bedingung eingebunden werden.
 withDefaults(
     defineProps<{
-        origin?: 'foto' | 'ergaenzt';
+        origin?: 'photo' | 'added';
         // «app» für die Bearbeiten-Seite, die ausserhalb der Lernseiten-Farben liegt
         variant?: 'lesson' | 'app';
     }>(),
@@ -13,7 +13,7 @@ withDefaults(
 
 <template>
     <span
-        v-if="origin === 'ergaenzt'"
+        v-if="origin === 'added'"
         class="inline-block rounded-full border px-2 py-px align-middle text-xs leading-normal font-normal whitespace-nowrap"
         :class="
             variant === 'app'

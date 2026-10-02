@@ -54,8 +54,8 @@ const statuses: { key: Status; label: string; bar: string; dot: string }[] = [
 
 const moduleLabel: Record<string, string> = {
     quiz: 'Quiz',
-    sortieren: 'Sortieren',
-    lueckentext: 'Lückentext',
+    sorting: 'Sortieren',
+    cloze: 'Lückentext',
 };
 </script>
 

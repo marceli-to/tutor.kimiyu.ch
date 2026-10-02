@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 class HeroDocument
 {
     /**
-     * @param  array{muster: string, beschreibung: string, css: string, markup: string, script: string}  $graphic
+     * @param  array{pattern: string, description: string, css: string, markup: string, script: string}  $graphic
      */
     public static function response(Lesson $lesson, array $graphic): Response
     {

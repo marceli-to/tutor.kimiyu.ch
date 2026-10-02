@@ -12,14 +12,9 @@ export type LessonSettings = {
     graphics_mode: GraphicsMode;
 };
 
-export type PresetKey = 'kurz' | 'normal' | 'pruefung';
+export type PresetKey = 'short' | 'normal' | 'exam';
 
-const ALL_MODULES: LessonModule[] = [
-    'quiz',
-    'sortieren',
-    'karten',
-    'lueckentext',
-];
+const ALL_MODULES: LessonModule[] = ['quiz', 'sorting', 'flashcards', 'cloze'];
 
 // Voreinstellungen im einfachen Modus, sie füllen die Felder des erweiterten Modus
 export const PRESETS: {
@@ -29,13 +24,13 @@ export const PRESETS: {
     settings: LessonSettings;
 }[] = [
     {
-        key: 'kurz',
+        key: 'short',
         label: 'Kurz & schnell',
         hint: 'Wenig Text, kurzes Quiz und Karteikarten, ohne Grafik. Am günstigsten.',
         settings: {
-            purpose: 'neu',
-            scope: 'kurz',
-            modules: ['quiz', 'karten'],
+            purpose: 'new',
+            scope: 'short',
+            modules: ['quiz', 'flashcards'],
             graphics_mode: 'none',
         },
     },
@@ -44,18 +39,18 @@ export const PRESETS: {
         label: 'Normal',
         hint: 'Erklärung, Quiz, passende Übungen, eine Grafik, wenn sie hilft.',
         settings: {
-            purpose: 'neu',
+            purpose: 'new',
             scope: 'normal',
             modules: ALL_MODULES,
             graphics_mode: 'auto',
         },
     },
     {
-        key: 'pruefung',
+        key: 'exam',
         label: 'Prüfung',
         hint: 'Kompakt, Fokus auf Begriffe und typische Prüfungsfragen.',
         settings: {
-            purpose: 'pruefung',
+            purpose: 'exam',
             scope: 'normal',
             modules: ALL_MODULES,
             graphics_mode: 'auto',
@@ -89,11 +84,11 @@ export function matchPreset(settings: LessonSettings): PresetKey | null {
 
 // Eine Zeile wie «Neuer Stoff · Ausführlich · 2 Module · ohne Grafik»
 export function settingsSummary(settings: LessonSettings): string {
-    const purpose = settings.purpose === 'pruefung' ? 'Prüfung' : 'Neuer Stoff';
+    const purpose = settings.purpose === 'exam' ? 'Prüfung' : 'Neuer Stoff';
     const scope = {
-        kurz: 'Kurz',
+        short: 'Kurz',
         normal: 'Normal',
-        ausfuehrlich: 'Ausführlich',
+        detailed: 'Ausführlich',
     }[settings.scope];
     const modules =
         settings.modules.length === 1

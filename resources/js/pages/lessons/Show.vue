@@ -39,13 +39,13 @@ const props = defineProps<{
         palette: Palette | null;
         hero: LessonHero | null;
         graphics: LessonGraphics;
-        checkNotes: { bereich: string; aenderung: string }[];
+        checkNotes: { area: string; change: string }[];
     };
 }>();
 
 // A regenerated part keeps the status (the child still sees the page), only the step shows it
 const regenerating = computed(
-    () => props.lesson.step?.startsWith('neu-') ?? false,
+    () => props.lesson.step?.startsWith('regenerate-') ?? false,
 );
 
 const generating = computed(
@@ -66,7 +66,7 @@ watch(generating, (active) => (active ? start() : stop()));
 </script>
 
 <template>
-    <Head :title="lesson.content?.meta.titel ?? 'Lernseite entsteht'" />
+    <Head :title="lesson.content?.meta.title ?? 'Lernseite entsteht'" />
 
     <GenerationStatus
         v-if="

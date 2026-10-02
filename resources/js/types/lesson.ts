@@ -3,82 +3,80 @@
 export type CategoryId = 'cat1' | 'cat2' | 'cat3';
 
 // Herkunft eines Bausteins: von den Fotos oder aus Fachwissen ergänzt (fehlt bei alten Seiten)
-export type Origin = { herkunft?: 'foto' | 'ergaenzt' };
+export type Origin = { origin?: 'photo' | 'added' };
 
 export type LessonBlock = Origin &
     (
-        | { typ: 'absatz'; text: string }
-        | { typ: 'formel'; text: string; zusatz?: string | null }
-        | { typ: 'fakten'; eintraege: { titel: string; text: string }[] }
+        | { type: 'paragraph'; text: string }
+        | { type: 'formula'; text: string; addendum?: string | null }
+        | { type: 'facts'; entries: { title: string; text: string }[] }
         | {
-              typ: 'spalten';
-              eintraege: {
-                  titel: string;
-                  kategorie: CategoryId;
-                  absaetze: string[];
+              type: 'columns';
+              entries: {
+                  title: string;
+                  category: CategoryId;
+                  paragraphs: string[];
               }[];
           }
-        | { typ: 'box'; titel: string; absaetze: string[] }
+        | { type: 'box'; title: string; paragraphs: string[] }
         // Grafik 2 oder 3 an dieser Stelle; Grafik 1 steht oben
-        | { typ: 'grafik'; nr: number }
+        | { type: 'graphic'; number: number }
     );
 
 export type QuizQuestion = Origin & {
     id: string;
-    frage: string;
-    optionen: string[];
-    loesung: number;
-    tipp?: string | null;
-    erklaerung: string;
+    question: string;
+    options: string[];
+    answer: number;
+    hint?: string | null;
+    explanation: string;
 };
 
 export type SortModuleData = {
-    anleitung?: string | null;
-    kategorien: { id: CategoryId; label: string; sub?: string | null }[];
-    begriffe: (Origin & {
+    instructions?: string | null;
+    categories: { id: CategoryId; label: string; sub?: string | null }[];
+    terms: (Origin & {
         id: string;
         text: string;
-        kategorie: CategoryId;
-        erklaerung?: string | null;
+        category: CategoryId;
+        explanation?: string | null;
     })[];
 };
 
 export type FlashcardModuleData = {
-    anleitung?: string | null;
-    eintraege: (Origin & { id: string; vorne: string; hinten: string })[];
+    instructions?: string | null;
+    entries: (Origin & { id: string; front: string; back: string })[];
 };
 
-export type ClozeSegment =
-    | { text: string }
-    | { id: string; loesungen: string[] };
+export type ClozeSegment = { text: string } | { id: string; answers: string[] };
 
 export type ClozeModuleData = Origin & {
-    anleitung?: string | null;
-    segmente: ClozeSegment[];
+    instructions?: string | null;
+    segments: ClozeSegment[];
 };
 
 export type LessonContent = {
     meta: {
-        titel: string;
-        anleitung: string;
-        thema: string;
-        kernidee: string;
+        title: string;
+        instructions: string;
+        topic: string;
+        key_idea: string;
         emoji: string;
         palette: string;
     };
-    abschnitte: { titel: string; bloecke: LessonBlock[] }[];
-    probieren: {
-        experimente: string[];
-        alltagsvergleich?: string | null;
+    sections: { title: string; blocks: LessonBlock[] }[];
+    try_it: {
+        experiments: string[];
+        everyday_comparison?: string | null;
     } | null;
-    module: {
+    modules: {
         // null, wenn die Eltern kein Quiz wollten
         quiz: QuizQuestion[] | null;
-        sortieren: SortModuleData | null;
-        karten: FlashcardModuleData | null;
-        lueckentext: ClozeModuleData | null;
+        sorting: SortModuleData | null;
+        flashcards: FlashcardModuleData | null;
+        cloze: ClozeModuleData | null;
     };
-    nachdenken: { frage: string };
+    reflect: { question: string };
 };
 
 export type PaletteColors = Record<
@@ -101,7 +99,7 @@ export type Palette = {
 
 export type LessonHero = {
     url: string;
-    beschreibung: string;
+    description: string;
 };
 
 // Fertige Grafiken nach Position (1 oben, 2 und 3 an ihrem Block im Inhalt)
@@ -109,7 +107,7 @@ export type LessonGraphics = Partial<Record<number, LessonHero>>;
 
 // Nur für Eltern: Zustand jeder Grafik, auch der fehlgeschlagenen
 export type GraphicState = {
-    nr: number;
+    number: number;
     error: string | null;
     canRegenerate: boolean;
     // Von den Eltern in der Bearbeiten-Ansicht ausgeblendet
@@ -118,7 +116,7 @@ export type GraphicState = {
 
 // Ergebnis einer einzelnen Antwort, für den Lernstand (Phase 4)
 export type ModuleAnswer = {
-    module: 'quiz' | 'sortieren' | 'lueckentext';
+    module: 'quiz' | 'sorting' | 'cloze';
     itemId: string;
     // Gewählte Option (Quiz), gewählter Korb (Sortieren) oder Eingabe (Lückentext);
     // der Server prüft selbst, ob sie stimmt

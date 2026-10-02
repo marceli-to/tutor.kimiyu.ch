@@ -46,7 +46,7 @@ class GenerationPipeline
 
         $lesson->update([
             'status' => LessonStatus::Generating,
-            'step' => 'warteschlange',
+            'step' => 'queued',
             'error' => null,
         ]);
 
@@ -60,13 +60,13 @@ class GenerationPipeline
     {
         $job = match ($part) {
             'quiz' => new RegenerateQuiz($lesson),
-            'grafik' => new RegenerateGraphic($lesson, $position),
+            'graphic' => new RegenerateGraphic($lesson, $position),
             default => throw new InvalidArgumentException("Unbekannter Teil: {$part}"),
         };
 
         // A published page stays online for the child; the step shows the parent the progress
         $lesson->update([
-            'step' => "neu-{$part}",
+            'step' => "regenerate-{$part}",
             'error' => null,
         ]);
 
@@ -81,8 +81,8 @@ class GenerationPipeline
         return in_array($lesson->status, [LessonStatus::Review, LessonStatus::Published], true)
             && $lesson->content !== null
             && ! $lesson->isRegenerating()
-            && ($part !== 'grafik' || $lesson->graphic($position)?->plan !== null)
-            && ($part !== 'quiz' || ! empty($lesson->content['module']['quiz']));
+            && ($part !== 'graphic' || $lesson->graphic($position)?->plan !== null)
+            && ($part !== 'quiz' || ! empty($lesson->content['modules']['quiz']));
     }
 
     /**

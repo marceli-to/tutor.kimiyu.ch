@@ -8,7 +8,7 @@ namespace App\Lessons\Ai;
 final readonly class ModelRequest
 {
     /**
-     * @param  string  $step  analyse, module, neu-quiz, reparatur-*, pruefung, grafik oder grafik-reparatur
+     * @param  string  $step  analysis, page, modules, regenerate-quiz, repair-*, check, graphic or graphic-repair
      * @param  list<array{mime: string, data: string}>  $images  Bilder als Binärdaten
      * @param  array<string, mixed>  $schema  JSON-Schema der Antwort
      */
@@ -33,7 +33,7 @@ final readonly class ModelRequest
 
     /**
      * Einstellung für diesen Schritt aus config/lessons.php: zuerst der genaue Schritt
-     * («grafik-reparatur»), dann der Teil vor dem Bindestrich («grafik»).
+     * («graphic-repair»), dann der Teil vor dem Bindestrich («graphic»).
      */
     private function setting(string $key): ?string
     {

@@ -31,7 +31,7 @@ function onAnswer(answer: ModuleAnswer) {
 </script>
 
 <template>
-    <Head :title="lesson.content.meta.titel">
+    <Head :title="lesson.content.meta.title">
         <meta name="robots" content="noindex, nofollow" />
     </Head>
 

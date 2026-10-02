@@ -5,7 +5,7 @@ import type { GraphicState } from '@/types';
 const props = defineProps<{
     status: string;
     error: string | null;
-    checkNotes: { bereich: string; aenderung: string }[];
+    checkNotes: { area: string; change: string }[];
     graphics: GraphicState[];
     fromTopic: boolean;
     additions: string[];
@@ -64,18 +64,18 @@ const graphicErrors = computed(() =>
                 </summary>
                 <ul class="mt-2 mb-0 list-disc pl-5">
                     <li v-for="(note, k) in checkNotes" :key="k">
-                        <strong>{{ note.bereich }}:</strong>
-                        {{ note.aenderung }}
+                        <strong>{{ note.area }}:</strong>
+                        {{ note.change }}
                     </li>
                 </ul>
             </details>
             <p
                 v-for="graphic in graphicErrors"
-                :key="graphic.nr"
+                :key="graphic.number"
                 class="mt-3 mb-0 text-ls-bad"
             >
                 <template v-if="graphics.length > 1">
-                    Grafik {{ graphic.nr }}:
+                    Grafik {{ graphic.number }}:
                 </template>
                 <template v-else>
                     Die interaktive Grafik konnte nicht erstellt werden.

@@ -8,7 +8,7 @@ const props = defineProps<{
     data: FlashcardModuleData;
 }>();
 
-const deck = ref(props.data.eintraege.slice());
+const deck = ref(props.data.entries.slice());
 const index = ref(0);
 const back = ref(false);
 
@@ -40,12 +40,12 @@ function mix() {
             aria-live="polite"
             @click="back = !back"
         >
-            <span v-if="back" class="text-[1.1rem]">{{ card.hinten }}</span>
+            <span v-if="back" class="text-[1.1rem]">{{ card.back }}</span>
             <template v-else>
                 <span class="font-display text-2xl font-bold">{{
-                    card.vorne
+                    card.front
                 }}</span>
-                <OriginBadge :origin="card.herkunft" class="ml-1" />
+                <OriginBadge :origin="card.origin" class="ml-1" />
                 <br />
                 <small class="text-ls-muted">Tippen zum Umdrehen</small>
             </template>

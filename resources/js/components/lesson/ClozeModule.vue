@@ -12,7 +12,7 @@ const emit = defineEmits<{
 }>();
 
 const gaps = computed(() =>
-    props.data.segmente.flatMap((s) => ('loesungen' in s ? [s] : [])),
+    props.data.segments.flatMap((s) => ('answers' in s ? [s] : [])),
 );
 
 const values = reactive<Record<string, string>>({});
@@ -40,7 +40,7 @@ function check() {
 
     for (const gap of gaps.value) {
         const value = normalizeAnswer(values[gap.id] ?? '');
-        const correct = gap.loesungen.some((a) => normalizeAnswer(a) === value);
+        const correct = gap.answers.some((a) => normalizeAnswer(a) === value);
 
         states[gap.id] = correct ? 'right' : 'wrong';
 
@@ -50,7 +50,7 @@ function check() {
 
         if (value !== '') {
             emit('answer', {
-                module: 'lueckentext',
+                module: 'cloze',
                 itemId: gap.id,
                 answer: values[gap.id] ?? '',
                 correct,
@@ -63,7 +63,7 @@ function check() {
 
 function showSolution() {
     for (const gap of gaps.value) {
-        values[gap.id] = gap.loesungen[0];
+        values[gap.id] = gap.answers[0];
         states[gap.id] = 'right';
     }
 
@@ -91,9 +91,9 @@ function inputClass(id: string): string {
 <template>
     <div class="ls-panel">
         <p class="leading-[2.3]">
-            <template v-for="(segment, k) in data.segmente" :key="k">
+            <template v-for="(segment, k) in data.segments" :key="k">
                 <input
-                    v-if="'loesungen' in segment"
+                    v-if="'answers' in segment"
                     v-model="values[segment.id]"
                     type="text"
                     class="w-[9em] rounded-lg border-[1.5px] px-2 py-0.5 text-base text-ls-ink"

@@ -8,7 +8,7 @@ class AnalyzeLesson extends LessonStep
 {
     protected function step(): string
     {
-        return 'analyse';
+        return 'analysis';
     }
 
     protected function run(LessonGenerator $generator): void

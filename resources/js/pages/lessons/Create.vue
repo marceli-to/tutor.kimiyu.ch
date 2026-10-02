@@ -87,9 +87,9 @@ const form = useForm<{
     level: props.children[0]?.level ?? '',
     graphics_mode: 'auto',
     graphics: [],
-    purpose: 'neu',
+    purpose: 'new',
     scope: 'normal',
-    modules: ['quiz', 'sortieren', 'karten', 'lueckentext'],
+    modules: ['quiz', 'sorting', 'flashcards', 'cloze'],
     images: [],
 });
 

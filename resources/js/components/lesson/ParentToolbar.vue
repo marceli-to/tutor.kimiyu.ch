@@ -43,7 +43,7 @@ const props = defineProps<{
     graphics: GraphicState[];
 }>();
 
-type Confirm = 'quiz' | 'grafik' | 'delete' | null;
+type Confirm = 'quiz' | 'graphic' | 'delete' | null;
 const confirm = ref<Confirm>(null);
 // Welche Grafik neu erstellt werden soll
 const graphicNr = ref(1);
@@ -53,14 +53,16 @@ function graphicLabel(nr: number) {
         nr === 1 && props.graphics.length > 1
             ? 'Grafik 1 (oben)'
             : `Grafik ${nr}`;
-    const hidden = props.graphics.find((graphic) => graphic.nr === nr)?.hidden;
+    const hidden = props.graphics.find(
+        (graphic) => graphic.number === nr,
+    )?.hidden;
 
     return hidden ? `${label} (ausgeblendet)` : label;
 }
 
 function confirmGraphic(nr: number) {
     graphicNr.value = nr;
-    confirm.value = 'grafik';
+    confirm.value = 'graphic';
 }
 
 const texts = {
@@ -69,7 +71,7 @@ const texts = {
         description: `Die KI schreibt ${props.quizCount} neue Fragen. Das dauert etwa eine Minute. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.`,
         action: 'Neues Quiz erstellen',
     },
-    grafik: {
+    graphic: {
         title: 'Grafik neu erstellen?',
         description:
             'Die KI zeichnet die interaktive Grafik neu. Das dauert einige Minuten. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.',
@@ -86,7 +88,7 @@ function confirmForm() {
     switch (confirm.value) {
         case 'quiz':
             return regenerate.form([props.lessonId, 'quiz']);
-        case 'grafik':
+        case 'graphic':
             return regenerateGraphic.form([props.lessonId, graphicNr.value]);
         default:
             return destroy.form(props.lessonId);
@@ -161,13 +163,13 @@ function confirmForm() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         v-for="graphic in graphics"
-                        :key="graphic.nr"
+                        :key="graphic.number"
                         :disabled="!graphic.canRegenerate"
-                        @select="confirmGraphic(graphic.nr)"
+                        @select="confirmGraphic(graphic.number)"
                     >
                         {{
                             graphics.length > 1
-                                ? `${graphicLabel(graphic.nr)} neu erstellen`
+                                ? `${graphicLabel(graphic.number)} neu erstellen`
                                 : 'Grafik neu erstellen'
                         }}
                     </DropdownMenuItem>
@@ -201,7 +203,7 @@ function confirmForm() {
                 <DialogHeader>
                     <DialogTitle>
                         {{
-                            confirm === 'grafik' && graphics.length > 1
+                            confirm === 'graphic' && graphics.length > 1
                                 ? `${graphicLabel(graphicNr)} neu erstellen?`
                                 : texts[confirm].title
                         }}

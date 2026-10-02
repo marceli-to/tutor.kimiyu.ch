@@ -28,8 +28,8 @@ class StoreLessonRequest extends FormRequest
             'graphics_mode' => ['required', Rule::in(['none', 'auto', 'custom'])],
             // Wünsche der Eltern, nur bei «Selbst beschreiben»
             'graphics' => ['exclude_unless:graphics_mode,custom', 'required', 'array', 'min:1', 'max:3'],
-            'graphics.*.beschreibung' => ['exclude_unless:graphics_mode,custom', 'required', 'string', 'max:500'],
-            'graphics.*.muster' => ['exclude_unless:graphics_mode,custom', 'nullable', Rule::enum(HeroPattern::class)],
+            'graphics.*.description' => ['exclude_unless:graphics_mode,custom', 'required', 'string', 'max:500'],
+            'graphics.*.pattern' => ['exclude_unless:graphics_mode,custom', 'nullable', Rule::enum(HeroPattern::class)],
             'purpose' => ['required', Rule::in(Lesson::PURPOSES)],
             'scope' => ['required', Rule::in(Lesson::SCOPES)],
             // Erlaubte Lernmodule: ein Quiz in der Liste kommt immer, die anderen nur, wenn sie zum Stoff passen
@@ -77,9 +77,9 @@ class StoreLessonRequest extends FormRequest
             'graphics.required' => 'Beschreib mindestens eine Grafik.',
             'graphics.min' => 'Beschreib mindestens eine Grafik.',
             'graphics.max' => 'Höchstens 3 Grafiken.',
-            'graphics.*.beschreibung.required' => 'Beschreib, was die Grafik zeigen soll.',
-            'graphics.*.beschreibung.max' => 'Die Beschreibung einer Grafik darf höchstens 500 Zeichen lang sein.',
-            'graphics.*.muster' => 'Wähle ein Muster aus der Liste.',
+            'graphics.*.description.required' => 'Beschreib, was die Grafik zeigen soll.',
+            'graphics.*.description.max' => 'Die Beschreibung einer Grafik darf höchstens 500 Zeichen lang sein.',
+            'graphics.*.pattern' => 'Wähle ein Muster aus der Liste.',
             'images.required_without' => 'Lade mindestens ein Foto hoch oder schreib einen Auftrag.',
             'images.max' => 'Höchstens :max Fotos pro Lernseite.',
             'images.*.mimes' => 'Nur Fotos im Format JPEG, PNG oder WebP.',

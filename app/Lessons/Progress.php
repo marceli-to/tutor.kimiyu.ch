@@ -26,20 +26,20 @@ class Progress
      */
     public static function items(Lesson $lesson): array
     {
-        $module = $lesson->content['module'] ?? [];
+        $module = $lesson->content['modules'] ?? [];
         $items = [];
 
         foreach ($module['quiz'] ?? [] as $question) {
-            $items[] = ['module' => 'quiz', 'id' => $question['id'], 'text' => $question['frage']];
+            $items[] = ['module' => 'quiz', 'id' => $question['id'], 'text' => $question['question']];
         }
 
-        foreach ($module['sortieren']['begriffe'] ?? [] as $term) {
-            $items[] = ['module' => 'sortieren', 'id' => $term['id'], 'text' => $term['text']];
+        foreach ($module['sorting']['terms'] ?? [] as $term) {
+            $items[] = ['module' => 'sorting', 'id' => $term['id'], 'text' => $term['text']];
         }
 
-        foreach ($module['lueckentext']['segmente'] ?? [] as $segment) {
-            if (isset($segment['loesungen'])) {
-                $items[] = ['module' => 'lueckentext', 'id' => $segment['id'], 'text' => 'Lücke: '.$segment['loesungen'][0]];
+        foreach ($module['cloze']['segments'] ?? [] as $segment) {
+            if (isset($segment['answers'])) {
+                $items[] = ['module' => 'cloze', 'id' => $segment['id'], 'text' => 'Lücke: '.$segment['answers'][0]];
             }
         }
 
@@ -53,12 +53,12 @@ class Progress
      */
     public static function check(Lesson $lesson, string $module, string $itemId, mixed $answer): ?bool
     {
-        $content = $lesson->content['module'] ?? [];
+        $content = $lesson->content['modules'] ?? [];
 
         $item = match ($module) {
             'quiz' => self::find($content['quiz'] ?? [], $itemId),
-            'sortieren' => self::find($content['sortieren']['begriffe'] ?? [], $itemId),
-            'lueckentext' => self::find($content['lueckentext']['segmente'] ?? [], $itemId),
+            'sorting' => self::find($content['sorting']['terms'] ?? [], $itemId),
+            'cloze' => self::find($content['cloze']['segments'] ?? [], $itemId),
             default => null,
         };
 
@@ -67,9 +67,9 @@ class Progress
         }
 
         return match ($module) {
-            'quiz' => is_int($answer) && $answer === $item['loesung'],
-            'sortieren' => $answer === $item['kategorie'],
-            default => is_string($answer) && ClozeParser::isCorrect($answer, $item['loesungen']),
+            'quiz' => is_int($answer) && $answer === $item['answer'],
+            'sorting' => $answer === $item['category'],
+            default => is_string($answer) && ClozeParser::isCorrect($answer, $item['answers']),
         };
     }
 

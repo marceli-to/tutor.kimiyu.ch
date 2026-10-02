@@ -38,7 +38,7 @@ class LessonFactory extends Factory
 
         return $this->state(fn () => [
             'status' => LessonStatus::Published,
-            'title' => $content['meta']['titel'],
+            'title' => $content['meta']['title'],
             'schema_version' => ContentValidator::SCHEMA_VERSION,
             'content' => $content,
             'published_at' => now(),
@@ -47,7 +47,7 @@ class LessonFactory extends Factory
 
             $lesson->graphics()->create([
                 'position' => 1,
-                'plan' => ['muster' => $hero['muster'], 'idee' => $hero['beschreibung']],
+                'plan' => ['pattern' => $hero['pattern'], 'idea' => $hero['description']],
                 'graphic' => $hero,
             ]);
         });

@@ -12,7 +12,7 @@ class RegenerateQuiz extends LessonStep
 {
     protected function step(): string
     {
-        return 'neu-quiz';
+        return 'regenerate-quiz';
     }
 
     protected function run(LessonGenerator $generator): void

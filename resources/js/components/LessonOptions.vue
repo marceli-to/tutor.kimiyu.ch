@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 
-export type Purpose = 'neu' | 'pruefung';
-export type Scope = 'kurz' | 'normal' | 'ausfuehrlich';
-export type LessonModule = 'quiz' | 'sortieren' | 'karten' | 'lueckentext';
+export type Purpose = 'new' | 'exam';
+export type Scope = 'short' | 'normal' | 'detailed';
+export type LessonModule = 'quiz' | 'sorting' | 'flashcards' | 'cloze';
 export type ScopeInfo = Record<
     Scope,
     {
-        abschnitte: string;
+        sections: string;
         quiz: number;
-        karten: string;
-        begriffe: string;
-        luecken: string;
+        flashcards: string;
+        terms: string;
+        gaps: string;
     }
 >;
 
@@ -26,21 +26,21 @@ const modules = defineModel<LessonModule[]>('modules', { required: true });
 
 const purposes: { value: Purpose; label: string; hint: string }[] = [
     {
-        value: 'neu',
+        value: 'new',
         label: 'Neuer Stoff',
         hint: 'Erklärt Schritt für Schritt, mit Beispielen aus dem Alltag.',
     },
     {
-        value: 'pruefung',
+        value: 'exam',
         label: 'Prüfungsvorbereitung',
         hint: 'Kompakt, mit Fokus auf Fachbegriffe und einer Zusammenfassung am Schluss.',
     },
 ];
 
 const scopeLabels: Record<Scope, string> = {
-    kurz: 'Kurz',
+    short: 'Kurz',
     normal: 'Normal',
-    ausfuehrlich: 'Ausführlich',
+    detailed: 'Ausführlich',
 };
 
 const scopes = Object.keys(scopeLabels) as Scope[];
@@ -48,14 +48,14 @@ const scopes = Object.keys(scopeLabels) as Scope[];
 function scopeHint(value: Scope): string {
     const info = props.scopeInfo[value];
 
-    return `${info.quiz} Quizfragen, ${info.abschnitte} Abschnitte`;
+    return `${info.quiz} Quizfragen, ${info.sections} Abschnitte`;
 }
 
 const moduleLabels: Record<LessonModule, string> = {
     quiz: 'Quiz',
-    sortieren: 'Sortierspiel',
-    karten: 'Karteikarten',
-    lueckentext: 'Lückentext',
+    sorting: 'Sortierspiel',
+    flashcards: 'Karteikarten',
+    cloze: 'Lückentext',
 };
 
 const allModules = Object.keys(moduleLabels) as LessonModule[];

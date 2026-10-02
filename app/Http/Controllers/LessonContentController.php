@@ -28,7 +28,7 @@ class LessonContentController extends Controller
 
         abort_unless($this->editable($lesson), 404);
 
-        $cloze = $lesson->content['module']['lueckentext'] ?? null;
+        $cloze = $lesson->content['modules']['cloze'] ?? null;
 
         return Inertia::render('lessons/Edit', [
             'lesson' => [
@@ -38,7 +38,7 @@ class LessonContentController extends Controller
                 'content' => $this->withUnplacedGraphics($lesson, $lesson->content),
             ],
             'showOrigin' => ! $lesson->isFromTopic(),
-            'clozeMarkup' => $cloze ? ClozeParser::toMarkup($cloze['segmente']) : null,
+            'clozeMarkup' => $cloze ? ClozeParser::toMarkup($cloze['segments']) : null,
             'graphicLabels' => $this->graphicLabels($lesson),
             'palettes' => collect(Palettes::all())
                 ->map(fn (array $palette, string $key) => ['value' => $key, 'label' => $palette['label'], 'accent' => $palette['light']['accent']])
@@ -60,14 +60,14 @@ class LessonContentController extends Controller
         $content = $request->input('content');
 
         // Der Lückentext wird als Text mit [Lücke|Alternative] bearbeitet
-        if (is_array($content['module']['lueckentext'] ?? null)) {
+        if (is_array($content['modules']['cloze'] ?? null)) {
             try {
-                $content['module']['lueckentext']['segmente'] = ClozeParser::parse((string) $request->input('clozeMarkup'));
+                $content['modules']['cloze']['segments'] = ClozeParser::parse((string) $request->input('clozeMarkup'));
 
                 // Die Herkunft wird nicht im Markup bearbeitet, also vom gespeicherten Lückentext übernehmen
-                $origin = $lesson->content['module']['lueckentext']['herkunft'] ?? null;
+                $origin = $lesson->content['modules']['cloze']['origin'] ?? null;
                 if ($origin !== null) {
-                    $content['module']['lueckentext']['herkunft'] = $origin;
+                    $content['modules']['cloze']['origin'] = $origin;
                 }
             } catch (InvalidArgumentException $e) {
                 throw ValidationException::withMessages(['clozeMarkup' => $e->getMessage()]);
@@ -88,7 +88,7 @@ class LessonContentController extends Controller
         $this->hideRemovedGraphics($lesson, $this->withUnplacedGraphics($lesson, $lesson->content), $content);
 
         $lesson->update([
-            'title' => $content['meta']['titel'],
+            'title' => $content['meta']['title'],
             'content' => $content,
         ]);
 
@@ -107,7 +107,7 @@ class LessonContentController extends Controller
     {
         return $lesson->graphics
             ->mapWithKeys(fn (LessonGraphic $graphic) => [$graphic->position => Str::limit(
-                (string) ($graphic->graphic['beschreibung'] ?? $graphic->plan['idee'] ?? $graphic->request ?? ''),
+                (string) ($graphic->graphic['description'] ?? $graphic->plan['idea'] ?? $graphic->request ?? ''),
                 120,
                 '…',
             )])
@@ -159,8 +159,8 @@ class LessonContentController extends Controller
         foreach ($unplaced as $nr) {
             $target = null;
 
-            foreach ($content['abschnitte'] ?? [] as $k => $section) {
-                if (count($section['bloecke'] ?? []) < 4) {
+            foreach ($content['sections'] ?? [] as $k => $section) {
+                if (count($section['blocks'] ?? []) < 4) {
                     $target = $k;
                 }
             }
@@ -169,7 +169,7 @@ class LessonContentController extends Controller
                 break;
             }
 
-            $content['abschnitte'][$target]['bloecke'][] = ['typ' => 'grafik', 'nr' => $nr];
+            $content['sections'][$target]['blocks'][] = ['type' => 'graphic', 'number' => $nr];
         }
 
         return $content;
@@ -183,10 +183,10 @@ class LessonContentController extends Controller
     {
         $numbers = [];
 
-        foreach ($content['abschnitte'] ?? [] as $section) {
-            foreach ($section['bloecke'] ?? [] as $block) {
-                if (($block['typ'] ?? null) === 'grafik' && is_int($block['nr'] ?? null)) {
-                    $numbers[] = $block['nr'];
+        foreach ($content['sections'] ?? [] as $section) {
+            foreach ($section['blocks'] ?? [] as $block) {
+                if (($block['type'] ?? null) === 'graphic' && is_int($block['number'] ?? null)) {
+                    $numbers[] = $block['number'];
                 }
             }
         }

@@ -4,7 +4,7 @@ import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { categoryClasses, shuffle } from '@/lib/lesson';
 import type { CategoryId, ModuleAnswer, SortModuleData } from '@/types';
 
-type Term = SortModuleData['begriffe'][number];
+type Term = SortModuleData['terms'][number];
 
 const props = defineProps<{
     data: SortModuleData;
@@ -20,7 +20,7 @@ const right = ref(0);
 const bins = ref<
     Record<
         string,
-        { text: string; correct: boolean; herkunft?: Term['herkunft'] }[]
+        { text: string; correct: boolean; origin?: Term['origin'] }[]
     >
 >({});
 const last = ref<{ term: Term; correct: boolean } | null>(null);
@@ -28,22 +28,22 @@ const last = ref<{ term: Term; correct: boolean } | null>(null);
 const finished = computed(() => position.value >= order.value.length);
 const current = computed(() => order.value[position.value]);
 const labels = computed(() =>
-    Object.fromEntries(props.data.kategorien.map((c) => [c.id, c.label])),
+    Object.fromEntries(props.data.categories.map((c) => [c.id, c.label])),
 );
 
 function start() {
-    order.value = shuffle(props.data.begriffe);
+    order.value = shuffle(props.data.terms);
     position.value = 0;
     right.value = 0;
     last.value = null;
     bins.value = Object.fromEntries(
-        props.data.kategorien.map((c) => [c.id, []]),
+        props.data.categories.map((c) => [c.id, []]),
     );
 }
 
 function choose(category: CategoryId) {
     const term = current.value;
-    const correct = category === term.kategorie;
+    const correct = category === term.category;
 
     if (correct) {
         right.value++;
@@ -52,13 +52,13 @@ function choose(category: CategoryId) {
     bins.value[category].push({
         text: term.text,
         correct,
-        herkunft: term.herkunft,
+        origin: term.origin,
     });
     last.value = { term, correct };
     position.value++;
 
     emit('answer', {
-        module: 'sortieren',
+        module: 'sorting',
         itemId: term.id,
         answer: category,
         correct,
@@ -90,13 +90,13 @@ start();
                 class="mt-2 mb-4 rounded-2xl border-2 border-dashed border-ls-line px-2 py-5 text-center font-display text-[clamp(1.5rem,6vw,2.2rem)] font-bold"
             >
                 {{ current.text }}
-                <OriginBadge :origin="current.herkunft" class="ml-1" />
+                <OriginBadge :origin="current.origin" class="ml-1" />
             </div>
             <div
                 class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3"
             >
                 <button
-                    v-for="category in data.kategorien"
+                    v-for="category in data.categories"
                     :key="category.id"
                     type="button"
                     class="cursor-pointer rounded-[14px] border-2 bg-transparent p-3 text-[1.05rem] text-ls-ink"
@@ -123,9 +123,9 @@ start();
             :class="last.correct ? 'ls-feedback-ok' : 'ls-feedback-no'"
         >
             <strong>{{ last.correct ? 'Richtig!' : 'Nicht ganz.' }}</strong>
-            «{{ last.term.text }}» gehört zu {{ labels[last.term.kategorie] }}.
-            <template v-if="last.term.erklaerung">
-                {{ last.term.erklaerung }}
+            «{{ last.term.text }}» gehört zu {{ labels[last.term.category] }}.
+            <template v-if="last.term.explanation">
+                {{ last.term.explanation }}
             </template>
         </div>
 
@@ -133,7 +133,7 @@ start();
             class="mt-4 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3"
         >
             <div
-                v-for="category in data.kategorien"
+                v-for="category in data.categories"
                 :key="category.id"
                 class="min-h-12 rounded-xl px-3 py-2.5 text-[0.95rem]"
                 :class="categoryClasses[category.id].bg"
@@ -148,7 +148,7 @@ start();
                     :class="{ 'text-ls-bad line-through': !tag.correct }"
                 >
                     {{ tag.text }}
-                    <OriginBadge :origin="tag.herkunft" class="ml-0.5" />
+                    <OriginBadge :origin="tag.origin" class="ml-0.5" />
                     <span v-if="!tag.correct" class="sr-only">(falsch)</span>
                 </span>
             </div>

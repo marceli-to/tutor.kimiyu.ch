@@ -56,16 +56,18 @@ describe('answers', function () {
     });
 
     it('checks sorting and cloze answers', function () {
-        answer(['module' => 'sortieren', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertJson(['correct' => true]);
-        answer(['module' => 'sortieren', 'item_id' => 's1', 'answer' => 'cat2'], $this->eco)->assertJson(['correct' => false]);
-        answer(['module' => 'lueckentext', 'item_id' => 'g1', 'answer' => ' co2 '])->assertJson(['correct' => true]);
-        answer(['module' => 'lueckentext', 'item_id' => 'g1', 'answer' => 'Sauerstoff'])->assertJson(['correct' => false]);
+        answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertJson(['correct' => true]);
+        answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat2'], $this->eco)->assertJson(['correct' => false]);
+        answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => ' co2 '])->assertJson(['correct' => true]);
+        answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => 'Sauerstoff'])->assertJson(['correct' => false]);
     });
 
     it('rejects items that do not exist', function () {
         answer(['module' => 'quiz', 'item_id' => 'q99', 'answer' => 0])->assertStatus(422);
-        answer(['module' => 'sortieren', 'item_id' => 's1', 'answer' => 'cat1'])->assertStatus(422);
-        answer(['module' => 'karten', 'item_id' => 'k1', 'answer' => 'x'])->assertStatus(422);
+        answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'])->assertStatus(422);
+        answer(['module' => 'flashcards', 'item_id' => 'k1', 'answer' => 'x'])->assertStatus(422);
+        // Module names from before the English keys are no longer accepted
+        answer(['module' => 'sortieren', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertStatus(422);
 
         expect(Attempt::count())->toBe(0);
     });
@@ -102,7 +104,7 @@ describe('status', function () {
 
     it('lists what still needs practice, hardest first', function () {
         attempts($this->child, $this->lesson, 'quiz', 'q2', [true]);
-        attempts($this->child, $this->lesson, 'lueckentext', 'g1', [false]);
+        attempts($this->child, $this->lesson, 'cloze', 'g1', [false]);
 
         $summary = Progress::summaries($this->child, collect([$this->lesson]))[$this->lesson->id];
 
@@ -122,7 +124,7 @@ describe('status', function () {
 
 describe('pages', function () {
     it('shows the parent what sits and what not', function () {
-        attempts($this->child, $this->eco, 'sortieren', 's6', [false]);
+        attempts($this->child, $this->eco, 'sorting', 's6', [false]);
         attempts($this->child, $this->eco, 'quiz', 'q1', [true, true]);
 
         $this->actingAs($this->user)->get(route('children.progress', $this->child))
@@ -153,9 +155,9 @@ describe('pages', function () {
 
     it('works for a lesson without quiz', function () {
         $content = $this->eco->content;
-        $content['module']['quiz'] = null;
+        $content['modules']['quiz'] = null;
         $this->eco->update(['content' => $content]);
-        attempts($this->child, $this->eco, 'sortieren', 's6', [true, true]);
+        attempts($this->child, $this->eco, 'sorting', 's6', [true, true]);
 
         expect(Progress::forLesson($this->child, $this->eco->fresh()))->toHaveCount(12);
 
@@ -182,12 +184,12 @@ describe('pages', function () {
 
     it('sums up the costs per month and lesson', function () {
         $this->lesson->generations()->createMany([
-            ['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'output_tokens' => 1000, 'cost_usd' => 0.1, 'duration_ms' => 30_000],
-            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'error', 'output_tokens' => 0, 'cost_usd' => 0.05, 'duration_ms' => 1_000],
+            ['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'output_tokens' => 1000, 'cost_usd' => 0.1, 'duration_ms' => 30_000],
+            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'error', 'output_tokens' => 0, 'cost_usd' => 0.05, 'duration_ms' => 1_000],
         ]);
         $foreign = Lesson::factory()->fromFixture()->create();
         $foreign->generations()->create(
-            ['user_id' => $foreign->child->user_id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99],
+            ['user_id' => $foreign->child->user_id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99],
         );
 
         $this->actingAs($this->user)->get(route('costs'))
@@ -205,13 +207,13 @@ describe('pages', function () {
     });
 
     it('shows deleted lessons and orphaned costs on the costs page', function () {
-        $this->eco->generations()->forceCreate(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.3, 'created_at' => now()->subMinute()]);
+        $this->eco->generations()->forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.3, 'created_at' => now()->subMinute()]);
         $this->eco->delete();
         // Lernseite samt Kind gelöscht: nur noch das Konto ist bekannt
-        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2, 'created_at' => now()->subMinutes(2)]);
-        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'error', 'cost_usd' => 0.1, 'created_at' => now()->subMinutes(3)]);
+        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2, 'created_at' => now()->subMinutes(2)]);
+        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'error', 'cost_usd' => 0.1, 'created_at' => now()->subMinutes(3)]);
         // Fremde Kosten ohne Lernseite zählen nicht
-        Generation::create(['user_id' => User::factory()->create()->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99]);
+        Generation::create(['user_id' => User::factory()->create()->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99]);
 
         $this->actingAs($this->user)->get(route('costs'))
             ->assertOk()
@@ -237,17 +239,17 @@ describe('pages', function () {
 
     it('shows the average cost per step and model', function () {
         $this->lesson->generations()->createMany([
-            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
-            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
-            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'error', 'input_tokens' => 0, 'output_tokens' => 0, 'cost_usd' => 0.05],
-            ['user_id' => $this->user->id, 'step' => 'module', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
+            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
+            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
+            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'error', 'input_tokens' => 0, 'output_tokens' => 0, 'cost_usd' => 0.05],
+            ['user_id' => $this->user->id, 'step' => 'modules', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
         ]);
 
         // Der Durchschnitt zählt nur erfolgreiche Aufrufe, die Summe alle
         $this->actingAs($this->user)->get(route('costs'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('steps.0', [
-                    'step' => 'grafik',
+                    'step' => 'graphic',
                     'model' => 'claude-opus-5-5',
                     'calls' => 3,
                     'failed' => 1,
@@ -256,7 +258,7 @@ describe('pages', function () {
                     'avgUsd' => 0.5,
                     'totalUsd' => 1.05,
                 ])
-                ->where('steps.1.step', 'module')
+                ->where('steps.1.step', 'modules')
             );
     });
 });

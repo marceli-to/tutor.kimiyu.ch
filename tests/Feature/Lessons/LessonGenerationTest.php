@@ -29,7 +29,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 /**
  * Ein JPEG mit EXIF-Block (wie von einer Handykamera), grösser als erlaubt.
  */
-function photo(string $name = 'seite.jpg', int $width = 3000, int $height = 2000): UploadedFile
+function photo(string $name = 'page.jpg', int $width = 3000, int $height = 2000): UploadedFile
 {
     $image = imagecreatetruecolor($width, $height);
     imagefill($image, 0, 0, imagecolorallocate($image, 240, 240, 230));
@@ -46,7 +46,7 @@ function photo(string $name = 'seite.jpg', int $width = 3000, int $height = 2000
 
 function analysis(array $changes = []): array
 {
-    return array_replace_recursive(FakeLanguageModel::defaultResponse('analyse'), $changes);
+    return array_replace_recursive(FakeLanguageModel::defaultResponse('analysis'), $changes);
 }
 
 beforeEach(function () {
@@ -65,9 +65,9 @@ function upload(array $data = []): TestResponse
         'prompt' => 'Prüfung am Freitag',
         'images' => [photo()],
         'graphics_mode' => 'auto',
-        'purpose' => 'neu',
+        'purpose' => 'new',
         'scope' => 'normal',
-        'modules' => ['quiz', 'sortieren', 'karten', 'lueckentext'],
+        'modules' => ['quiz', 'sorting', 'flashcards', 'cloze'],
         ...$data,
     ]);
 }
@@ -83,28 +83,28 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->title)->toBe('Wie macht ein Blatt Zucker aus Licht?')
         ->and($lesson->content)->toBe(LessonFactory::fixture('fotosynthese'))
         ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
-        ->and($lesson->graphic(1)->plan['muster'])->toBe('regler')
+        ->and($lesson->graphic(1)->plan['pattern'])->toBe('sliders')
         ->and($lesson->graphic(1)->error)->toBeNull()
         ->and($lesson->source_summary)->toContain('Fotosynthese')
         ->and($lesson->schema_version)->toBe(1);
 
-    expect($lesson->generations()->pluck('step')->all())->toBe(['analyse', 'seite', 'module', 'pruefung', 'grafik'])
+    expect($lesson->generations()->pluck('step')->all())->toBe(['analysis', 'page', 'modules', 'check', 'graphic'])
         ->and($lesson->generations()->where('status', 'ok')->count())->toBe(5)
         ->and($lesson->generations()->pluck('user_id')->unique()->all())->toBe([$this->user->id]);
 
     $this->actingAs($this->user)->get(route('lessons.show', $lesson))
         ->assertInertia(fn (Assert $page) => $page
             ->where('lesson.status', 'review')
-            ->where('lesson.content.meta.palette', 'gruen')
+            ->where('lesson.content.meta.palette', 'green')
             ->has('lesson.hero.url')
-            ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
+            ->where('parent.graphics', [['number' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
         );
 });
 
 it('sends the photos, subject and level, but never the child name', function () {
     upload();
 
-    $request = $this->fake->requestsFor('analyse')[0];
+    $request = $this->fake->requestsFor('analysis')[0];
 
     expect($request->images)->toHaveCount(1)
         ->and($request->prompt)->toContain('Fach: Biologie')
@@ -118,7 +118,7 @@ it('sends the photos, subject and level, but never the child name', function () 
 it('treats the photos as the frame and the prompt as the focus', function () {
     upload();
 
-    $prompt = $this->fake->requestsFor('analyse')[0]->prompt;
+    $prompt = $this->fake->requestsFor('analysis')[0]->prompt;
 
     expect($prompt)->toContain('Die Fotos sind der Rahmen')
         ->toContain('Auftrag der Eltern: Prüfung am Freitag')
@@ -128,7 +128,7 @@ it('treats the photos as the frame and the prompt as the focus', function () {
 it('sends photos without a prompt as before', function () {
     upload(['prompt' => '']);
 
-    expect($this->fake->requestsFor('analyse')[0]->prompt)
+    expect($this->fake->requestsFor('analysis')[0]->prompt)
         ->toContain('Erstelle eine Lernseite aus diesem Foto.')
         ->not->toContain('Auftrag der Eltern');
 });
@@ -137,15 +137,15 @@ it('passes the prompt to every later step', function (string $step) {
     upload();
 
     expect($this->fake->requestsFor($step)[0]->prompt)->toContain('Auftrag der Eltern: Prüfung am Freitag');
-})->with(['seite', 'module', 'pruefung', 'grafik']);
+})->with(['page', 'modules', 'check', 'graphic']);
 
 it('stores the additions of the analysis and passes them on', function () {
-    $this->fake->push('analyse', analysis(['ergaenzungen' => ['Zellatmung ergänzt.']]));
+    $this->fake->push('analysis', analysis(['additions' => ['Zellatmung ergänzt.']]));
 
     upload();
 
     expect(Lesson::sole()->additions)->toBe(['Zellatmung ergänzt.'])
-        ->and($this->fake->requestsFor('module')[0]->prompt)
+        ->and($this->fake->requestsFor('modules')[0]->prompt)
         ->toContain("Ergänzt (nicht auf den Fotos):\n- Zellatmung ergänzt.");
 });
 
@@ -153,20 +153,20 @@ it('stores no additions when nothing was added', function () {
     upload();
 
     expect(Lesson::sole()->additions)->toBeNull()
-        ->and($this->fake->requestsFor('module')[0]->prompt)->not->toContain('Ergänzt (nicht auf den Fotos)');
+        ->and($this->fake->requestsFor('modules')[0]->prompt)->not->toContain('Ergänzt (nicht auf den Fotos)');
 });
 
 it('keeps parent-only information out of the graphic request', function () {
-    $this->fake->push('analyse', analysis([
-        'ergaenzungen' => ['Zellatmung ergänzt.'],
-        'zusammenfassung' => 'Pflanzen machen Zucker. Zellatmung (ergänzt) setzt Energie frei.',
+    $this->fake->push('analysis', analysis([
+        'additions' => ['Zellatmung ergänzt.'],
+        'summary' => 'Pflanzen machen Zucker. Zellatmung (ergänzt) setzt Energie frei.',
     ]));
 
     upload();
 
-    $request = $this->fake->requestsFor('grafik')[0];
+    $request = $this->fake->requestsFor('graphic')[0];
     expect($request->prompt)
-        ->not->toContain('herkunft')
+        ->not->toContain('origin')
         ->not->toContain('Ergänzt (nicht auf den Fotos)')
         ->not->toContain('(ergänzt)')
         ->toContain('Zellatmung setzt Energie frei.')
@@ -177,37 +177,37 @@ it('keeps parent-only information out of the graphic request', function () {
 it('tells the system prompts to keep the origin marker away from the child', function () {
     upload();
 
-    expect($this->fake->requestsFor('analyse')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht')
-        ->and($this->fake->requestsFor('module')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht');
+    expect($this->fake->requestsFor('analysis')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht')
+        ->and($this->fake->requestsFor('modules')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht');
 });
 
 it('gives the repair of the text part the graphic plans and the rules for graphic blocks', function () {
     $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['graphics_mode' => 'custom']);
-    $lesson->graphics()->create(['position' => 2, 'plan' => ['muster' => 'schritte', 'idee' => 'Vier Schritte']]);
+    $lesson->graphics()->create(['position' => 2, 'plan' => ['pattern' => 'steps', 'idea' => 'Vier Schritte']]);
     $content = $lesson->content;
-    $content['abschnitte'][0]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+    $content['sections'][0]['blocks'][] = ['type' => 'graphic', 'number' => 2, 'origin' => 'photo'];
 
-    $request = Prompts::repair($lesson, $content, 'seite', ['Ein Fehler.']);
+    $request = Prompts::repair($lesson, $content, 'page', ['Ein Fehler.']);
 
     expect($request->prompt)->toContain('Geplante Grafiken:')
-        ->toContain("Grafik 2 (im Abschnitt «{$content['abschnitte'][0]['titel']}»): Muster schritte\nVier Schritte")
-        ->and($request->system)->toContain('Bausteine `grafik` nur für geplante Grafiken mit Nummer 2 oder 3')
-        ->and(Prompts::repair($lesson, $content, 'module', ['Ein Fehler.'])->prompt)->not->toContain('Geplante Grafiken:');
+        ->toContain("Grafik 2 (im Abschnitt «{$content['sections'][0]['title']}»): Muster steps\nVier Schritte")
+        ->and($request->system)->toContain('Bausteine `graphic` nur für geplante Grafiken mit Nummer 2 oder 3')
+        ->and(Prompts::repair($lesson, $content, 'modules', ['Ein Fehler.'])->prompt)->not->toContain('Geplante Grafiken:');
 });
 
 it('tells the repair to keep origin and ids', function () {
     $broken = LessonFactory::fixture('fotosynthese');
-    $broken['module']['quiz'] = array_slice($broken['module']['quiz'], 0, 2);
-    $this->fake->push('module', ['module' => $broken['module']]);
+    $broken['modules']['quiz'] = array_slice($broken['modules']['quiz'], 0, 2);
+    $this->fake->push('modules', ['modules' => $broken['modules']]);
 
     upload();
 
-    expect($this->fake->requestsFor('reparatur-module')[0]->system)
-        ->toContain('`herkunft` und IDs bestehender Einträge übernimmst du unverändert');
+    expect($this->fake->requestsFor('repair-modules')[0]->system)
+        ->toContain('`origin` und IDs bestehender Einträge übernimmst du unverändert');
 });
 
 it('re-encodes photos without metadata and scales them down', function () {
-    $this->fake->push('analyse', function (ModelRequest $request) {
+    $this->fake->push('analysis', function (ModelRequest $request) {
         $data = $request->images[0]['data'];
         [$width, $height] = getimagesizefromstring($data);
 
@@ -221,7 +221,7 @@ it('re-encodes photos without metadata and scales them down', function () {
 
     upload();
 
-    expect($this->fake->requestsFor('analyse'))->toHaveCount(1);
+    expect($this->fake->requestsFor('analysis'))->toHaveCount(1);
 });
 
 it('deletes the photos after a successful analysis', function () {
@@ -236,7 +236,7 @@ it('names the photo order when there are several photos', function () {
 
     upload(['images' => [photo('a.jpg'), photo('b.jpg')]]);
 
-    expect($this->fake->requestsFor('analyse')[0]->prompt)
+    expect($this->fake->requestsFor('analysis')[0]->prompt)
         ->toContain('Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.')
         ->and(Lesson::sole()->images()->reorder('id')->pluck('position')->all())->toBe([0, 1]);
 });
@@ -244,7 +244,7 @@ it('names the photo order when there are several photos', function () {
 it('does not name a photo order for a single photo', function () {
     upload();
 
-    expect($this->fake->requestsFor('analyse')[0]->prompt)->not->toContain('Reihenfolge der Seiten');
+    expect($this->fake->requestsFor('analysis')[0]->prompt)->not->toContain('Reihenfolge der Seiten');
 });
 
 it('keeps the photos when deleting is switched off', function () {
@@ -261,55 +261,55 @@ it('skips the check when it is switched off', function () {
 
     upload();
 
-    expect($this->fake->requestsFor('pruefung'))->toBe([])
+    expect($this->fake->requestsFor('check'))->toBe([])
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review);
 });
 
 it('checks the whole page in one call', function () {
     upload();
 
-    $request = $this->fake->requestsFor('pruefung');
+    $request = $this->fake->requestsFor('check');
     expect($request)->toHaveCount(1)
-        ->and($request[0]->prompt)->toContain('"module"')
-        ->and($request[0]->prompt)->toContain('"abschnitte"');
+        ->and($request[0]->prompt)->toContain('"modules"')
+        ->and($request[0]->prompt)->toContain('"sections"');
 });
 
 it('sends one example graphic to the graphic step', function () {
     upload();
 
-    $system = $this->fake->requestsFor('grafik')[0]->system;
-    expect($system)->toContain(LessonFactory::fixture('fotosynthese')['meta']['titel'])
-        ->and($system)->not->toContain(LessonFactory::fixture('oekosystem')['meta']['titel']);
+    $system = $this->fake->requestsFor('graphic')[0]->system;
+    expect($system)->toContain(LessonFactory::fixture('fotosynthese')['meta']['title'])
+        ->and($system)->not->toContain(LessonFactory::fixture('oekosystem')['meta']['title']);
 });
 
 it('applies the corrections of the check and lists them for the parents', function () {
-    $this->fake->push('pruefung', ['korrekturen' => [
-        ['pfad' => '/module/quiz/0/tipp', 'wert' => 'Denk an die Zutaten, nicht an das Ergebnis.', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Tipp präzisiert.'],
+    $this->fake->push('check', ['corrections' => [
+        ['path' => '/modules/quiz/0/hint', 'value' => 'Denk an die Zutaten, nicht an das Ergebnis.', 'area' => 'Quiz, Frage 1', 'change' => 'Tipp präzisiert.'],
     ]]);
 
     upload();
 
     $lesson = Lesson::sole();
-    expect($lesson->check_notes)->toBe([['bereich' => 'Quiz, Frage 1', 'aenderung' => 'Tipp präzisiert.']])
-        ->and($lesson->content['module']['quiz'][0]['tipp'])->toBe('Denk an die Zutaten, nicht an das Ergebnis.');
+    expect($lesson->check_notes)->toBe([['area' => 'Quiz, Frage 1', 'change' => 'Tipp präzisiert.']])
+        ->and($lesson->content['modules']['quiz'][0]['hint'])->toBe('Denk an die Zutaten, nicht an das Ergebnis.');
 });
 
 it('lists one note for several corrections with the same description', function () {
-    $this->fake->push('pruefung', ['korrekturen' => [
-        ['pfad' => '/module/quiz/0/optionen', 'wert' => '["Kohlenstoffdioxid und Wasser","Sauerstoff und Wasser","Traubenzucker und Sauerstoff","Kohlenstoffdioxid und Traubenzucker"]', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Richtige Antwort an den Anfang gestellt.'],
-        ['pfad' => '/module/quiz/0/loesung', 'wert' => '0', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Richtige Antwort an den Anfang gestellt.'],
+    $this->fake->push('check', ['corrections' => [
+        ['path' => '/modules/quiz/0/options', 'value' => '["Kohlenstoffdioxid und Wasser","Sauerstoff und Wasser","Traubenzucker und Sauerstoff","Kohlenstoffdioxid und Traubenzucker"]', 'area' => 'Quiz, Frage 1', 'change' => 'Richtige Antwort an den Anfang gestellt.'],
+        ['path' => '/modules/quiz/0/answer', 'value' => '0', 'area' => 'Quiz, Frage 1', 'change' => 'Richtige Antwort an den Anfang gestellt.'],
     ]]);
 
     upload();
 
     $lesson = Lesson::sole();
-    expect($lesson->content['module']['quiz'][0]['loesung'])->toBe(0)
-        ->and($lesson->check_notes)->toBe([['bereich' => 'Quiz, Frage 1', 'aenderung' => 'Richtige Antwort an den Anfang gestellt.']]);
+    expect($lesson->content['modules']['quiz'][0]['answer'])->toBe(0)
+        ->and($lesson->check_notes)->toBe([['area' => 'Quiz, Frage 1', 'change' => 'Richtige Antwort an den Anfang gestellt.']]);
 });
 
 it('drops corrections that would break the content', function () {
-    $this->fake->push('pruefung', ['korrekturen' => [
-        ['pfad' => '/module/quiz/0/loesung', 'wert' => '99', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Lösung korrigiert.'],
+    $this->fake->push('check', ['corrections' => [
+        ['path' => '/modules/quiz/0/answer', 'value' => '99', 'area' => 'Quiz, Frage 1', 'change' => 'Lösung korrigiert.'],
     ]]);
 
     upload();
@@ -320,56 +320,56 @@ it('drops corrections that would break the content', function () {
 });
 
 it('keeps going when the check call fails', function () {
-    $this->fake->push('pruefung', new ModelException('Die KI ist gerade ausgelastet.', retryable: false));
+    $this->fake->push('check', new ModelException('Die KI ist gerade ausgelastet.', retryable: false));
 
     upload();
 
     expect(Lesson::sole()->status)->toBe(LessonStatus::Review)
         ->and(Lesson::sole()->content)->toBe(LessonFactory::fixture('fotosynthese'))
-        ->and(Lesson::sole()->generations()->where('step', 'pruefung')->value('status'))->toBe('error');
+        ->and(Lesson::sole()->generations()->where('step', 'check')->value('status'))->toBe('error');
 });
 
 it('repairs invalid content once', function () {
     $broken = LessonFactory::fixture('fotosynthese');
-    $broken['module']['quiz'] = array_slice($broken['module']['quiz'], 0, 2);
+    $broken['modules']['quiz'] = array_slice($broken['modules']['quiz'], 0, 2);
 
-    $this->fake->push('module', ['module' => $broken['module']]);
+    $this->fake->push('modules', ['modules' => $broken['modules']]);
 
     upload();
 
-    $repair = $this->fake->requestsFor('reparatur-module');
+    $repair = $this->fake->requestsFor('repair-modules');
     expect($repair)->toHaveCount(1)
-        ->and($this->fake->requestsFor('reparatur-seite'))->toBe([])
-        ->and($repair[0]->prompt)->toContain('Das Feld module.quiz muss mindestens 3 Elemente haben.')
-        ->toContain('Gib diesen Teil korrigiert zurück: module')
+        ->and($this->fake->requestsFor('repair-page'))->toBe([])
+        ->and($repair[0]->prompt)->toContain('Das Feld Quiz muss mindestens 3 Elemente haben.')
+        ->toContain('Gib diesen Teil korrigiert zurück: modules')
         ->toContain('Zusammenfassung des Stoffs:')
         ->and(Lesson::sole()->status)->toBe(LessonStatus::Review)
-        ->and(Lesson::sole()->content['module']['quiz'])->toHaveCount(5);
+        ->and(Lesson::sole()->content['modules']['quiz'])->toHaveCount(5);
 });
 
 it('fails when the content is still invalid after the repair', function () {
     $broken = LessonFactory::fixture('fotosynthese');
     $broken['meta']['palette'] = 'neonpink';
 
-    $this->fake->push('seite', ['seite' => Prompts::page($broken)]);
-    $this->fake->push('reparatur-seite', ['seite' => Prompts::page($broken)]);
+    $this->fake->push('page', ['page' => Prompts::page($broken)]);
+    $this->fake->push('repair-page', ['page' => Prompts::page($broken)]);
 
     upload();
 
     $lesson = Lesson::sole();
     expect($lesson->status)->toBe(LessonStatus::Failed)
         ->and($lesson->error)->toBe('Die KI hat keinen gültigen Inhalt geliefert.')
-        ->and($this->fake->requestsFor('grafik'))->toBe([]);
+        ->and($this->fake->requestsFor('graphic'))->toBe([]);
 });
 
 it('accepts content that only breaks the strict rules after the repair', function () {
     $content = LessonFactory::fixture('fotosynthese');
-    foreach ($content['module']['quiz'] as &$question) {
-        $question['loesung'] = 1;
+    foreach ($content['modules']['quiz'] as &$question) {
+        $question['answer'] = 1;
     }
 
-    $this->fake->push('module', ['module' => $content['module']]);
-    $this->fake->push('reparatur-module', ['module' => $content['module']]);
+    $this->fake->push('modules', ['modules' => $content['modules']]);
+    $this->fake->push('repair-modules', ['modules' => $content['modules']]);
 
     upload();
 
@@ -377,8 +377,8 @@ it('accepts content that only breaks the strict rules after the repair', functio
 });
 
 it('tells the parents when the photos are unreadable', function () {
-    $this->fake->push('analyse', analysis([
-        'quelle' => ['lesbar' => false, 'problem' => 'Die Fotos sind zu unscharf.'],
+    $this->fake->push('analysis', analysis([
+        'source' => ['readable' => false, 'problem' => 'Die Fotos sind zu unscharf.'],
     ]));
 
     upload();
@@ -387,8 +387,8 @@ it('tells the parents when the photos are unreadable', function () {
     expect($lesson->status)->toBe(LessonStatus::Failed)
         ->and($lesson->error)->toBe('Die Fotos sind zu unscharf.')
         ->and($lesson->images()->count())->toBe(1)
-        ->and($this->fake->requestsFor('seite'))->toBe([])
-        ->and($lesson->generations()->pluck('step')->all())->toBe(['analyse']);
+        ->and($this->fake->requestsFor('page'))->toBe([])
+        ->and($lesson->generations()->pluck('step')->all())->toBe(['analysis']);
 
     $this->actingAs($this->user)->get(route('lessons.show', $lesson))
         ->assertInertia(fn (Assert $page) => $page
@@ -399,17 +399,17 @@ it('tells the parents when the photos are unreadable', function () {
 });
 
 it('writes the page in a second call with the photos, the summary, the additions and the plans', function () {
-    $this->fake->push('analyse', analysis([
-        'zusammenfassung' => 'Pflanzen bauen aus Licht, CO₂ und Wasser Zucker. Zellatmung (ergänzt).',
-        'ergaenzungen' => ['Zellatmung ergänzt.'],
-        'grafik_plaene' => [['nr' => 1, 'plan' => ['muster' => 'regler', 'idee' => 'Drei Regler für Licht, CO₂ und Wasser.'], 'hinweis' => null]],
+    $this->fake->push('analysis', analysis([
+        'summary' => 'Pflanzen bauen aus Licht, CO₂ und Wasser Zucker. Zellatmung (ergänzt).',
+        'additions' => ['Zellatmung ergänzt.'],
+        'graphic_plans' => [['number' => 1, 'plan' => ['pattern' => 'sliders', 'idea' => 'Drei Regler für Licht, CO₂ und Wasser.'], 'note' => null]],
     ]));
 
     upload();
 
-    $request = $this->fake->requestsFor('seite')[0];
+    $request = $this->fake->requestsFor('page')[0];
     expect($request->images)->toHaveCount(1)
-        ->and($request->schema)->toBe(Schemas::part('seite'))
+        ->and($request->schema)->toBe(Schemas::part('page'))
         ->and($request->prompt)->toContain('Fach: Biologie')
         ->toContain('Stufe: 2. Sek')
         ->toContain('Zweck: Neuer Stoff')
@@ -418,31 +418,31 @@ it('writes the page in a second call with the photos, the summary, the additions
         ->toContain('Grafiken: höchstens eine')
         ->toContain('Pflanzen bauen aus Licht, CO₂ und Wasser Zucker. Zellatmung (ergänzt).')
         ->toContain('Zellatmung ergänzt.')
-        ->toContain("Grafik 1 (oben): Muster regler\nDrei Regler für Licht, CO₂ und Wasser.")
-        ->toContain('Liefere nur `seite`')
+        ->toContain("Grafik 1 (oben): Muster sliders\nDrei Regler für Licht, CO₂ und Wasser.")
+        ->toContain('Liefere nur `page`')
         ->not->toContain('Mia')
-        ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Liefere nur `quelle`, `fach`, `zusammenfassung`, `ergaenzungen` und `grafik_plaene`');
+        ->and($this->fake->requestsFor('analysis')[0]->prompt)->toContain('Liefere nur `source`, `subject`, `summary`, `additions` und `graphic_plans`');
 });
 
 it('shows each call only the example of its own fields', function () {
     upload();
 
-    expect($this->fake->requestsFor('analyse')[0]->system)->toContain('"grafik_plaene": [')
-        ->not->toContain('"abschnitte": [')
-        ->and($this->fake->requestsFor('seite')[0]->system)->toContain('"abschnitte": [')
-        ->not->toContain('"grafik_plaene": [');
+    expect($this->fake->requestsFor('analysis')[0]->system)->toContain('"graphic_plans": [')
+        ->not->toContain('"sections": [')
+        ->and($this->fake->requestsFor('page')[0]->system)->toContain('"sections": [')
+        ->not->toContain('"graphic_plans": [');
 });
 
 it('tells the page step when there is no graphic', function () {
-    $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+    $this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
 
     upload();
 
-    expect($this->fake->requestsFor('seite')[0]->prompt)->toContain('Diese Seite hat keine Grafik 1');
+    expect($this->fake->requestsFor('page')[0]->prompt)->toContain('Diese Seite hat keine Grafik 1');
 });
 
 it('fails the lesson when the page call fails', function () {
-    $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+    $this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
 
     upload();
 
@@ -451,12 +451,12 @@ it('fails the lesson when the page call fails', function () {
         ->and($lesson->error)->toBe('Die KI war nicht erreichbar.')
         ->and($lesson->content)->toBeNull()
         ->and($lesson->images()->count())->toBe(1)
-        ->and($this->fake->requestsFor('module'))->toBe([])
-        ->and($lesson->generations()->pluck('status', 'step')->all())->toBe(['analyse' => 'ok', 'seite' => 'error']);
+        ->and($this->fake->requestsFor('modules'))->toBe([])
+        ->and($lesson->generations()->pluck('status', 'step')->all())->toBe(['analysis' => 'ok', 'page' => 'error']);
 });
 
 it('shows a clear message when the api fails', function () {
-    $this->fake->push('analyse', new ModelException('Der Zugang zur KI ist falsch eingerichtet.', 'invalid x-api-key'));
+    $this->fake->push('analysis', new ModelException('Der Zugang zur KI ist falsch eingerichtet.', 'invalid x-api-key'));
 
     upload();
 
@@ -467,19 +467,19 @@ it('shows a clear message when the api fails', function () {
 });
 
 it('logs the model of the step when a call fails without a response', function () {
-    config()->set('lessons.models.analyse', ['model' => 'claude-test-analyse', 'effort' => 'high']);
-    $this->fake->push('analyse', new ModelException('Die KI war nicht erreichbar.'));
+    config()->set('lessons.models.analysis', ['model' => 'claude-test-analysis', 'effort' => 'high']);
+    $this->fake->push('analysis', new ModelException('Die KI war nicht erreichbar.'));
 
     upload();
 
-    expect(Lesson::sole()->generations()->where('step', 'analyse')->value('model'))->toBe('claude-test-analyse');
+    expect(Lesson::sole()->generations()->where('step', 'analysis')->value('model'))->toBe('claude-test-analysis');
 });
 
 it('publishes the page without a graphic when the hero stays broken', function () {
     $broken = [...LessonFactory::fixture('fotosynthese.hero'), 'markup' => '<button onclick="x()">Los</button>'];
 
-    $this->fake->push('grafik', $broken);
-    $this->fake->push('grafik-reparatur', $broken);
+    $this->fake->push('graphic', $broken);
+    $this->fake->push('graphic-repair', $broken);
 
     upload();
 
@@ -487,11 +487,11 @@ it('publishes the page without a graphic when the hero stays broken', function (
     expect($lesson->status)->toBe(LessonStatus::Review)
         ->and($lesson->graphic(1)->graphic)->toBeNull()
         ->and($lesson->graphic(1)->error)->toContain('Inline-Event-Handler')
-        ->and($this->fake->requestsFor('grafik-reparatur'))->toHaveCount(1);
+        ->and($this->fake->requestsFor('graphic-repair'))->toHaveCount(1);
 });
 
 it('repairs a broken hero once', function () {
-    $this->fake->push('grafik', [...LessonFactory::fixture('fotosynthese.hero'), 'script' => 'fetch("x")']);
+    $this->fake->push('graphic', [...LessonFactory::fixture('fotosynthese.hero'), 'script' => 'fetch("x")']);
 
     upload();
 
@@ -521,14 +521,14 @@ it('validates the upload', function () {
     upload(['images' => array_fill(0, 5, photo())])
         ->assertSessionHasErrors(['images' => 'Höchstens 4 Fotos pro Lernseite.']);
 
-    upload(['images' => [UploadedFile::fake()->create('seite.pdf', 100, 'application/pdf')]])
+    upload(['images' => [UploadedFile::fake()->create('page.pdf', 100, 'application/pdf')]])
         ->assertSessionHasErrors(['images.0' => 'Nur Fotos im Format JPEG, PNG oder WebP.']);
 
     expect(Lesson::count())->toBe(0);
 });
 
 it('rejects a damaged photo', function () {
-    upload(['images' => [UploadedFile::fake()->createWithContent('seite.jpg', "\xFF\xD8\xFFkaputt")]])
+    upload(['images' => [UploadedFile::fake()->createWithContent('page.jpg', "\xFF\xD8\xFFkaputt")]])
         ->assertSessionHasErrors('images.0');
 
     expect(Lesson::count())->toBe(0);
@@ -551,19 +551,19 @@ it('runs the steps as a chain', function () {
 
     $lesson = Lesson::sole();
     expect($lesson->status)->toBe(LessonStatus::Generating)
-        ->and($lesson->step)->toBe('warteschlange');
+        ->and($lesson->step)->toBe('queued');
 
     $this->actingAs($this->user)->get(route('lessons.show', $lesson))
         ->assertInertia(fn (Assert $page) => $page
             ->where('lesson.status', 'generating')
-            ->where('lesson.step', 'warteschlange')
+            ->where('lesson.step', 'queued')
             ->where('lesson.content', null)
         );
 });
 
 describe('retry', function () {
     it('starts again after a failed analysis', function () {
-        $this->fake->push('analyse', new ModelException('Die KI war nicht erreichbar.'));
+        $this->fake->push('analysis', new ModelException('Die KI war nicht erreichbar.'));
         upload();
         $lesson = Lesson::sole();
 
@@ -571,7 +571,7 @@ describe('retry', function () {
             ->assertRedirect(route('lessons.show', $lesson));
 
         expect($lesson->fresh()->status)->toBe(LessonStatus::Review)
-            ->and($this->fake->requestsFor('analyse'))->toHaveCount(2);
+            ->and($this->fake->requestsFor('analysis'))->toHaveCount(2);
     });
 
     it('only regenerates what is missing', function () {
@@ -582,7 +582,7 @@ describe('retry', function () {
 
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
-        expect(collect($this->fake->requests)->pluck('step')->all())->toBe(['grafik'])
+        expect(collect($this->fake->requests)->pluck('step')->all())->toBe(['graphic'])
             ->and($lesson->fresh()->status)->toBe(LessonStatus::Review);
     });
 
@@ -595,11 +595,11 @@ describe('retry', function () {
 
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
-        expect($this->fake->requestsFor('analyse')[0]->prompt)
+        expect($this->fake->requestsFor('analysis')[0]->prompt)
             ->toContain('zum Thema «Fotosynthese»')
             ->toContain('Hinweise der Eltern: Bitte mit Beispielen aus dem Garten')
             ->not->toContain('Auftrag der Eltern')
-            ->and($this->fake->requestsFor('module')[0]->prompt)
+            ->and($this->fake->requestsFor('modules')[0]->prompt)
             ->toContain('Hinweise der Eltern: Bitte mit Beispielen aus dem Garten')
             ->and($lesson->fresh()->status)->toBe(LessonStatus::Review);
     });
@@ -657,7 +657,7 @@ it('shows the upload form with the parent’s children', function () {
             ->where('children.0.name', 'Mia')
             ->where('maxImages', 4)
             ->where('maxEdge', 1600)
-            ->where('patterns.0', ['value' => 'regler', 'label' => 'Regler'])
+            ->where('patterns.0', ['value' => 'sliders', 'label' => 'Regler'])
             ->has('patterns', 6)
         );
 });
@@ -671,83 +671,83 @@ describe('remembered settings', function () {
     it('passes the settings of the latest lesson per child and subject', function () {
         $leo = Child::factory()->for($this->user)->create(['name' => 'Leo']);
 
-        lessonFor($this->child, ['subject' => 'Biologie', 'purpose' => 'neu', 'scope' => 'normal', 'modules' => null, 'graphics_mode' => 'auto', 'created_at' => now()->subDays(3)]);
-        lessonFor($this->child, ['subject' => ' biologie ', 'purpose' => 'pruefung', 'scope' => 'kurz', 'modules' => ['quiz', 'karten'], 'graphics_mode' => 'none', 'created_at' => now()->subDay()]);
-        lessonFor($this->child, ['subject' => 'Mathematik', 'scope' => 'ausfuehrlich', 'created_at' => now()->subDays(2)]);
-        lessonFor($leo, ['subject' => 'Biologie', 'purpose' => 'neu', 'scope' => 'ausfuehrlich', 'modules' => ['sortieren'], 'graphics_mode' => 'custom']);
+        lessonFor($this->child, ['subject' => 'Biologie', 'purpose' => 'new', 'scope' => 'normal', 'modules' => null, 'graphics_mode' => 'auto', 'created_at' => now()->subDays(3)]);
+        lessonFor($this->child, ['subject' => ' biologie ', 'purpose' => 'exam', 'scope' => 'short', 'modules' => ['quiz', 'flashcards'], 'graphics_mode' => 'none', 'created_at' => now()->subDay()]);
+        lessonFor($this->child, ['subject' => 'Mathematik', 'scope' => 'detailed', 'created_at' => now()->subDays(2)]);
+        lessonFor($leo, ['subject' => 'Biologie', 'purpose' => 'new', 'scope' => 'detailed', 'modules' => ['sorting'], 'graphics_mode' => 'custom']);
 
         $this->actingAs($this->user)->get(route('lessons.create'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lastSettings', 3)
                 ->where("lastSettings.{$this->child->id}|biologie", [
-                    'purpose' => 'pruefung',
-                    'scope' => 'kurz',
-                    'modules' => ['quiz', 'karten'],
+                    'purpose' => 'exam',
+                    'scope' => 'short',
+                    'modules' => ['quiz', 'flashcards'],
                     'graphics_mode' => 'none',
                 ])
-                ->where("lastSettings.{$this->child->id}|mathematik.scope", 'ausfuehrlich')
+                ->where("lastSettings.{$this->child->id}|mathematik.scope", 'detailed')
                 // Alte Lernseiten ohne Liste: alle Module waren erlaubt
-                ->where("lastSettings.{$this->child->id}|mathematik.modules", ['quiz', 'sortieren', 'karten', 'lueckentext'])
-                ->where("lastSettings.{$leo->id}|biologie.modules", ['sortieren'])
+                ->where("lastSettings.{$this->child->id}|mathematik.modules", ['quiz', 'sorting', 'flashcards', 'cloze'])
+                ->where("lastSettings.{$leo->id}|biologie.modules", ['sorting'])
                 ->where("lastSettings.{$leo->id}|biologie.graphics_mode", 'custom')
             );
     });
 
     it('ignores deleted lessons and lessons of other parents', function () {
-        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'kurz', 'created_at' => now()->subDays(2)]);
-        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'ausfuehrlich', 'created_at' => now()->subDay()])->delete();
-        lessonFor(Child::factory()->create(), ['subject' => 'Chemie', 'scope' => 'ausfuehrlich']);
+        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'short', 'created_at' => now()->subDays(2)]);
+        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'detailed', 'created_at' => now()->subDay()])->delete();
+        lessonFor(Child::factory()->create(), ['subject' => 'Chemie', 'scope' => 'detailed']);
 
         $this->actingAs($this->user)->get(route('lessons.create'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lastSettings', 1)
-                ->where("lastSettings.{$this->child->id}|biologie.scope", 'kurz')
+                ->where("lastSettings.{$this->child->id}|biologie.scope", 'short')
             );
     });
 
     it('passes the settings of the latest lesson per child', function () {
         $leo = Child::factory()->for($this->user)->create(['name' => 'Leo']);
 
-        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'kurz', 'created_at' => now()->subDays(2)]);
-        lessonFor($this->child, ['subject' => null, 'purpose' => 'pruefung', 'scope' => 'ausfuehrlich', 'modules' => ['quiz'], 'graphics_mode' => 'none', 'created_at' => now()->subDay()]);
-        lessonFor($leo, ['subject' => 'Mathematik', 'purpose' => 'neu', 'scope' => 'normal', 'modules' => null, 'graphics_mode' => 'custom']);
+        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'short', 'created_at' => now()->subDays(2)]);
+        lessonFor($this->child, ['subject' => null, 'purpose' => 'exam', 'scope' => 'detailed', 'modules' => ['quiz'], 'graphics_mode' => 'none', 'created_at' => now()->subDay()]);
+        lessonFor($leo, ['subject' => 'Mathematik', 'purpose' => 'new', 'scope' => 'normal', 'modules' => null, 'graphics_mode' => 'custom']);
 
         $this->actingAs($this->user)->get(route('lessons.create'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lastByChild', 2)
                 ->where("lastByChild.{$this->child->id}", [
-                    'purpose' => 'pruefung',
-                    'scope' => 'ausfuehrlich',
+                    'purpose' => 'exam',
+                    'scope' => 'detailed',
                     'modules' => ['quiz'],
                     'graphics_mode' => 'none',
                 ])
                 // Eigene Grafikwünsche gelten nur für die eine Seite: daraus wird «KI entscheidet»
                 ->where("lastByChild.{$leo->id}", [
-                    'purpose' => 'neu',
+                    'purpose' => 'new',
                     'scope' => 'normal',
-                    'modules' => ['quiz', 'sortieren', 'karten', 'lueckentext'],
+                    'modules' => ['quiz', 'sorting', 'flashcards', 'cloze'],
                     'graphics_mode' => 'auto',
                 ])
             );
     });
 
     it('ignores deleted lessons and other parents for the settings per child', function () {
-        lessonFor($this->child, ['scope' => 'kurz', 'created_at' => now()->subDays(2)]);
-        lessonFor($this->child, ['scope' => 'ausfuehrlich', 'created_at' => now()->subDay()])->delete();
-        lessonFor(Child::factory()->create(), ['scope' => 'ausfuehrlich']);
+        lessonFor($this->child, ['scope' => 'short', 'created_at' => now()->subDays(2)]);
+        lessonFor($this->child, ['scope' => 'detailed', 'created_at' => now()->subDay()])->delete();
+        lessonFor(Child::factory()->create(), ['scope' => 'detailed']);
 
         $this->actingAs($this->user)->get(route('lessons.create'))
             ->assertInertia(fn (Assert $page) => $page
                 ->has('lastByChild', 1)
-                ->where("lastByChild.{$this->child->id}.scope", 'kurz')
+                ->where("lastByChild.{$this->child->id}.scope", 'short')
             );
     });
 
     it('passes the counts per scope for the labels', function () {
         $this->actingAs($this->user)->get(route('lessons.create'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('scopeInfo.kurz.quiz', 3)
-                ->where('scopeInfo.kurz.abschnitte', '1–2')
+                ->where('scopeInfo.short.quiz', 3)
+                ->where('scopeInfo.short.sections', '1–2')
                 ->has('scopeInfo', 3)
             );
     });
@@ -763,7 +763,7 @@ describe('from a prompt', function () {
         uploadPrompt()->assertRedirect();
 
         $lesson = Lesson::sole();
-        $request = $this->fake->requestsFor('analyse')[0];
+        $request = $this->fake->requestsFor('analysis')[0];
 
         expect($lesson->prompt)->toBe('Biodiversität: Arten, Lebensräume und Gefährdung')
             ->and($lesson->photo_count)->toBe(0)
@@ -780,7 +780,7 @@ describe('from a prompt', function () {
     it('works from the prompt alone', function () {
         uploadPrompt();
 
-        $request = $this->fake->requestsFor('analyse')[0];
+        $request = $this->fake->requestsFor('analysis')[0];
 
         expect($request->images)->toBe([])
             ->and($request->prompt)->toContain('keine Fotos')
@@ -808,12 +808,12 @@ describe('from a prompt', function () {
     });
 
     it('tells the later steps that there are no photos', function () {
-        $this->fake->push('analyse', analysis(['ergaenzungen' => ['Alles ergänzt.']]));
+        $this->fake->push('analysis', analysis(['additions' => ['Alles ergänzt.']]));
 
         uploadPrompt();
 
         expect(Lesson::sole()->additions)->toBeNull()
-            ->and($this->fake->requestsFor('module')[0]->prompt)
+            ->and($this->fake->requestsFor('modules')[0]->prompt)
             ->toContain('Quelle: keine Fotos (Auftrag oder Thema)')
             ->not->toContain('Ergänzt (nicht auf den Fotos)');
     });
@@ -821,7 +821,7 @@ describe('from a prompt', function () {
     it('does not mention missing photos for a photo lesson', function () {
         upload();
 
-        expect($this->fake->requestsFor('module')[0]->prompt)->not->toContain('Quelle: keine Fotos');
+        expect($this->fake->requestsFor('modules')[0]->prompt)->not->toContain('Quelle: keine Fotos');
     });
 
     it('requires photos or a prompt', function () {
@@ -835,8 +835,8 @@ describe('from a prompt', function () {
     });
 
     it('explains when the topic does not work', function () {
-        $this->fake->push('analyse', analysis([
-            'quelle' => ['lesbar' => false, 'problem' => 'Das ist kein Thema aus dem Schulstoff.'],
+        $this->fake->push('analysis', analysis([
+            'source' => ['readable' => false, 'problem' => 'Das ist kein Thema aus dem Schulstoff.'],
         ]));
 
         uploadPrompt(['prompt' => 'Fussballresultate vom Wochenende']);
@@ -852,11 +852,11 @@ describe('from a prompt', function () {
 });
 
 it('names the prompt or the topic when no lesson could be made', function () {
-    $this->fake->push('analyse', analysis(['quelle' => ['lesbar' => false, 'problem' => null]]));
+    $this->fake->push('analysis', analysis(['source' => ['readable' => false, 'problem' => null]]));
     uploadPrompt();
     expect(Lesson::sole()->error)->toBe('Zu diesem Auftrag konnte keine Lernseite erstellt werden.');
 
-    $this->fake->push('analyse', analysis(['quelle' => ['lesbar' => false, 'problem' => null]]));
+    $this->fake->push('analysis', analysis(['source' => ['readable' => false, 'problem' => null]]));
     $legacy = Lesson::factory()->for($this->child)->create(['status' => LessonStatus::Failed, 'topic' => 'Fotosynthese']);
     $this->actingAs($this->user)->post(route('lessons.retry', $legacy));
     expect($legacy->fresh()->error)->toBe('Zu diesem Thema konnte keine Lernseite erstellt werden.');
@@ -864,7 +864,7 @@ it('names the prompt or the topic when no lesson could be made', function () {
 
 describe('without a graphic', function () {
     it('skips the graphic when the parents switch it off', function () {
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
 
         upload(['graphics_mode' => 'none']);
 
@@ -872,8 +872,8 @@ describe('without a graphic', function () {
         expect($lesson->graphics_mode)->toBe('none')
             ->and($lesson->status)->toBe(LessonStatus::Review)
             ->and($lesson->graphics)->toBeEmpty()
-            ->and($this->fake->requestsFor('grafik'))->toBe([])
-            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Grafiken: keine (von den Eltern abgewählt)');
+            ->and($this->fake->requestsFor('graphic'))->toBe([])
+            ->and($this->fake->requestsFor('analysis')[0]->prompt)->toContain('Grafiken: keine (von den Eltern abgewählt)');
 
         $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page
@@ -884,7 +884,7 @@ describe('without a graphic', function () {
     });
 
     it('lets the ai leave out the graphic when nothing fits', function () {
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
 
         upload();
 
@@ -892,16 +892,16 @@ describe('without a graphic', function () {
         expect($lesson->graphics_mode)->toBe('auto')
             ->and($lesson->graphic(1)?->graphic)->toBeNull()
             ->and($lesson->graphic(1)?->error)->toBeNull()
-            ->and($this->fake->requestsFor('grafik'))->toBe([])
-            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht')
-            ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
+            ->and($this->fake->requestsFor('graphic'))->toBe([])
+            ->and($this->fake->requestsFor('analysis')[0]->prompt)->toContain('Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht')
+            ->and($this->fake->requestsFor('modules')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
     });
 
     it('creates a graphic by default', function () {
         upload();
 
         expect(Lesson::sole()->graphics_mode)->toBe('auto')
-            ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
+            ->and($this->fake->requestsFor('graphic'))->toHaveCount(1);
     });
 });
 
@@ -909,7 +909,7 @@ describe('deleted lessons', function () {
     it('stops the generation when the lesson was deleted', function () {
         $lesson = Lesson::factory()->for($this->child)->create([
             'status' => LessonStatus::Generating,
-            'step' => 'warteschlange',
+            'step' => 'queued',
             'prompt' => 'Fotosynthese',
         ]);
         $lesson->delete();
@@ -922,7 +922,7 @@ describe('deleted lessons', function () {
         expect($this->fake->requests)->toBe([])
             ->and(Generation::count())->toBe(0)
             ->and($fresh->status)->toBe(LessonStatus::Generating)
-            ->and($fresh->step)->toBe('warteschlange');
+            ->and($fresh->step)->toBe('queued');
     });
 
     /**
@@ -960,8 +960,8 @@ describe('deleted lessons', function () {
         expectStillEmpty($lesson);
         // Costs of the calls made so far stay logged
         expect(Generation::where('lesson_id', $lesson->id)->pluck('step')->last())->toBe($step)
-            ->and($this->fake->requestsFor('grafik'))->toBe([]);
-    })->with(['analyse', 'seite', 'module']);
+            ->and($this->fake->requestsFor('graphic'))->toBe([]);
+    })->with(['analysis', 'page', 'modules']);
 
     it('does not write the check or the graphic into a lesson deleted during a call', function (string $step, string $job) {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['status' => LessonStatus::Generating]);
@@ -972,20 +972,20 @@ describe('deleted lessons', function () {
 
         expectStillEmpty($lesson);
     })->with([
-        'check' => ['pruefung', CheckLesson::class],
-        'graphic' => ['grafik', GenerateLessonGraphic::class],
+        'check' => ['check', CheckLesson::class],
+        'graphic' => ['graphic', GenerateLessonGraphic::class],
     ]);
 
     it('does not write a new quiz or graphic into a lesson deleted during a call', function (string $step, string $job) {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create();
-        deleteDuring($step, $lesson, $step === 'neu-quiz' ? ['quiz' => LessonFactory::fixture('oekosystem')['module']['quiz']] : null);
+        deleteDuring($step, $lesson, $step === 'regenerate-quiz' ? ['quiz' => LessonFactory::fixture('oekosystem')['modules']['quiz']] : null);
 
         (new $job($lesson, 1))->handle(app(LessonGenerator::class));
 
         expectStillEmpty($lesson);
     })->with([
-        'quiz' => ['neu-quiz', RegenerateQuiz::class],
-        'graphic' => ['grafik', RegenerateGraphic::class],
+        'quiz' => ['regenerate-quiz', RegenerateQuiz::class],
+        'graphic' => ['graphic', RegenerateGraphic::class],
     ]);
 
     it('does not call the api when the child is gone', function () {
@@ -1024,22 +1024,22 @@ describe('graphics mode', function () {
     });
 
     it('ignores wishes unless the parents describe the graphics', function () {
-        upload(['graphics_mode' => 'auto', 'graphics' => [['beschreibung' => 'Ein Zeitstrahl']]])->assertSessionHasNoErrors();
+        upload(['graphics_mode' => 'auto', 'graphics' => [['description' => 'Ein Zeitstrahl']]])->assertSessionHasNoErrors();
 
         expect(Lesson::sole()->graphics()->count())->toBe(0);
     });
 
     it('stores the wishes in order', function () {
         upload(['graphics_mode' => 'custom', 'graphics' => [
-            ['beschreibung' => 'Ein Blatt mit Reglern für Licht und Wasser', 'muster' => 'regler'],
-            ['beschreibung' => 'Die Schritte der Fotosynthese', 'muster' => null],
-            ['beschreibung' => '  Zellatmung im Vergleich  '],
+            ['description' => 'Ein Blatt mit Reglern für Licht und Wasser', 'pattern' => 'sliders'],
+            ['description' => 'Die Schritte der Fotosynthese', 'pattern' => null],
+            ['description' => '  Zellatmung im Vergleich  '],
         ]])->assertSessionHasNoErrors();
 
         $lesson = Lesson::sole();
         expect($lesson->graphics_mode)->toBe('custom')
             ->and($lesson->graphics->map->only(['position', 'request', 'pattern'])->all())->toBe([
-                ['position' => 1, 'request' => 'Ein Blatt mit Reglern für Licht und Wasser', 'pattern' => 'regler'],
+                ['position' => 1, 'request' => 'Ein Blatt mit Reglern für Licht und Wasser', 'pattern' => 'sliders'],
                 ['position' => 2, 'request' => 'Die Schritte der Fotosynthese', 'pattern' => null],
                 ['position' => 3, 'request' => 'Zellatmung im Vergleich', 'pattern' => null],
             ]);
@@ -1052,17 +1052,17 @@ describe('graphics mode', function () {
         upload(['graphics_mode' => 'custom', 'graphics' => []])
             ->assertSessionHasErrors(['graphics' => 'Beschreib mindestens eine Grafik.']);
 
-        upload(['graphics_mode' => 'custom', 'graphics' => array_fill(0, 4, ['beschreibung' => 'Eine Grafik'])])
+        upload(['graphics_mode' => 'custom', 'graphics' => array_fill(0, 4, ['description' => 'Eine Grafik'])])
             ->assertSessionHasErrors(['graphics' => 'Höchstens 3 Grafiken.']);
 
-        upload(['graphics_mode' => 'custom', 'graphics' => [['beschreibung' => '']]])
-            ->assertSessionHasErrors(['graphics.0.beschreibung' => 'Beschreib, was die Grafik zeigen soll.']);
+        upload(['graphics_mode' => 'custom', 'graphics' => [['description' => '']]])
+            ->assertSessionHasErrors(['graphics.0.description' => 'Beschreib, was die Grafik zeigen soll.']);
 
-        upload(['graphics_mode' => 'custom', 'graphics' => [['beschreibung' => str_repeat('a', 501)]]])
-            ->assertSessionHasErrors('graphics.0.beschreibung');
+        upload(['graphics_mode' => 'custom', 'graphics' => [['description' => str_repeat('a', 501)]]])
+            ->assertSessionHasErrors('graphics.0.description');
 
-        upload(['graphics_mode' => 'custom', 'graphics' => [['beschreibung' => 'Eine Grafik', 'muster' => 'karussell']]])
-            ->assertSessionHasErrors('graphics.0.muster');
+        upload(['graphics_mode' => 'custom', 'graphics' => [['description' => 'Eine Grafik', 'pattern' => 'karussell']]])
+            ->assertSessionHasErrors('graphics.0.pattern');
 
         upload(['graphics_mode' => 'alle'])->assertSessionHasErrors('graphics_mode');
 
@@ -1073,61 +1073,61 @@ describe('graphics mode', function () {
 describe('graphic plans', function () {
     function plan(string $muster, string $idee): array
     {
-        return ['muster' => $muster, 'idee' => $idee];
+        return ['pattern' => $muster, 'idea' => $idee];
     }
 
     function wishes(): array
     {
         return ['graphics_mode' => 'custom', 'graphics' => [
-            ['beschreibung' => 'Ein Blatt mit Reglern', 'muster' => 'regler'],
-            ['beschreibung' => 'Ein Vulkan'],
-            ['beschreibung' => 'Die Schritte im Chloroplasten', 'muster' => 'schritte'],
+            ['description' => 'Ein Blatt mit Reglern', 'pattern' => 'sliders'],
+            ['description' => 'Ein Vulkan'],
+            ['description' => 'Die Schritte im Chloroplasten', 'pattern' => 'steps'],
         ]];
     }
 
     it('tells the analysis what the parents chose', function (array $data, string $line) {
         upload($data);
 
-        expect($this->fake->requestsFor('analyse')[0]->prompt)->toContain($line)
+        expect($this->fake->requestsFor('analysis')[0]->prompt)->toContain($line)
             ->not->toContain('Interaktive Grafik');
     })->with([
         'none' => [['graphics_mode' => 'none'], 'Grafiken: keine (von den Eltern abgewählt)'],
         'auto' => [['graphics_mode' => 'auto'], 'Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht'],
-        'custom' => [wishes(), "Grafiken nach Wunsch der Eltern:\nGrafik 1: Ein Blatt mit Reglern (Muster: regler – Regler)\nGrafik 2: Ein Vulkan\nGrafik 3: Die Schritte im Chloroplasten (Muster: schritte – Schritt für Schritt)"],
+        'custom' => [wishes(), "Grafiken nach Wunsch der Eltern:\nGrafik 1: Ein Blatt mit Reglern (Muster: sliders – Regler)\nGrafik 2: Ein Vulkan\nGrafik 3: Die Schritte im Chloroplasten (Muster: steps – Schritt für Schritt)"],
     ]);
 
     it('stores a plan or a hint for every wish', function () {
         $page = Prompts::page(LessonFactory::fixture('fotosynthese'));
-        $page['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto'];
+        $page['sections'][1]['blocks'][] = ['type' => 'graphic', 'number' => 3, 'origin' => 'photo'];
 
-        $this->fake->push('seite', ['seite' => $page]);
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
-            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
-            ['nr' => 2, 'plan' => null, 'hinweis' => 'Ein Vulkan kommt auf den Fotos nicht vor.'],
-            ['nr' => 3, 'plan' => plan('schritte', 'Vier Schritte'), 'hinweis' => null],
-            ['nr' => 4, 'plan' => plan('rechner', 'Zu viel'), 'hinweis' => null],
+        $this->fake->push('page', ['page' => $page]);
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => [
+            ['number' => 1, 'plan' => plan('sliders', 'Drei Regler'), 'note' => null],
+            ['number' => 2, 'plan' => null, 'note' => 'Ein Vulkan kommt auf den Fotos nicht vor.'],
+            ['number' => 3, 'plan' => plan('steps', 'Vier Schritte'), 'note' => null],
+            ['number' => 4, 'plan' => plan('calculator', 'Zu viel'), 'note' => null],
         ]]);
 
         upload(wishes());
 
         $lesson = Lesson::sole();
         expect($lesson->graphics->map->only(['position', 'request', 'plan', 'error'])->all())->toBe([
-            ['position' => 1, 'request' => 'Ein Blatt mit Reglern', 'plan' => plan('regler', 'Drei Regler'), 'error' => null],
+            ['position' => 1, 'request' => 'Ein Blatt mit Reglern', 'plan' => plan('sliders', 'Drei Regler'), 'error' => null],
             ['position' => 2, 'request' => 'Ein Vulkan', 'plan' => null, 'error' => 'Ein Vulkan kommt auf den Fotos nicht vor.'],
-            ['position' => 3, 'request' => 'Die Schritte im Chloroplasten', 'plan' => plan('schritte', 'Vier Schritte'), 'error' => null],
+            ['position' => 3, 'request' => 'Die Schritte im Chloroplasten', 'plan' => plan('steps', 'Vier Schritte'), 'error' => null],
         ])
-            ->and($lesson->content['abschnitte'][1]['bloecke'][1])->toBe(['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto']);
+            ->and($lesson->content['sections'][1]['blocks'][1])->toBe(['type' => 'graphic', 'number' => 3, 'origin' => 'photo']);
 
-        expect($this->fake->requestsFor('module')[0]->prompt)
-            ->toContain("Grafik 1 (oben): Muster regler\nDrei Regler")
-            ->toContain("Grafik 3 (im Abschnitt «Was man wissen muss»): Muster schritte\nVier Schritte")
+        expect($this->fake->requestsFor('modules')[0]->prompt)
+            ->toContain("Grafik 1 (oben): Muster sliders\nDrei Regler")
+            ->toContain("Grafik 3 (im Abschnitt «Was man wissen muss»): Muster steps\nVier Schritte")
             ->not->toContain('Grafik 2')
             ->not->toContain('keine interaktive Grafik');
     });
 
     it('notes a wish the analysis forgot', function () {
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
-            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => [
+            ['number' => 1, 'plan' => plan('sliders', 'Drei Regler'), 'note' => null],
         ]]);
 
         upload(wishes());
@@ -1140,36 +1140,36 @@ describe('graphic plans', function () {
     });
 
     it('only plans graphic 1 when the ai decides', function () {
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
-            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
-            ['nr' => 2, 'plan' => plan('schritte', 'Vier Schritte'), 'hinweis' => null],
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => [
+            ['number' => 1, 'plan' => plan('sliders', 'Drei Regler'), 'note' => null],
+            ['number' => 2, 'plan' => plan('steps', 'Vier Schritte'), 'note' => null],
         ]]);
 
         upload(['graphics_mode' => 'auto']);
 
         $lesson = Lesson::sole();
-        expect($lesson->graphics->pluck('plan', 'position')->all())->toBe([1 => plan('regler', 'Drei Regler')])
-            ->and($this->fake->requestsFor('module')[0]->prompt)->toContain("Grafik 1 (oben): Muster regler\nDrei Regler");
+        expect($lesson->graphics->pluck('plan', 'position')->all())->toBe([1 => plan('sliders', 'Drei Regler')])
+            ->and($this->fake->requestsFor('modules')[0]->prompt)->toContain("Grafik 1 (oben): Muster sliders\nDrei Regler");
     });
 
     it('forgets the plan of an earlier attempt when the ai now decides against a graphic', function () {
-        $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+        $this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
         upload(['graphics_mode' => 'auto']);
         $lesson = Lesson::sole();
         expect($lesson->status)->toBe(LessonStatus::Failed)
             ->and($lesson->graphic(1)->plan)->not->toBeNull();
 
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
         expect($lesson->fresh()->status)->toBe(LessonStatus::Review)
             ->and($lesson->graphics()->count())->toBe(0)
-            ->and($this->fake->requestsFor('grafik'))->toBe([]);
+            ->and($this->fake->requestsFor('graphic'))->toBe([]);
     });
 
     it('keeps a finished graphic when a new analysis has no plan for it', function () {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['graphics_mode' => 'auto', 'prompt' => 'Fotosynthese']);
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
 
         app(LessonGenerator::class)->analyze($lesson);
 
@@ -1177,35 +1177,35 @@ describe('graphic plans', function () {
     });
 
     it('stores no plan when the parents switched the graphics off', function () {
-        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
-            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+        $this->fake->push('analysis', [...analysis(), 'graphic_plans' => [
+            ['number' => 1, 'plan' => plan('sliders', 'Drei Regler'), 'note' => null],
         ]]);
 
         upload(['graphics_mode' => 'none']);
 
         expect(Lesson::sole()->graphics()->count())->toBe(0)
-            ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
+            ->and($this->fake->requestsFor('modules')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
     });
 });
 
 describe('graphic generation', function () {
     /**
-     * Textteil mit dem Baustein für Grafik 2, als Antwort des Schritts «seite».
+     * Textteil mit dem Baustein für Grafik 2, als Antwort des Schritts «page».
      */
     function pageWithGraphic2(): array
     {
         $page = Prompts::page(LessonFactory::fixture('fotosynthese'));
-        $page['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+        $page['sections'][1]['blocks'][] = ['type' => 'graphic', 'number' => 2, 'origin' => 'photo'];
 
-        return ['seite' => $page];
+        return ['page' => $page];
     }
 
     function threePlans(): array
     {
-        return [...analysis(), 'grafik_plaene' => [
-            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
-            ['nr' => 2, 'plan' => plan('schritte', 'Vier Schritte'), 'hinweis' => null],
-            ['nr' => 3, 'plan' => plan('rechner', 'Ein Rechner'), 'hinweis' => null],
+        return [...analysis(), 'graphic_plans' => [
+            ['number' => 1, 'plan' => plan('sliders', 'Drei Regler'), 'note' => null],
+            ['number' => 2, 'plan' => plan('steps', 'Vier Schritte'), 'note' => null],
+            ['number' => 3, 'plan' => plan('calculator', 'Ein Rechner'), 'note' => null],
         ]];
     }
 
@@ -1224,25 +1224,25 @@ describe('graphic generation', function () {
 
     it('builds each graphic on its own and keeps the others when one breaks', function () {
         $broken = [...LessonFactory::fixture('fotosynthese.hero'), 'markup' => '<button onclick="x()">Los</button>'];
-        $this->fake->push('analyse', threePlans());
-        $this->fake->push('seite', pageWithGraphic2());
-        $this->fake->push('grafik', function (ModelRequest $request) {
-            expect(Lesson::sole()->step)->toBe('grafik-1');
+        $this->fake->push('analysis', threePlans());
+        $this->fake->push('page', pageWithGraphic2());
+        $this->fake->push('graphic', function (ModelRequest $request) {
+            expect(Lesson::sole()->step)->toBe('graphic-1');
 
             return LessonFactory::fixture('fotosynthese.hero');
         });
-        $this->fake->push('grafik', function (ModelRequest $request) use ($broken) {
-            expect(Lesson::sole()->step)->toBe('grafik-2');
+        $this->fake->push('graphic', function (ModelRequest $request) use ($broken) {
+            expect(Lesson::sole()->step)->toBe('graphic-2');
 
             return $broken;
         });
-        $this->fake->push('grafik-reparatur', $broken);
-        $this->fake->push('grafik', LessonFactory::fixture('oekosystem.hero'));
+        $this->fake->push('graphic-repair', $broken);
+        $this->fake->push('graphic', LessonFactory::fixture('oekosystem.hero'));
 
         upload(wishes());
 
         $lesson = Lesson::sole();
-        $requests = $this->fake->requestsFor('grafik');
+        $requests = $this->fake->requestsFor('graphic');
 
         expect($lesson->status)->toBe(LessonStatus::Review)
             ->and($requests)->toHaveCount(3)
@@ -1253,29 +1253,29 @@ describe('graphic generation', function () {
             ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
             ->and($lesson->graphic(3)->error)->toBeNull();
 
-        expect($requests[0]->prompt)->toContain("Muster: regler\nDrei Regler")->not->toContain('nicht oben auf der Seite')
-            ->and($requests[1]->prompt)->toContain("Muster: schritte\nVier Schritte")
+        expect($requests[0]->prompt)->toContain("Muster: sliders\nDrei Regler")->not->toContain('nicht oben auf der Seite')
+            ->and($requests[1]->prompt)->toContain("Muster: steps\nVier Schritte")
             ->toContain('Diese Grafik steht im Abschnitt «Was man wissen muss» neben dem Text, nicht oben auf der Seite.')
-            ->and($requests[2]->prompt)->toContain("Muster: rechner\nEin Rechner")
+            ->and($requests[2]->prompt)->toContain("Muster: calculator\nEin Rechner")
             ->toContain('Diese Grafik steht weiter unten auf der Seite neben dem Text, nicht oben auf der Seite.');
 
         foreach ($requests as $request) {
-            expect($request->prompt)->not->toContain('herkunft')
+            expect($request->prompt)->not->toContain('origin')
                 ->not->toContain('Ein Blatt mit Reglern');
         }
     });
 
     it('skips a graphic whose wish did not fit', function () {
-        $this->fake->push('seite', pageWithGraphic2());
-        $this->fake->push('analyse', [...threePlans(), 'grafik_plaene' => [
-            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
-            ['nr' => 2, 'plan' => null, 'hinweis' => 'Passt nicht zu den Fotos.'],
+        $this->fake->push('page', pageWithGraphic2());
+        $this->fake->push('analysis', [...threePlans(), 'graphic_plans' => [
+            ['number' => 1, 'plan' => plan('sliders', 'Drei Regler'), 'note' => null],
+            ['number' => 2, 'plan' => null, 'note' => 'Passt nicht zu den Fotos.'],
         ]]);
 
         upload(wishes());
 
         $lesson = Lesson::sole();
-        expect($this->fake->requestsFor('grafik'))->toHaveCount(1)
+        expect($this->fake->requestsFor('graphic'))->toHaveCount(1)
             ->and($lesson->graphic(2)->error)->toBe('Passt nicht zu den Fotos.')
             ->and($lesson->graphic(3)->error)->toBe('Für diese Grafik hat die KI keinen Plan erstellt.')
             ->and($lesson->status)->toBe(LessonStatus::Review);
@@ -1286,14 +1286,14 @@ describe('graphic generation', function () {
             'status' => LessonStatus::Failed,
             'graphics_mode' => 'custom',
         ]);
-        $lesson->graphics()->create(['position' => 2, 'plan' => plan('schritte', 'Vier Schritte'), 'error' => 'Die KI war nicht erreichbar.']);
+        $lesson->graphics()->create(['position' => 2, 'plan' => plan('steps', 'Vier Schritte'), 'error' => 'Die KI war nicht erreichbar.']);
         $lesson->graphics()->create(['position' => 3, 'request' => 'Ein Vulkan', 'error' => 'Passt nicht zu den Fotos.']);
 
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
         $lesson->refresh();
-        expect(collect($this->fake->requests)->pluck('step')->all())->toBe(['grafik'])
-            ->and($this->fake->requests[0]->prompt)->toContain("Muster: schritte\nVier Schritte")
+        expect(collect($this->fake->requests)->pluck('step')->all())->toBe(['graphic'])
+            ->and($this->fake->requests[0]->prompt)->toContain("Muster: steps\nVier Schritte")
             ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
             ->and($lesson->graphic(2)->error)->toBeNull()
             ->and($lesson->graphic(3)->error)->toBe('Passt nicht zu den Fotos.')
@@ -1301,14 +1301,14 @@ describe('graphic generation', function () {
     });
 
     it('uses the model settings of the graphic step', function () {
-        config()->set('lessons.models.grafik', ['model' => 'claude-test-grafik', 'effort' => 'medium']);
-        $this->fake->push('analyse', threePlans());
-        $this->fake->push('seite', pageWithGraphic2());
+        config()->set('lessons.models.graphic', ['model' => 'claude-test-graphic', 'effort' => 'medium']);
+        $this->fake->push('analysis', threePlans());
+        $this->fake->push('page', pageWithGraphic2());
 
         upload(wishes());
 
-        expect(collect($this->fake->requestsFor('grafik'))->map->model()->unique()->all())->toBe(['claude-test-grafik'])
-            ->and($this->fake->requestsFor('grafik'))->toHaveCount(3);
+        expect(collect($this->fake->requestsFor('graphic'))->map->model()->unique()->all())->toBe(['claude-test-graphic'])
+            ->and($this->fake->requestsFor('graphic'))->toHaveCount(3);
     });
 });
 
@@ -1316,18 +1316,18 @@ describe('purpose, scope and modules', function () {
     beforeEach(fn () => Bus::fake());
 
     it('stores purpose, scope and allowed modules', function () {
-        upload(['purpose' => 'pruefung', 'scope' => 'kurz', 'modules' => ['karten', 'quiz']])->assertSessionHasNoErrors();
+        upload(['purpose' => 'exam', 'scope' => 'short', 'modules' => ['flashcards', 'quiz']])->assertSessionHasNoErrors();
 
         $lesson = Lesson::sole();
-        expect($lesson->purpose)->toBe('pruefung')
-            ->and($lesson->scope)->toBe('kurz')
-            ->and($lesson->modules)->toBe(['karten', 'quiz']);
+        expect($lesson->purpose)->toBe('exam')
+            ->and($lesson->scope)->toBe('short')
+            ->and($lesson->modules)->toBe(['flashcards', 'quiz']);
     });
 
     it('has defaults for lessons without settings', function () {
         $lesson = Lesson::factory()->create()->fresh();
 
-        expect($lesson->purpose)->toBe('neu')
+        expect($lesson->purpose)->toBe('new')
             ->and($lesson->scope)->toBe('normal')
             ->and($lesson->modules)->toBeNull();
     });
@@ -1366,62 +1366,62 @@ describe('purpose, scope and modules', function () {
 
 describe('prompts for purpose, scope and modules', function () {
     it('tells the steps the purpose, the scope and the allowed modules', function () {
-        upload(['purpose' => 'pruefung', 'scope' => 'kurz', 'modules' => ['karten', 'quiz']]);
+        upload(['purpose' => 'exam', 'scope' => 'short', 'modules' => ['flashcards', 'quiz']]);
 
-        $analysis = $this->fake->requestsFor('analyse')[0]->prompt;
-        $modules = $this->fake->requestsFor('module')[0]->prompt;
+        $analysis = $this->fake->requestsFor('analysis')[0]->prompt;
+        $modules = $this->fake->requestsFor('modules')[0]->prompt;
 
         expect($analysis)->toContain('Zweck: Prüfungsvorbereitung')
             ->toContain('Umfang: kurz (1–2 Abschnitte)')
             ->and($modules)->toContain('Zweck: Prüfungsvorbereitung')
             ->toContain('Umfang: kurz (1–2 Abschnitte)')
             ->toContain('Erlaubte Lernmodule: Quiz (genau 3 Fragen), Karteikarten (4–6 Karten)')
-            ->and($this->fake->requestsFor('pruefung')[0]->prompt)->toContain('Erlaubte Lernmodule: Quiz (genau 3 Fragen), Karteikarten (4–6 Karten)');
+            ->and($this->fake->requestsFor('check')[0]->prompt)->toContain('Erlaubte Lernmodule: Quiz (genau 3 Fragen), Karteikarten (4–6 Karten)');
     });
 
     it('explains purpose, scope and modules in the system prompts', function () {
         upload();
 
-        expect($this->fake->requestsFor('analyse')[0]->system)->toContain('«Prüfungsvorbereitung»')
+        expect($this->fake->requestsFor('analysis')[0]->system)->toContain('«Prüfungsvorbereitung»')
             ->toContain('«Das Wichtigste für die Prüfung»')
             ->toContain('Die Zeile «Umfang»')
-            ->and($this->fake->requestsFor('module')[0]->system)->toContain('Die Zeile «Erlaubte Lernmodule»')
+            ->and($this->fake->requestsFor('modules')[0]->system)->toContain('Die Zeile «Erlaubte Lernmodule»')
             ->not->toContain('genau 5 Fragen');
     });
 
     it('names each purpose and scope', function (array $data, array $lines) {
         upload($data);
 
-        expect($this->fake->requestsFor('module')[0]->prompt)->toContain(...$lines);
+        expect($this->fake->requestsFor('modules')[0]->prompt)->toContain(...$lines);
     })->with([
         'defaults' => [[], ['Zweck: Neuer Stoff', 'Umfang: normal (1–3 Abschnitte)', 'Erlaubte Lernmodule: Quiz (genau 5 Fragen), Sortierspiel (8–12 Begriffe), Karteikarten (5–10 Karten), Lückentext (4–8 Lücken)']],
-        'detailed' => [['scope' => 'ausfuehrlich', 'modules' => ['lueckentext', 'sortieren']], ['Umfang: ausführlich (2–4 Abschnitte)', 'Erlaubte Lernmodule: Sortierspiel (10–16 Begriffe), Lückentext (6–10 Lücken)']],
+        'detailed' => [['scope' => 'detailed', 'modules' => ['cloze', 'sorting']], ['Umfang: ausführlich (2–4 Abschnitte)', 'Erlaubte Lernmodule: Sortierspiel (10–16 Begriffe), Lückentext (6–10 Lücken)']],
     ]);
 
     it('keeps these lines away from the graphic', function () {
-        upload(['purpose' => 'pruefung', 'scope' => 'kurz']);
+        upload(['purpose' => 'exam', 'scope' => 'short']);
 
-        expect($this->fake->requestsFor('grafik')[0]->prompt)->not->toContain('Zweck:')
+        expect($this->fake->requestsFor('graphic')[0]->prompt)->not->toContain('Zweck:')
             ->not->toContain('Umfang:')
             ->not->toContain('Erlaubte Lernmodule');
     });
 
     it('drops modules the parents did not allow', function () {
-        upload(['modules' => ['karten']]);
+        upload(['modules' => ['flashcards']]);
 
         $lesson = Lesson::sole();
         expect($lesson->status)->toBe(LessonStatus::Review)
-            ->and($lesson->content['module']['quiz'])->toBeNull()
-            ->and($lesson->content['module']['lueckentext'])->toBeNull()
-            ->and($lesson->content['module']['karten'])->toBe(LessonFactory::fixture('fotosynthese')['module']['karten'])
-            ->and($this->fake->requestsFor('reparatur-module'))->toBe([]);
+            ->and($lesson->content['modules']['quiz'])->toBeNull()
+            ->and($lesson->content['modules']['cloze'])->toBeNull()
+            ->and($lesson->content['modules']['flashcards'])->toBe(LessonFactory::fixture('fotosynthese')['modules']['flashcards'])
+            ->and($this->fake->requestsFor('repair-modules'))->toBe([]);
     });
 
     it('repairs a page left without any module', function () {
         // Die Fotosynthese hat kein Sortierspiel: ohne die anderen Module bleibt nichts übrig
-        upload(['modules' => ['sortieren']]);
+        upload(['modules' => ['sorting']]);
 
-        expect($this->fake->requestsFor('reparatur-module')[0]->prompt)->toContain('Die Seite braucht mindestens ein Lernmodul.')
+        expect($this->fake->requestsFor('repair-modules')[0]->prompt)->toContain('Die Seite braucht mindestens ein Lernmodul.')
             ->and(Lesson::sole()->status)->toBe(LessonStatus::Failed);
     });
 
@@ -1469,18 +1469,18 @@ describe('subject detected by the ai', function () {
     });
 
     it('asks the analysis to detect the subject and stores it before the page call', function () {
-        $this->fake->push('analyse', analysis(['fach' => '  Natur und Technik ']));
+        $this->fake->push('analysis', analysis(['subject' => '  Natur und Technik ']));
 
         upload(['subject' => '']);
 
-        expect($this->fake->requestsFor('analyse')[0]->prompt)
+        expect($this->fake->requestsFor('analysis')[0]->prompt)
             ->toContain('Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag')
-            ->and($this->fake->requestsFor('seite')[0]->prompt)->toContain('Fach: Natur und Technik')
+            ->and($this->fake->requestsFor('page')[0]->prompt)->toContain('Fach: Natur und Technik')
             ->and(Lesson::sole()->subject)->toBe('Natur und Technik');
     });
 
     it('falls back to a general subject when the analysis returns none', function () {
-        $this->fake->push('analyse', analysis(['fach' => ' ']));
+        $this->fake->push('analysis', analysis(['subject' => ' ']));
 
         upload(['subject' => '']);
 
@@ -1488,7 +1488,7 @@ describe('subject detected by the ai', function () {
     });
 
     it('keeps the subject the parents gave', function () {
-        $this->fake->push('analyse', analysis(['fach' => 'Natur und Technik']));
+        $this->fake->push('analysis', analysis(['subject' => 'Natur und Technik']));
 
         upload();
 
@@ -1496,13 +1496,13 @@ describe('subject detected by the ai', function () {
     });
 
     it('asks for the subject in the analysis schema', function () {
-        expect(Schemas::analysis()['properties'])->toHaveKey('fach')
-            ->and(Schemas::analysis()['required'])->toContain('fach')
-            ->and(file_get_contents(resource_path('prompts/analyse.md')))->toContain('`fach`');
+        expect(Schemas::analysis()['properties'])->toHaveKey('subject')
+            ->and(Schemas::analysis()['required'])->toContain('subject')
+            ->and(file_get_contents(resource_path('prompts/analysis.md')))->toContain('`subject`');
     });
 
     it('remembers whether the subject was detected', function () {
-        $this->fake->push('analyse', analysis(['fach' => 'Chemie']));
+        $this->fake->push('analysis', analysis(['subject' => 'Chemie']));
         upload(['subject' => '']);
         expect(Lesson::sole()->subject_detected)->toBeTrue();
 
@@ -1512,29 +1512,29 @@ describe('subject detected by the ai', function () {
     });
 
     it('detects the subject again on a retry', function () {
-        $this->fake->push('analyse', analysis(['fach' => 'Chemie']));
-        $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+        $this->fake->push('analysis', analysis(['subject' => 'Chemie']));
+        $this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
         upload(['subject' => '']);
         $lesson = Lesson::sole();
         expect($lesson->subject)->toBe('Chemie');
 
-        $this->fake->push('analyse', analysis(['fach' => 'Biologie']));
+        $this->fake->push('analysis', analysis(['subject' => 'Biologie']));
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
-        expect($this->fake->requestsFor('analyse')[1]->prompt)->toContain('Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag')
+        expect($this->fake->requestsFor('analysis')[1]->prompt)->toContain('Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag')
             ->and($lesson->fresh()->subject)->toBe('Biologie')
             ->and($lesson->fresh()->subject_detected)->toBeTrue();
     });
 
     it('keeps the subject of the parents on a retry', function () {
-        $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+        $this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
         upload(['subject' => 'Biologie']);
         $lesson = Lesson::sole();
 
-        $this->fake->push('analyse', analysis(['fach' => 'Chemie']));
+        $this->fake->push('analysis', analysis(['subject' => 'Chemie']));
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
-        expect($this->fake->requestsFor('analyse')[1]->prompt)->toContain('Fach: Biologie')
+        expect($this->fake->requestsFor('analysis')[1]->prompt)->toContain('Fach: Biologie')
             ->and($lesson->fresh()->subject)->toBe('Biologie')
             ->and($lesson->fresh()->subject_detected)->toBeFalse();
     });
@@ -1558,7 +1558,7 @@ describe('subject detected by the ai', function () {
 
     it('shows lessons without a subject in the library, the costs and the lesson', function () {
         $lesson = lessonFor($this->child, ['subject' => null, 'title' => null, 'prompt' => 'Brüche', 'status' => LessonStatus::Generating]);
-        $lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.1]);
+        $lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.1]);
 
         $this->actingAs($this->user)->get(route('dashboard'))
             ->assertOk()

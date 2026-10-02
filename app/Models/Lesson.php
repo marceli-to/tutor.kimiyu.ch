@@ -27,12 +27,12 @@ use Illuminate\Support\Str;
  * @property string|null $prompt Auftrag der Eltern, frei formuliert
  * @property int $photo_count
  * @property 'none'|'auto'|'custom' $graphics_mode Keine Grafik, die KI entscheidet oder nach Wunsch der Eltern
- * @property 'neu'|'pruefung' $purpose Neuer Stoff oder Prüfungsvorbereitung
- * @property 'kurz'|'normal'|'ausfuehrlich' $scope Umfang der Seite
- * @property list<'quiz'|'sortieren'|'karten'|'lueckentext'>|null $modules Erlaubte Lernmodule, null bei alten Lernseiten: alle
+ * @property 'new'|'exam' $purpose Neuer Stoff oder Prüfungsvorbereitung
+ * @property 'short'|'normal'|'detailed' $scope Umfang der Seite
+ * @property list<'quiz'|'sorting'|'flashcards'|'cloze'>|null $modules Erlaubte Lernmodule, null bei alten Lernseiten: alle
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
- * @property list<array{bereich: string, aenderung: string}>|null $check_notes
+ * @property list<array{area: string, change: string}>|null $check_notes
  * @property string|null $source_summary
  * @property list<string>|null $additions Was die KI aus eigenem Wissen ergänzt hat
  * @property string|null $error
@@ -53,11 +53,11 @@ class Lesson extends Model
     /** Shown when the generation failed before the AI detected the subject */
     public const SUBJECT_UNKNOWN = 'Fach unbekannt';
 
-    public const PURPOSES = ['neu', 'pruefung'];
+    public const PURPOSES = ['new', 'exam'];
 
-    public const SCOPES = ['kurz', 'normal', 'ausfuehrlich'];
+    public const SCOPES = ['short', 'normal', 'detailed'];
 
-    public const MODULES = ['quiz', 'sortieren', 'karten', 'lueckentext'];
+    public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze'];
 
     /**
      * Wie der Standardwert in der Datenbank, damit auch ungespeicherte Lernseiten ihn haben.
@@ -68,7 +68,7 @@ class Lesson extends Model
         'photo_count' => 0,
         'subject_detected' => false,
         'graphics_mode' => 'auto',
-        'purpose' => 'neu',
+        'purpose' => 'new',
         'scope' => 'normal',
     ];
 
@@ -97,7 +97,7 @@ class Lesson extends Model
     /**
      * Erlaubte Lernmodule; alte Lernseiten ohne Liste erlauben alle.
      *
-     * @return list<'quiz'|'sortieren'|'karten'|'lueckentext'>
+     * @return list<'quiz'|'sorting'|'flashcards'|'cloze'>
      */
     public function allowedModules(): array
     {
@@ -109,7 +109,7 @@ class Lesson extends Model
      */
     public function isRegenerating(): bool
     {
-        return $this->step !== null && str_starts_with($this->step, 'neu-');
+        return $this->step !== null && str_starts_with($this->step, 'regenerate-');
     }
 
     /**

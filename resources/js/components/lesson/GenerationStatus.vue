@@ -17,16 +17,20 @@ const props = defineProps<{
 }>();
 
 const fullSteps = [
-    { key: 'warteschlange', label: 'Wartet auf den Start' },
-    { key: 'analyse', label: 'Stoff lesen und Erklärungen schreiben' },
-    { key: 'module', label: 'Quiz und Übungen erstellen' },
-    { key: 'pruefung', label: 'Inhalt nachprüfen' },
+    { key: 'queued', label: 'Wartet auf den Start' },
+    { key: 'analysis', label: 'Stoff lesen und Erklärungen schreiben' },
+    { key: 'modules', label: 'Quiz und Übungen erstellen' },
+    { key: 'check', label: 'Inhalt nachprüfen' },
 ];
 
 // Beim Neu-Erstellen einzelner Teile gibt es nur einen Schritt
 const partSteps: Record<string, { key: string; label: string }[]> = {
-    'neu-quiz': [{ key: 'neu-quiz', label: 'Neues Quiz schreiben' }],
-    'neu-grafik': [{ key: 'neu-grafik', label: 'Grafik neu zeichnen' }],
+    'regenerate-quiz': [
+        { key: 'regenerate-quiz', label: 'Neues Quiz schreiben' },
+    ],
+    'regenerate-graphic': [
+        { key: 'regenerate-graphic', label: 'Grafik neu zeichnen' },
+    ],
 };
 
 // Regenerating a part of a finished page: the page itself stays as it is meanwhile
@@ -39,10 +43,10 @@ const steps = computed(() => {
         return partSteps[part.value];
     }
 
-    // Ein Schritt pro Grafik; die Jobs heissen «grafik-{Position}»
+    // One step per graphic; the jobs are called «graphic-{position}»
     const total = props.plannedGraphics.length;
     const graphicSteps = props.plannedGraphics.map((position, index) => ({
-        key: `grafik-${position}`,
+        key: `graphic-${position}`,
         label:
             total > 1
                 ? `Grafik ${index + 1} von ${total} wird gebaut`
@@ -54,7 +58,7 @@ const steps = computed(() => {
 
 const current = computed(() => {
     const index = steps.value.findIndex((s) => s.key === props.step);
-    const position = Number(props.step?.match(/^grafik-(\d)$/)?.[1]);
+    const position = Number(props.step?.match(/^graphic-(\d)$/)?.[1]);
 
     if (index !== -1 || !position) {
         return index;
@@ -62,7 +66,8 @@ const current = computed(() => {
 
     // Ein Job für eine Grafik ohne Plan läuft nur kurz durch: als nächste geplante Grafik anzeigen
     const next = steps.value.findIndex(
-        (s) => s.key.startsWith('grafik-') && Number(s.key.slice(7)) > position,
+        (s) =>
+            s.key.startsWith('graphic-') && Number(s.key.slice(8)) > position,
     );
 
     return next === -1 ? steps.value.length : next;

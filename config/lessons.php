@@ -27,35 +27,35 @@ return [
     | höchstens 4 Abschnitte, 3–8 Quizfragen, 20 Karten, 16 Sortier-Begriffe.
     */
     'scope' => [
-        'kurz' => ['abschnitte' => '1–2', 'quiz' => 3, 'karten' => '4–6', 'begriffe' => '6–8', 'luecken' => '3–5'],
-        'normal' => ['abschnitte' => '1–3', 'quiz' => 5, 'karten' => '5–10', 'begriffe' => '8–12', 'luecken' => '4–8'],
-        'ausfuehrlich' => ['abschnitte' => '2–4', 'quiz' => 8, 'karten' => '8–15', 'begriffe' => '10–16', 'luecken' => '6–10'],
+        'short' => ['sections' => '1–2', 'quiz' => 3, 'flashcards' => '4–6', 'terms' => '6–8', 'gaps' => '3–5'],
+        'normal' => ['sections' => '1–3', 'quiz' => 5, 'flashcards' => '5–10', 'terms' => '8–12', 'gaps' => '4–8'],
+        'detailed' => ['sections' => '2–4', 'quiz' => 8, 'flashcards' => '8–15', 'terms' => '10–16', 'gaps' => '6–10'],
     ],
 
     'max_tokens' => [
-        'analyse' => 32000,
-        'seite' => 32000,
-        'module' => 32000,
-        'reparatur' => 32000,
-        'pruefung' => 16000,
-        'grafik' => 48000,
+        'analysis' => 32000,
+        'page' => 32000,
+        'modules' => 32000,
+        'repair' => 32000,
+        'check' => 16000,
+        'graphic' => 48000,
     ],
 
     /*
     | Modell und Effort pro Schritt. Leer: globaler Standard aus services.anthropic.
     | Fotos lesen und interaktive Grafiken bauen braucht Opus; strukturiertes Schreiben
     | und Prüfen aus vorhandenem Stoff schafft Sonnet zum halben Preis.
-    | Schritte ohne eigenen Eintrag nehmen den Teil vor dem Bindestrich (grafik-reparatur → grafik).
+    | Schritte ohne eigenen Eintrag nehmen den Teil vor dem Bindestrich (graphic-repair → graphic).
     */
     'models' => [
-        'analyse' => ['model' => env('LESSON_MODEL_ANALYSE'), 'effort' => env('LESSON_EFFORT_ANALYSE')],
+        'analysis' => ['model' => env('LESSON_MODEL_ANALYSIS'), 'effort' => env('LESSON_EFFORT_ANALYSIS')],
         // Textteil, der zweite Teil der Analyse: liest dieselben Fotos, deshalb dieselben Einstellungen
-        'seite' => ['model' => env('LESSON_MODEL_ANALYSE'), 'effort' => env('LESSON_EFFORT_ANALYSE')],
-        'module' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
-        'neu-quiz' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
-        'reparatur' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
-        'pruefung' => ['model' => env('LESSON_MODEL_PRUEFUNG', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_PRUEFUNG', 'medium')],
-        'grafik' => ['model' => env('LESSON_MODEL_GRAFIK'), 'effort' => env('LESSON_EFFORT_GRAFIK', 'medium')],
+        'page' => ['model' => env('LESSON_MODEL_ANALYSIS'), 'effort' => env('LESSON_EFFORT_ANALYSIS')],
+        'modules' => ['model' => env('LESSON_MODEL_MODULES', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULES', 'medium')],
+        'regenerate-quiz' => ['model' => env('LESSON_MODEL_MODULES', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULES', 'medium')],
+        'repair' => ['model' => env('LESSON_MODEL_MODULES', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULES', 'medium')],
+        'check' => ['model' => env('LESSON_MODEL_CHECK', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_CHECK', 'medium')],
+        'graphic' => ['model' => env('LESSON_MODEL_GRAPHIC'), 'effort' => env('LESSON_EFFORT_GRAPHIC', 'medium')],
     ],
 
     /*

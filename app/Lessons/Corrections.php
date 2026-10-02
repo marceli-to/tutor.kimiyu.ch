@@ -6,20 +6,20 @@ namespace App\Lessons;
  * Wendet die Korrekturen des Prüf-Schritts auf eine Lernseite an.
  *
  * Die Prüfung schickt nur, was sie ändert (JSON-Pointer + neuer Wert), statt die ganze Seite neu zu schreiben.
- * Korrekturen am selben Eintrag (gleicher Pointer ohne letztes Segment, z. B. /module/quiz/0) gehören zusammen:
+ * Korrekturen am selben Eintrag (gleicher Pointer ohne letztes Segment, z. B. /modules/quiz/0) gehören zusammen:
  * Optionen und Lösung einer Quizfrage etwa sind nur gemeinsam gültig. Jede Gruppe wird darum als Ganzes
  * angewendet und nur behalten, wenn die Seite danach gültig ist; sonst wird die ganze Gruppe verworfen.
  *
  * Ersetzt werden nur einzelne Werte (Text, Zahl, Wahrheitswert) und Listen aus Texten oder Zahlen
- * (z. B. optionen, loesungen), jeweils mit dem gleichen Typ wie bisher. Ganze Objekte, Module, Listen
+ * (z. B. options, answers), jeweils mit dem gleichen Typ wie bisher. Ganze Objekte, Module, Listen
  * von Objekten und leere Felder (null) bleiben unangetastet, und kein Wert wird auf null gesetzt.
- * IDs und die Herkunft (`herkunft`) werden nie geändert.
+ * IDs und die Herkunft (`origin`) werden nie geändert.
  */
 class Corrections
 {
     /**
      * @param  array<string, mixed>  $content
-     * @param  list<array{pfad: string, wert: string, bereich: string, aenderung: string}>  $corrections
+     * @param  list<array{path: string, value: string, area: string, change: string}>  $corrections
      * @return array{content: array<string, mixed>, applied: list<array<string, string>>, rejected: list<array<string, string>>}
      */
     public static function apply(array $content, array $corrections): array
@@ -31,7 +31,7 @@ class Corrections
             $candidate = $content;
 
             foreach ($group as $correction) {
-                $candidate = self::replace($candidate, $correction['pfad'], $correction['wert']);
+                $candidate = self::replace($candidate, $correction['path'], $correction['value']);
 
                 if ($candidate === null) {
                     break;
@@ -55,15 +55,15 @@ class Corrections
      * Gruppiert Korrekturen nach Eintrag (Pointer ohne letztes Segment), in der Reihenfolge des ersten Auftretens.
      * Ungültige Pointer bilden je eine eigene Gruppe, damit sie keine gültigen Korrekturen mitreissen.
      *
-     * @param  list<array{pfad: string, wert: string, bereich: string, aenderung: string}>  $corrections
-     * @return list<list<array{pfad: string, wert: string, bereich: string, aenderung: string}>>
+     * @param  list<array{path: string, value: string, area: string, change: string}>  $corrections
+     * @return list<list<array{path: string, value: string, area: string, change: string}>>
      */
     private static function groupByItem(array $corrections): array
     {
         $groups = [];
 
         foreach ($corrections as $i => $correction) {
-            $pointer = $correction['pfad'];
+            $pointer = $correction['path'];
             $key = str_starts_with($pointer, '/')
                 ? 'eintrag:'.substr($pointer, 0, (int) strrpos($pointer, '/'))
                 : "ungueltig:$i";
@@ -81,7 +81,7 @@ class Corrections
     private static function replace(array $content, string $pointer, string $value): ?array
     {
         // IDs und Herkunft bleiben, wie sie sind: die Herkunft bestimmt, was die Eltern als ergänzt sehen
-        if (! str_starts_with($pointer, '/') || str_ends_with($pointer, '/id') || str_ends_with($pointer, '/herkunft')) {
+        if (! str_starts_with($pointer, '/') || str_ends_with($pointer, '/id') || str_ends_with($pointer, '/origin')) {
             return null;
         }
 

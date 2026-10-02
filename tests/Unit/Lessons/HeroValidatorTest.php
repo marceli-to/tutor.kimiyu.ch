@@ -45,8 +45,8 @@ it('rejects tags that would close the surrounding element', function () {
 it('rejects oversized parts, unknown patterns and the sharp s', function () {
     expect(HeroValidator::errors(hero(['script' => str_repeat('a', 40_001)])))
         ->toContain('Das Feld «script» ist zu gross (höchstens 40 KB).')
-        ->and(HeroValidator::errors(hero(['muster' => 'karussell'])))
-        ->toContain('Das Feld «muster» enthält kein bekanntes Hero-Muster.')
+        ->and(HeroValidator::errors(hero(['pattern' => 'karussell'])))
+        ->toContain('Das Feld «pattern» enthält kein bekanntes Hero-Muster.')
         ->and(HeroValidator::errors(hero(['markup' => '<p>Grösse und Maß</p>'])))
         ->toContain('Die Grafik enthält ein «ß». In der Schweiz schreibt man «ss».');
 });

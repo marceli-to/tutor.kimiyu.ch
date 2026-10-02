@@ -15,10 +15,10 @@ class GenerateLessonGraphic extends LessonStep
         parent::__construct($lesson);
     }
 
-    // Für die Anzeige des Fortschritts; die API-Schritte heissen weiterhin «grafik» und «grafik-reparatur»
+    // For the progress display; the API steps are still called «graphic» and «graphic-repair»
     protected function step(): string
     {
-        return "grafik-{$this->position}";
+        return "graphic-{$this->position}";
     }
 
     protected function run(LessonGenerator $generator): void

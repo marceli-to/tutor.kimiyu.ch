@@ -74,7 +74,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage));
             :src="initialSrc"
             sandbox="allow-scripts"
             referrerpolicy="no-referrer"
-            :title="`Interaktive Grafik: ${hero.beschreibung}`"
+            :title="`Interaktive Grafik: ${hero.description}`"
             class="block w-full border-0"
             :style="{ height: `${height}px` }"
         />

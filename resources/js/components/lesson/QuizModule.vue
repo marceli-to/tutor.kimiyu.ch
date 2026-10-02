@@ -23,7 +23,7 @@ const questionEl = ref<HTMLElement | null>(null);
 
 const finished = computed(() => index.value >= props.questions.length);
 const question = computed(() => props.questions[index.value]);
-const isCorrect = computed(() => selected.value === question.value?.loesung);
+const isCorrect = computed(() => selected.value === question.value?.answer);
 const isLast = computed(() => index.value === props.questions.length - 1);
 
 function check() {
@@ -69,7 +69,7 @@ function optionClass(k: number): string {
         return 'border-ls-line hover:border-ls-accent';
     }
 
-    if (k === question.value.loesung) {
+    if (k === question.value.answer) {
         return 'border-ls-ok bg-ls-ok-bg';
     }
 
@@ -108,8 +108,8 @@ function optionClass(k: number): string {
                 tabindex="-1"
                 class="mb-4 font-display text-[1.3rem] font-medium outline-none"
             >
-                {{ question.frage }}
-                <OriginBadge :origin="question.herkunft" class="ml-1" />
+                {{ question.question }}
+                <OriginBadge :origin="question.origin" class="ml-1" />
             </p>
 
             <div
@@ -118,7 +118,7 @@ function optionClass(k: number): string {
                 :aria-labelledby="`${groupName}-q`"
             >
                 <label
-                    v-for="(option, k) in question.optionen"
+                    v-for="(option, k) in question.options"
                     :key="k"
                     class="ls-opt flex cursor-pointer items-start gap-3 rounded-xl border-[1.5px] px-3.5 py-2.5"
                     :class="optionClass(k)"
@@ -154,7 +154,7 @@ function optionClass(k: number): string {
                     {{ isLast ? 'Resultat anzeigen' : 'Nächste Frage' }}
                 </button>
                 <button
-                    v-if="question.tipp && !checked"
+                    v-if="question.hint && !checked"
                     type="button"
                     class="ls-btn"
                     @click="hintShown = true"
@@ -167,10 +167,10 @@ function optionClass(k: number): string {
             </div>
 
             <p
-                v-if="hintShown && question.tipp"
+                v-if="hintShown && question.hint"
                 class="mt-3 mb-0 text-base text-ls-muted italic"
             >
-                Tipp: {{ question.tipp }}
+                Tipp: {{ question.hint }}
             </p>
 
             <div
@@ -179,7 +179,7 @@ function optionClass(k: number): string {
                 :class="isCorrect ? 'ls-feedback-ok' : 'ls-feedback-no'"
             >
                 <strong>{{ isCorrect ? 'Richtig!' : 'Nicht ganz.' }}</strong>
-                {{ question.erklaerung }}
+                {{ question.explanation }}
             </div>
         </template>
     </div>

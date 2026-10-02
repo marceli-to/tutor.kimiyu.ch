@@ -8,7 +8,7 @@ class CheckLesson extends LessonStep
 {
     protected function step(): string
     {
-        return 'pruefung';
+        return 'check';
     }
 
     protected function run(LessonGenerator $generator): void

@@ -7,7 +7,7 @@ use InvalidArgumentException;
 /**
  * Wandelt Lückentext-Markup («Die Pflanze nimmt [CO₂|CO2] auf.») in Segmente um und zurück.
  *
- * Segmente: ['text' => '…'] oder ['id' => 'g1', 'loesungen' => ['CO₂', 'CO2']].
+ * Segmente: ['text' => '…'] oder ['id' => 'g1', 'answers' => ['CO₂', 'CO2']].
  */
 class ClozeParser
 {
@@ -47,7 +47,7 @@ class ClozeParser
                 } while (isset($used[$id]));
                 $used[$id] = true;
 
-                $segments[] = ['id' => $id, 'loesungen' => $solutions];
+                $segments[] = ['id' => $id, 'answers' => $solutions];
 
                 continue;
             }
@@ -68,8 +68,8 @@ class ClozeParser
     public static function toMarkup(array $segments): string
     {
         return implode('', array_map(
-            fn (array $s) => isset($s['loesungen'])
-                ? '['.implode('|', $s['loesungen']).']'
+            fn (array $s) => isset($s['answers'])
+                ? '['.implode('|', $s['answers']).']'
                 : $s['text'],
             $segments,
         ));

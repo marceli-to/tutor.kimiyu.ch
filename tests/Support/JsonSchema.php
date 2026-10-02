@@ -91,6 +91,15 @@ class JsonSchema
         $unsupported = ['minItems', 'maxItems', 'minLength', 'maxLength', 'minimum', 'maximum', 'multipleOf', 'pattern', 'uniqueItems'];
 
         foreach ($schema as $key => $value) {
+            // Property names are not keywords: a field may be called «pattern» or «type»
+            if ($key === 'properties' && is_array($value)) {
+                foreach ($value as $name => $property) {
+                    $found = [...$found, ...self::unsupportedKeywords($property, "$path.properties.$name")];
+                }
+
+                continue;
+            }
+
             if (in_array($key, $unsupported, true)) {
                 $found[] = "$path.$key";
             }

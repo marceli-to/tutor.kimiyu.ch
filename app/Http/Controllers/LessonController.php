@@ -145,8 +145,8 @@ class LessonController extends Controller
             foreach (array_values($request->validated('graphics', [])) as $index => $wish) {
                 $lesson->graphics()->create([
                     'position' => $index + 1,
-                    'request' => trim($wish['beschreibung']),
-                    'pattern' => $wish['muster'] ?? null,
+                    'request' => trim($wish['description']),
+                    'pattern' => $wish['pattern'] ?? null,
                 ]);
             }
 
@@ -263,9 +263,9 @@ class LessonController extends Controller
     {
         Gate::authorize('update', $lesson);
 
-        abort_unless(GenerationPipeline::canRegenerate($lesson, 'grafik', $nr), 422, 'Das geht bei dieser Lernseite gerade nicht.');
+        abort_unless(GenerationPipeline::canRegenerate($lesson, 'graphic', $nr), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
-        GenerationPipeline::regenerate($lesson, 'grafik', $nr);
+        GenerationPipeline::regenerate($lesson, 'graphic', $nr);
 
         return to_route('lessons.show', $lesson);
     }
@@ -353,9 +353,9 @@ class LessonController extends Controller
                 'quizCount' => config('lessons.scope')[$lesson->scope]['quiz'],
                 // Fehler der Grafiken sehen nur die Eltern
                 'graphics' => $lesson->graphics->map(fn (LessonGraphic $graphic) => [
-                    'nr' => $graphic->position,
+                    'number' => $graphic->position,
                     'error' => $graphic->error,
-                    'canRegenerate' => GenerationPipeline::canRegenerate($lesson, 'grafik', $graphic->position),
+                    'canRegenerate' => GenerationPipeline::canRegenerate($lesson, 'graphic', $graphic->position),
                     'hidden' => $graphic->hidden,
                 ])->values()->all(),
                 'additions' => $lesson->isFromTopic() ? [] : ($lesson->additions ?? []),

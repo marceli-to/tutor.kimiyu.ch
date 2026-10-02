@@ -42,7 +42,7 @@ class SharedLessonController extends Controller
                         'id' => $lesson->id,
                         'title' => $lesson->title,
                         'emoji' => $lesson->content['meta']['emoji'] ?? null,
-                        'kernidee' => $lesson->content['meta']['kernidee'] ?? null,
+                        'key_idea' => $lesson->content['meta']['key_idea'] ?? null,
                         'progress' => [
                             'sitzt' => $progress[$lesson->id]['counts']['sitzt'],
                             'total' => $progress[$lesson->id]['total'],
@@ -75,7 +75,7 @@ class SharedLessonController extends Controller
         abort_unless($lesson->child_id === $child->id && $lesson->status === LessonStatus::Published, 404);
 
         $data = $request->validate([
-            'module' => ['required', Rule::in(['quiz', 'sortieren', 'lueckentext'])],
+            'module' => ['required', Rule::in(['quiz', 'sorting', 'cloze'])],
             'item_id' => ['required', 'string', 'max:20'],
             'answer' => ['present', 'nullable'],
         ]);

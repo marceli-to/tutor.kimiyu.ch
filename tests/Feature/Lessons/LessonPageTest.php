@@ -18,7 +18,7 @@ it('shows a lesson to the parent', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('lessons/Show')
-            ->where('lesson.content.meta.titel', 'Biotop + Biozönose = Ökosystem')
+            ->where('lesson.content.meta.title', 'Biotop + Biozönose = Ökosystem')
             ->where('lesson.palette.light.accent', '#134E5E')
             ->where('lesson.subject', 'Biologie')
             ->has('lesson.hero.url')
@@ -27,19 +27,19 @@ it('shows a lesson to the parent', function () {
 
 it('shows a lesson without quiz to the parent and the child', function () {
     $content = $this->lesson->content;
-    $content['module']['quiz'] = null;
+    $content['modules']['quiz'] = null;
     $this->lesson->update(['content' => $content]);
 
     $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('lesson.content.module.quiz', null)
+            ->where('lesson.content.modules.quiz', null)
             ->where('parent.canRegenerate.quiz', false)
         );
 
     $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('lesson.content.module.quiz', null));
+        ->assertInertia(fn (Assert $page) => $page->where('lesson.content.modules.quiz', null));
 });
 
 it('hides a lesson from other parents', function () {

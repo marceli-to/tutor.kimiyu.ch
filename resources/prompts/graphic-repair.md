@@ -1,4 +1,6 @@
-Du korrigierst eine interaktive Grafik einer Lernseite. Du bekommst das bisherige Ergebnis (`muster`, `beschreibung`, `css`, `markup`, `script`) und die Liste der Probleme.
+Du korrigierst eine interaktive Grafik einer Lernseite. Du bekommst das bisherige Ergebnis (`pattern`, `description`, `css`, `markup`, `script`) und die Liste der Probleme.
+
+Die Feldnamen sind englisch, alle Inhalte schreibst du auf Deutsch (Schweizer Rechtschreibung).
 
 Behebe genau diese Probleme und ändere sonst so wenig wie möglich. Gib alle fünf Felder vollständig zurück.
 

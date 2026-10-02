@@ -7,22 +7,22 @@ namespace App\Lessons;
  */
 enum HeroPattern: string
 {
-    case Regler = 'regler';
-    case Ansichten = 'ansichten';
-    case Schritte = 'schritte';
-    case Zeitstrahl = 'zeitstrahl';
+    case Sliders = 'sliders';
+    case Views = 'views';
+    case Steps = 'steps';
+    case Timeline = 'timeline';
     case Hotspots = 'hotspots';
-    case Rechner = 'rechner';
+    case Calculator = 'calculator';
 
     public function label(): string
     {
         return match ($this) {
-            self::Regler => 'Regler',
-            self::Ansichten => 'Ansichten umschalten',
-            self::Schritte => 'Schritt für Schritt',
-            self::Zeitstrahl => 'Zeitstrahl',
+            self::Sliders => 'Regler',
+            self::Views => 'Ansichten umschalten',
+            self::Steps => 'Schritt für Schritt',
+            self::Timeline => 'Zeitstrahl',
             self::Hotspots => 'Karte/Schema antippen',
-            self::Rechner => 'Rechner/Umformer',
+            self::Calculator => 'Rechner/Umformer',
         };
     }
 }
