@@ -15,7 +15,7 @@ use App\Lessons\Palettes;
 class Schemas
 {
     /**
-     * Erster Schritt: Quelle lesen, Zusammenfassung und Pläne für die Grafiken. Der Textteil kommt
+     * Erster Schritt: Quelle lesen, Fach, Zusammenfassung und Pläne für die Grafiken. Der Textteil kommt
      * separat (part('seite')): zusammen lehnt die API die Grammatik als zu gross ab.
      *
      * @return array<string, mixed>
@@ -27,6 +27,7 @@ class Schemas
                 'lesbar' => ['type' => 'boolean', 'description' => 'false, wenn die Fotos unleserlich sind, der Auftrag unklar ist oder kein Schulstoff erkennbar ist'],
                 'problem' => self::nullable(['type' => 'string', 'description' => 'Kurze Erklärung für die Eltern, was mit den Fotos oder dem Auftrag nicht stimmt']),
             ]),
+            'fach' => ['type' => 'string', 'description' => 'Schulfach, z. B. Biologie, Mathematik, Französisch'],
             'zusammenfassung' => ['type' => 'string', 'description' => 'Neutrale, vollständige Zusammenfassung des Stoffs in eigenen Worten'],
             'ergaenzungen' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Pro Ergänzung ein Satz: was auf den Fotos fehlte und was aus Fachwissen ergänzt wurde. Leer, wenn nichts ergänzt wurde oder es keine Fotos gibt.'],
             'grafik_plaene' => ['type' => 'array', 'items' => self::object([

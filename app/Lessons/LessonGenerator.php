@@ -11,6 +11,7 @@ use App\Lessons\Ai\UsageAwareModelException;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Die Schritte der Generierung. Jeder Schritt wird von einem eigenen Job aufgerufen.
@@ -60,8 +61,10 @@ class LessonGenerator
             );
         }
 
-        // Zuerst Zusammenfassung und Pläne speichern, die nächsten Aufrufe brauchen sie
+        // Zuerst Fach, Zusammenfassung und Pläne speichern, die nächsten Aufrufe brauchen sie.
+        // Das Fach nur, wenn die Eltern keines angegeben haben.
         $lesson->update([
+            'subject' => $lesson->subject ?? self::detectedSubject($data['fach'] ?? null),
             'source_summary' => (string) ($data['zusammenfassung'] ?? ''),
             // Ohne Fotos ist alles ergänzt, eine Liste wäre bedeutungslos
             'additions' => $lesson->isFromTopic()
@@ -188,6 +191,16 @@ class LessonGenerator
                 $result['applied'],
             ), SORT_REGULAR)),
         ]);
+    }
+
+    /**
+     * Das von der KI erkannte Fach, gekürzt; ohne brauchbare Antwort «Allgemein».
+     */
+    private static function detectedSubject(mixed $subject): string
+    {
+        $subject = is_string($subject) ? Str::limit(trim($subject), 60, '') : '';
+
+        return $subject !== '' ? $subject : 'Allgemein';
     }
 
     /**

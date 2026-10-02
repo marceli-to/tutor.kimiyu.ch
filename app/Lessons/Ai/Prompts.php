@@ -28,6 +28,7 @@ class Prompts
     {
         $system = self::analysisSystem([
             'quelle' => ['lesbar' => true, 'problem' => null],
+            'fach' => 'Biologie',
             'zusammenfassung' => '…',
             'ergaenzungen' => [],
             'grafik_plaene' => [[
@@ -44,7 +45,7 @@ class Prompts
             step: 'analyse',
             system: $system,
             prompt: implode("\n\n", [
-                'Schritt 1 von 2: Liefere nur `quelle`, `zusammenfassung`, `ergaenzungen` und `grafik_plaene`. Den Textteil (`seite`) schreibst du im zweiten Schritt.',
+                'Schritt 1 von 2: Liefere nur `quelle`, `fach`, `zusammenfassung`, `ergaenzungen` und `grafik_plaene`. Den Textteil (`seite`) schreibst du im zweiten Schritt.',
                 self::sourceLines($lesson, count($images)),
             ]),
             schema: Schemas::analysis(),
@@ -117,7 +118,8 @@ class Prompts
             $source,
             $count > 1 ? 'Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.' : null,
             '',
-            "Fach: {$lesson->subject}",
+            // Ohne Fach erkennt es die Analyse; im zweiten Aufruf steht es schon fest
+            'Fach: '.($lesson->subject ?? 'unbekannt, erkenne es aus den Fotos oder dem Auftrag'),
             "Stufe: {$lesson->level}",
             self::purposeLine($lesson),
             self::scopeLine($lesson),

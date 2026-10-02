@@ -97,7 +97,7 @@ class ChildController extends Controller
             'lessons' => $lessons->map(fn (Lesson $lesson) => [
                 'id' => $lesson->id,
                 'title' => $lesson->title,
-                'subject' => $lesson->subject,
+                'subject' => $lesson->subject ?? Lesson::SUBJECT_PENDING,
                 'emoji' => $lesson->content['meta']['emoji'] ?? null,
                 'published' => $lesson->status === LessonStatus::Published,
                 ...$summaries[$lesson->id],

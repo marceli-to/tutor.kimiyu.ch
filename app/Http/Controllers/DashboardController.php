@@ -27,10 +27,11 @@ class DashboardController extends Controller
                 'level' => $child->level,
                 'shareUrl' => route('shared.index', $child->share_token),
                 'subjects' => $child->lessons
-                    ->groupBy('subject')
+                    // Ohne Fach (noch nicht erkannt) als leerer Schlüssel, damit zuoberst
+                    ->groupBy(fn (Lesson $lesson) => (string) $lesson->subject)
                     ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
                     ->map(fn ($lessons, string $subject) => [
-                        'name' => $subject,
+                        'name' => $subject !== '' ? $subject : Lesson::SUBJECT_PENDING,
                         'lessons' => $lessons->map(fn (Lesson $lesson) => [
                             'id' => $lesson->id,
                             'title' => $lesson->displayTitle(),

@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  * @property LessonStatus $status
  * @property string|null $step
  * @property string|null $title
- * @property string $subject
+ * @property string|null $subject Leer, bis die KI das Fach erkannt hat
  * @property string $level
  * @property string|null $topic
  * @property string|null $notes
@@ -45,6 +45,9 @@ class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
     use HasFactory, SoftDeletes;
+
+    /** Anzeige, solange die KI das Fach noch nicht erkannt hat */
+    public const SUBJECT_PENDING = 'Fach wird erkannt …';
 
     public const PURPOSES = ['neu', 'pruefung'];
 

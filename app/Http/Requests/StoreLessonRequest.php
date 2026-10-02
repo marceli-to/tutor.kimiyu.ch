@@ -21,8 +21,10 @@ class StoreLessonRequest extends FormRequest
                 Rule::exists('children', 'id')->where('user_id', $this->user()->id),
             ],
             'child_name' => ['required_without:child_id', 'nullable', 'string', 'max:60'],
-            'subject' => ['required', 'string', 'max:60'],
-            'level' => ['required', 'string', 'max:60'],
+            // Leer: Die KI erkennt das Fach in der Analyse
+            'subject' => ['nullable', 'string', 'max:60'],
+            // Leer: Die Stufe kommt vom Kind; nur nötig, wenn das Kind keine hat oder neu ist
+            'level' => [Rule::requiredIf(fn () => $this->childLevel() === null), 'nullable', 'string', 'max:60'],
             'graphics_mode' => ['required', Rule::in(['none', 'auto', 'custom'])],
             // Wünsche der Eltern, nur bei «Selbst beschreiben»
             'graphics' => ['exclude_unless:graphics_mode,custom', 'required', 'array', 'min:1', 'max:3'],
@@ -41,6 +43,20 @@ class StoreLessonRequest extends FormRequest
     }
 
     /**
+     * Stufe des gewählten Kindes, null für ein neues Kind oder ein Kind ohne Stufe.
+     */
+    public function childLevel(): ?string
+    {
+        if (! $this->filled('child_id')) {
+            return null;
+        }
+
+        $level = $this->user()->children()->whereKey($this->integer('child_id'))->value('level');
+
+        return is_string($level) && trim($level) !== '' ? trim($level) : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     public function messages(): array
@@ -48,7 +64,6 @@ class StoreLessonRequest extends FormRequest
         return [
             'child_id.required_without' => 'Wähle ein Kind aus.',
             'child_name.required_without' => 'Gib den Namen des Kindes ein.',
-            'subject.required' => 'Gib das Fach an.',
             'level.required' => 'Gib die Stufe an.',
             'graphics_mode' => 'Wähle aus, ob und welche Grafiken die Seite bekommt.',
             'purpose' => 'Wähle den Zweck der Lernseite.',

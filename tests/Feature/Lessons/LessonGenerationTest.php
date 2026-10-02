@@ -404,7 +404,7 @@ it('writes the page in a second call with the photos, the summary, the additions
         ->toContain("Grafik 1 (oben): Muster regler\nDrei Regler für Licht, CO₂ und Wasser.")
         ->toContain('Liefere nur `seite`')
         ->not->toContain('Mia')
-        ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Liefere nur `quelle`, `zusammenfassung`, `ergaenzungen` und `grafik_plaene`');
+        ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Liefere nur `quelle`, `fach`, `zusammenfassung`, `ergaenzungen` und `grafik_plaene`');
 });
 
 it('shows each call only the example of its own fields', function () {
@@ -495,10 +495,10 @@ it('creates the first child from the name', function () {
 });
 
 it('validates the upload', function () {
-    upload(['images' => [], 'prompt' => '', 'subject' => ''])
+    upload(['images' => [], 'prompt' => '', 'subject' => str_repeat('x', 61)])
         ->assertSessionHasErrors([
             'images' => 'Lade mindestens ein Foto hoch oder schreib einen Auftrag.',
-            'subject' => 'Gib das Fach an.',
+            'subject',
         ]);
 
     upload(['images' => array_fill(0, 5, photo())])
@@ -1289,5 +1289,92 @@ describe('prompts for purpose, scope and modules', function () {
             ->and(Prompts::modules($lesson, Prompts::page($lesson->content))->prompt)
             ->toContain('Erlaubte Lernmodule: Quiz (genau 5 Fragen), Sortierspiel (8–12 Begriffe), Karteikarten (5–10 Karten), Lückentext (4–8 Lücken)')
             ->and(Prompts::quiz($lesson)->prompt)->toContain('genau 5 Fragen (IDs q1–q5)');
+    });
+});
+
+describe('subject detected by the ai', function () {
+    it('stores no subject and takes the level from the child when both are left out', function () {
+        Bus::fake();
+
+        upload(['subject' => '', 'level' => ''])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::sole();
+        expect($lesson->subject)->toBeNull()
+            ->and($lesson->level)->toBe('2. Sek');
+    });
+
+    it('still takes a given level over the child’s level', function () {
+        Bus::fake();
+
+        upload(['subject' => ' Biologie ', 'level' => '3. Sek']);
+
+        expect(Lesson::sole()->subject)->toBe('Biologie')
+            ->and(Lesson::sole()->level)->toBe('3. Sek');
+    });
+
+    it('requires the level when the child has none', function () {
+        $this->child->update(['level' => null]);
+
+        upload(['level' => ''])->assertSessionHasErrors(['level' => 'Gib die Stufe an.']);
+
+        expect(Lesson::count())->toBe(0);
+    });
+
+    it('requires the level for a new child', function () {
+        upload(['child_id' => null, 'child_name' => 'Noah', 'level' => ''])
+            ->assertSessionHasErrors(['level' => 'Gib die Stufe an.']);
+    });
+
+    it('asks the analysis to detect the subject and stores it before the page call', function () {
+        $this->fake->push('analyse', analysis(['fach' => '  Natur und Technik ']));
+
+        upload(['subject' => '']);
+
+        expect($this->fake->requestsFor('analyse')[0]->prompt)
+            ->toContain('Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag')
+            ->and($this->fake->requestsFor('seite')[0]->prompt)->toContain('Fach: Natur und Technik')
+            ->and(Lesson::sole()->subject)->toBe('Natur und Technik');
+    });
+
+    it('falls back to a general subject when the analysis returns none', function () {
+        $this->fake->push('analyse', analysis(['fach' => ' ']));
+
+        upload(['subject' => '']);
+
+        expect(Lesson::sole()->subject)->toBe('Allgemein');
+    });
+
+    it('keeps the subject the parents gave', function () {
+        $this->fake->push('analyse', analysis(['fach' => 'Natur und Technik']));
+
+        upload();
+
+        expect(Lesson::sole()->subject)->toBe('Biologie');
+    });
+
+    it('asks for the subject in the analysis schema', function () {
+        expect(Schemas::analysis()['properties'])->toHaveKey('fach')
+            ->and(Schemas::analysis()['required'])->toContain('fach')
+            ->and(file_get_contents(resource_path('prompts/analyse.md')))->toContain('`fach`');
+    });
+
+    it('shows lessons without a subject in the library, the costs and the lesson', function () {
+        $lesson = lessonFor($this->child, ['subject' => null, 'title' => null, 'prompt' => 'Brüche', 'status' => LessonStatus::Generating]);
+        $lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.1]);
+
+        $this->actingAs($this->user)->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('children.0.subjects.0.name', 'Fach wird erkannt …')
+                ->where('children.0.subjects.0.lessons.0.title', 'Brüche')
+            );
+
+        $this->actingAs($this->user)->get(route('costs'))->assertOk();
+        $this->actingAs($this->user)->get(route('lessons.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('lastSettings', 0));
+        $this->actingAs($this->user)->get(route('lessons.show', $lesson))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.subject', 'Fach wird erkannt …'));
     });
 });

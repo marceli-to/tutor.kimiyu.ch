@@ -5,6 +5,7 @@ Diese Regeln gelten für zwei Aufrufe nacheinander, beide mit denselben Fotos. D
 **Schritt 1:**
 
 - `quelle`: ob die Fotos (oder der Auftrag) brauchbar sind
+- `fach`: das Schulfach nach Lehrplan 21 (z. B. «Natur und Technik», «Mathematik», «Französisch»). Ist ein Fach angegeben, übernimm es unverändert. Sonst wähle wenn möglich einen dieser Namen: «Natur und Technik» · «Biologie» · «Chemie» · «Physik» · «Mathematik» · «Deutsch» · «Französisch» · «Englisch» · «Räume, Zeiten, Gesellschaften» · «Geschichte» · «Geografie» · «Wirtschaft, Arbeit, Haushalt» · «Ethik, Religionen, Gemeinschaft» · «Informatik».
 - `zusammenfassung`: eine neutrale Zusammenfassung des Stoffs
 - `ergaenzungen`: was du aus Fachwissen ergänzt hast, weil es auf den Fotos fehlte (siehe «Lücken ergänzen»)
 - `grafik_plaene`: die Ideen für die interaktiven Grafiken (sie werden in einem späteren Schritt gebaut)

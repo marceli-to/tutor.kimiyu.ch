@@ -31,7 +31,7 @@ class LessonView
 
         return [
             'id' => $lesson->id,
-            'subject' => $lesson->subject,
+            'subject' => $lesson->subject ?? Lesson::SUBJECT_PENDING,
             'level' => $lesson->level,
             'content' => $content,
             'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,

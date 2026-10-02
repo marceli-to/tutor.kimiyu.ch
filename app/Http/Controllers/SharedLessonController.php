@@ -33,10 +33,11 @@ class SharedLessonController extends Controller
             'token' => $token,
             'childName' => $child->name,
             'subjects' => $lessons
-                ->groupBy('subject')
+                // Freigegebene Lernseiten haben nach der Analyse immer ein Fach; trotzdem absichern
+                ->groupBy(fn (Lesson $lesson) => (string) $lesson->subject)
                 ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
                 ->map(fn ($lessons, string $subject) => [
-                    'name' => $subject,
+                    'name' => $subject !== '' ? $subject : 'Allgemein',
                     'lessons' => $lessons->map(fn (Lesson $lesson) => [
                         'id' => $lesson->id,
                         'title' => $lesson->title,

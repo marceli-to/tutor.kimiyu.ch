@@ -78,6 +78,7 @@ class FakeLanguageModel implements LanguageModel
         return match ($step) {
             'analyse' => [
                 'quelle' => ['lesbar' => true, 'problem' => null],
+                'fach' => 'Biologie',
                 'zusammenfassung' => 'Zusammenfassung der Buchseite zum Thema '.$content['meta']['thema'].'.',
                 'ergaenzungen' => [],
                 'grafik_plaene' => [['nr' => 1, 'plan' => ['muster' => $hero['muster'], 'idee' => $hero['beschreibung']], 'hinweis' => null]],

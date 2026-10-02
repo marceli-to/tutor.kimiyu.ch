@@ -56,6 +56,8 @@ class LessonController extends Controller
             ->latest()
             ->latest('id')
             ->get(['id', 'child_id', 'subject', 'purpose', 'scope', 'modules', 'graphics_mode', 'created_at'])
+            // Noch nicht erkanntes Fach: gehört zu keinem Fach
+            ->whereNotNull('subject')
             ->unique(fn (Lesson $lesson) => self::settingsKey($lesson->child_id, $lesson->subject))
             ->mapWithKeys(fn (Lesson $lesson) => [
                 self::settingsKey($lesson->child_id, $lesson->subject) => [
@@ -88,18 +90,21 @@ class LessonController extends Controller
         }
 
         $lesson = DB::transaction(function () use ($request, $images) {
+            $level = $request->string('level')->trim()->value() ?: (string) $request->childLevel();
+
             $child = $request->filled('child_id')
                 ? $request->user()->children()->findOrFail($request->integer('child_id'))
                 : $request->user()->children()->create([
                     'name' => $request->string('child_name')->trim()->value(),
-                    'level' => $request->string('level')->trim()->value(),
+                    'level' => $level,
                 ]);
 
             /** @var Child $child */
             $lesson = $child->lessons()->create([
                 'status' => LessonStatus::Draft,
-                'subject' => $request->string('subject')->trim()->value(),
-                'level' => $request->string('level')->trim()->value(),
+                // Leer: Die KI erkennt das Fach in der Analyse
+                'subject' => $request->string('subject')->trim()->value() ?: null,
+                'level' => $level,
                 'prompt' => $request->string('prompt')->trim()->value() ?: null,
                 'photo_count' => count($images),
                 'graphics_mode' => $request->validated('graphics_mode'),

@@ -94,6 +94,7 @@ it('rejects content with an unknown field', function () {
 it('lets the analysis report unreadable photos without content', function () {
     $response = [
         'quelle' => ['lesbar' => false, 'problem' => 'Das Foto ist unscharf.'],
+        'fach' => '',
         'zusammenfassung' => '',
         'ergaenzungen' => [],
         'grafik_plaene' => [],
