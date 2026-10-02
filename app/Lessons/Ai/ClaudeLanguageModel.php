@@ -41,6 +41,16 @@ class ClaudeLanguageModel implements LanguageModel
 
     public function generate(ModelRequest $request): ModelResponse
     {
+        // Tippfehler in LESSON_EFFORT_* oder ANTHROPIC_EFFORT: Schritt sauber abbrechen statt den Job abstürzen lassen
+        $effort = Effort::tryFrom($request->effort());
+
+        if ($effort === null) {
+            throw new ModelException(
+                'Die KI ist falsch eingerichtet.',
+                "Unbekannter Effort «{$request->effort()}» für Schritt {$request->step}. Erlaubt: ".implode(', ', array_column(Effort::cases(), 'value')),
+            );
+        }
+
         try {
             $stream = $this->client->beta->messages->createStream(
                 maxTokens: $request->maxTokens,
@@ -50,7 +60,7 @@ class ClaudeLanguageModel implements LanguageModel
                     BetaMessageParam::with(content: $this->content($request), role: 'user'),
                 ],
                 outputConfig: BetaOutputConfig::with(
-                    effort: Effort::from($request->effort()),
+                    effort: $effort,
                     format: BetaJSONOutputFormat::with(schema: $request->schema),
                 ),
                 fallbacks: $this->fallbacks ? 'default' : null,
