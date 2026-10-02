@@ -694,10 +694,11 @@ describe('without a graphic', function () {
     it('skips the graphic when the parents switch it off', function () {
         $this->fake->push('analyse', [...analysis(), 'hero_plan' => null]);
 
-        upload(['with_hero' => false]);
+        upload(['graphics_mode' => 'none']);
 
         $lesson = Lesson::sole();
-        expect($lesson->with_hero)->toBeFalse()
+        expect($lesson->graphics_mode)->toBe('none')
+            ->and($lesson->with_hero)->toBeFalse()
             ->and($lesson->status)->toBe(LessonStatus::Review)
             ->and($lesson->hero)->toBeNull()
             ->and($lesson->hero_error)->toBeNull()
@@ -761,5 +762,76 @@ describe('deleted lessons', function () {
         expect(fn () => app(LessonGenerator::class)->analyze($lesson))->toThrow(GenerationFailed::class);
         expect($this->fake->requests)->toBe([])
             ->and(Generation::count())->toBe(0);
+    });
+});
+
+describe('graphics mode', function () {
+    beforeEach(fn () => Bus::fake());
+
+    it('stores the mode without wishes', function (string $mode) {
+        upload(['graphics_mode' => $mode])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::sole();
+        expect($lesson->graphics_mode)->toBe($mode)
+            ->and($lesson->with_hero)->toBe($mode !== 'none')
+            ->and($lesson->graphics()->count())->toBe(0);
+    })->with(['none', 'auto']);
+
+    it('lets the ai decide when the form sends no mode', function () {
+        upload()->assertSessionHasNoErrors();
+
+        expect(Lesson::sole()->graphics_mode)->toBe('auto');
+    });
+
+    it('still understands the old checkbox', function () {
+        upload(['with_hero' => false])->assertSessionHasNoErrors();
+
+        expect(Lesson::sole()->graphics_mode)->toBe('none');
+    });
+
+    it('ignores wishes unless the parents describe the graphics', function () {
+        upload(['graphics_mode' => 'auto', 'graphics' => [['beschreibung' => 'Ein Zeitstrahl']]])->assertSessionHasNoErrors();
+
+        expect(Lesson::sole()->graphics()->count())->toBe(0);
+    });
+
+    it('stores the wishes in order', function () {
+        upload(['graphics_mode' => 'custom', 'graphics' => [
+            ['beschreibung' => 'Ein Blatt mit Reglern für Licht und Wasser', 'muster' => 'regler'],
+            ['beschreibung' => 'Die Schritte der Fotosynthese', 'muster' => null],
+            ['beschreibung' => '  Zellatmung im Vergleich  '],
+        ]])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::sole();
+        expect($lesson->graphics_mode)->toBe('custom')
+            ->and($lesson->graphics->map->only(['position', 'request', 'pattern'])->all())->toBe([
+                ['position' => 1, 'request' => 'Ein Blatt mit Reglern für Licht und Wasser', 'pattern' => 'regler'],
+                ['position' => 2, 'request' => 'Die Schritte der Fotosynthese', 'pattern' => null],
+                ['position' => 3, 'request' => 'Zellatmung im Vergleich', 'pattern' => null],
+            ]);
+    });
+
+    it('validates the wishes', function () {
+        upload(['graphics_mode' => 'custom'])
+            ->assertSessionHasErrors(['graphics' => 'Beschreib mindestens eine Grafik.']);
+
+        upload(['graphics_mode' => 'custom', 'graphics' => []])
+            ->assertSessionHasErrors(['graphics' => 'Beschreib mindestens eine Grafik.']);
+
+        upload(['graphics_mode' => 'custom', 'graphics' => array_fill(0, 4, ['beschreibung' => 'Eine Grafik'])])
+            ->assertSessionHasErrors(['graphics' => 'Höchstens 3 Grafiken.']);
+
+        upload(['graphics_mode' => 'custom', 'graphics' => [['beschreibung' => '']]])
+            ->assertSessionHasErrors(['graphics.0.beschreibung' => 'Beschreib, was die Grafik zeigen soll.']);
+
+        upload(['graphics_mode' => 'custom', 'graphics' => [['beschreibung' => str_repeat('a', 501)]]])
+            ->assertSessionHasErrors('graphics.0.beschreibung');
+
+        upload(['graphics_mode' => 'custom', 'graphics' => [['beschreibung' => 'Eine Grafik', 'muster' => 'karussell']]])
+            ->assertSessionHasErrors('graphics.0.muster');
+
+        upload(['graphics_mode' => 'alle'])->assertSessionHasErrors('graphics_mode');
+
+        expect(Lesson::count())->toBe(0);
     });
 });

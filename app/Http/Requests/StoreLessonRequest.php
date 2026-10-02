@@ -2,11 +2,23 @@
 
 namespace App\Http\Requests;
 
+use App\Lessons\HeroPattern;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreLessonRequest extends FormRequest
 {
+    /**
+     * Übergang bis Teil 2, Task 6: Das bisherige Formular schickt noch «with_hero» statt «graphics_mode».
+     * Ohne Modus entscheidet die KI, ausser die Grafik wurde abgewählt.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('graphics_mode')) {
+            $this->merge(['graphics_mode' => $this->has('with_hero') && ! $this->boolean('with_hero') ? 'none' : 'auto']);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -21,7 +33,11 @@ class StoreLessonRequest extends FormRequest
             'child_name' => ['required_without:child_id', 'nullable', 'string', 'max:60'],
             'subject' => ['required', 'string', 'max:60'],
             'level' => ['required', 'string', 'max:60'],
-            'with_hero' => ['boolean'],
+            'graphics_mode' => ['required', Rule::in(['none', 'auto', 'custom'])],
+            // Wünsche der Eltern, nur bei «Selbst beschreiben»
+            'graphics' => ['exclude_unless:graphics_mode,custom', 'required', 'array', 'min:1', 'max:3'],
+            'graphics.*.beschreibung' => ['exclude_unless:graphics_mode,custom', 'required', 'string', 'max:500'],
+            'graphics.*.muster' => ['exclude_unless:graphics_mode,custom', 'nullable', Rule::enum(HeroPattern::class)],
             // Fotos sind der verbindliche Rahmen, der Auftrag sagt, was daraus werden soll; eines von beiden genügt
             'prompt' => ['nullable', 'string', 'max:1000'],
             'images' => ['required_without:prompt', 'array', 'max:'.config('lessons.images.max_count')],
@@ -40,6 +56,12 @@ class StoreLessonRequest extends FormRequest
             'subject.required' => 'Gib das Fach an.',
             'level.required' => 'Gib die Stufe an.',
             'prompt.max' => 'Der Auftrag darf höchstens 1000 Zeichen lang sein.',
+            'graphics.required' => 'Beschreib mindestens eine Grafik.',
+            'graphics.min' => 'Beschreib mindestens eine Grafik.',
+            'graphics.max' => 'Höchstens 3 Grafiken.',
+            'graphics.*.beschreibung.required' => 'Beschreib, was die Grafik zeigen soll.',
+            'graphics.*.beschreibung.max' => 'Die Beschreibung einer Grafik darf höchstens 500 Zeichen lang sein.',
+            'graphics.*.muster' => 'Wähle ein Muster aus der Liste.',
             'images.required_without' => 'Lade mindestens ein Foto hoch oder schreib einen Auftrag.',
             'images.max' => 'Höchstens :max Fotos pro Lernseite.',
             'images.*.mimes' => 'Nur Fotos im Format JPEG, PNG oder WebP.',

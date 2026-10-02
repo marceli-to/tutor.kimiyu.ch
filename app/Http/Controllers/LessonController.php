@@ -64,8 +64,19 @@ class LessonController extends Controller
                 'level' => $request->string('level')->trim()->value(),
                 'prompt' => $request->string('prompt')->trim()->value() ?: null,
                 'photo_count' => count($images),
-                'with_hero' => $request->boolean('with_hero', true),
+                'graphics_mode' => $request->validated('graphics_mode'),
+                // Übergang bis Teil 2, Task 8: die alte Spalte noch mitführen
+                'with_hero' => $request->validated('graphics_mode') !== 'none',
             ]);
+
+            // Wünsche der Eltern als Grafik 1 bis 3
+            foreach (array_values($request->validated('graphics', [])) as $index => $wish) {
+                $lesson->graphics()->create([
+                    'position' => $index + 1,
+                    'request' => trim($wish['beschreibung']),
+                    'pattern' => $wish['muster'] ?? null,
+                ]);
+            }
 
             foreach ($images as $position => $image) {
                 $path = $lesson->id.'/'.Str::random(32).'.jpg';
