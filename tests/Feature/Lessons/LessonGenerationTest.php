@@ -208,6 +208,22 @@ it('deletes the photos after a successful analysis', function () {
         ->and(Storage::disk('lesson-images')->allFiles())->toBe([]);
 });
 
+it('names the photo order when there are several photos', function () {
+    config()->set('lessons.delete_images', false);
+
+    upload(['images' => [photo('a.jpg'), photo('b.jpg')]]);
+
+    expect($this->fake->requestsFor('analyse')[0]->prompt)
+        ->toContain('Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.')
+        ->and(Lesson::sole()->images()->reorder('id')->pluck('position')->all())->toBe([0, 1]);
+});
+
+it('does not name a photo order for a single photo', function () {
+    upload();
+
+    expect($this->fake->requestsFor('analyse')[0]->prompt)->not->toContain('Reihenfolge der Seiten');
+});
+
 it('keeps the photos when deleting is switched off', function () {
     config()->set('lessons.delete_images', false);
 

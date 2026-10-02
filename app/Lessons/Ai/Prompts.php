@@ -48,6 +48,7 @@ class Prompts
 
         $prompt = implode("\n", array_filter([
             $source,
+            $count > 1 ? 'Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.' : null,
             '',
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
