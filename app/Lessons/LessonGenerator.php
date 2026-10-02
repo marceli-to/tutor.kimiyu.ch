@@ -74,7 +74,7 @@ class LessonGenerator
         // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
         $page = $data['seite'];
         $modules = $this->call($lesson, Prompts::modules($lesson, $page))->data['module'] ?? [];
-        $content = self::assemble($page, $modules);
+        $content = self::assemble($page, self::onlyAllowed($lesson, $modules));
 
         // Fehlerhafte Teile einmal reparieren
         foreach (ContentValidator::errorsByPart($content, strict: true) as $part => $errors) {
@@ -85,7 +85,7 @@ class LessonGenerator
             $repaired = $this->call($lesson, Prompts::repair($lesson, $content, $part, $errors))->data[$part] ?? null;
 
             if (is_array($repaired)) {
-                $content = $part === 'module' ? self::assemble($content, $repaired) : self::assemble($repaired, $content['module']);
+                $content = $part === 'module' ? self::assemble($content, self::onlyAllowed($lesson, $repaired)) : self::assemble($repaired, $content['module']);
             }
         }
 
@@ -196,6 +196,22 @@ class LessonGenerator
         unset($page['module'], $page['nachdenken']);
 
         return [...$page, 'module' => $modules, 'nachdenken' => $nachdenken];
+    }
+
+    /**
+     * Module, welche die Eltern nicht erlaubt haben, auf null setzen, auch wenn die KI sie trotzdem liefert.
+     * Bleibt keines übrig, meldet das die Prüfung des Inhalts wie jeden anderen Fehler.
+     *
+     * @param  array<string, mixed>  $modules
+     * @return array<string, mixed>
+     */
+    private static function onlyAllowed(Lesson $lesson, array $modules): array
+    {
+        foreach (array_diff(Lesson::MODULES, $lesson->allowedModules()) as $module) {
+            $modules[$module] = null;
+        }
+
+        return $modules;
     }
 
     /**

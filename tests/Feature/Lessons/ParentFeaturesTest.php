@@ -365,6 +365,16 @@ describe('regenerating', function () {
         expect($this->fake->requests)->toBe([]);
     });
 
+    it('asks for as many questions as the scope wants', function () {
+        $this->lesson->update(['scope' => 'kurz']);
+        $this->fake->push('neu-quiz', ['quiz' => array_slice(LessonFactory::fixture('fotosynthese')['module']['quiz'], 0, 3)]);
+
+        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']));
+
+        expect($this->fake->requestsFor('neu-quiz')[0]->prompt)->toContain('Erstelle nur ein neues Quiz mit genau 3 Fragen (IDs q1–q3).')
+            ->and($this->lesson->fresh()->content['module']['quiz'])->toHaveCount(3);
+    });
+
     it('does not create a quiz for a page without one', function () {
         $content = $this->lesson->content;
         $content['module']['quiz'] = null;

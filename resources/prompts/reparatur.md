@@ -11,8 +11,8 @@ Regeln für den Textteil (`seite`):
 
 Regeln für die Module (`module`):
 
-- Quiz (wenn vorhanden, sonst null): 3–8 Fragen (IDs q1, q2, …), je 3–4 verschiedene Optionen, `loesung` ist der 0-basierte Index der richtigen Option, die richtige Antwort steht nicht immer an derselben Position.
-- Mindestens ein Modul (quiz, sortieren, karten oder lueckentext).
+- Quiz (wenn vorhanden, sonst null): so viele Fragen wie in «Erlaubte Lernmodule» angegeben (IDs q1, q2, …), je 3–4 verschiedene Optionen, `loesung` ist der 0-basierte Index der richtigen Option, die richtige Antwort steht nicht immer an derselben Position.
+- Nur Module aus «Erlaubte Lernmodule», nicht erlaubte sind null. Mindestens ein Modul (quiz, sortieren, karten oder lueckentext).
 - Sortieren: 2–3 Kategorien mit IDs cat1–cat3, jede Kategorie hat Begriffe, jeder Begriff gehört zu einer vorhandenen Kategorie, keine doppelten Begriffe.
 - Lückentext: Segmente sind entweder {"text": …} oder {"id": …, "loesungen": […]}, mindestens eine Lücke.
 - Alle IDs (Quiz, Begriffe, Karten, Lücken) sind eindeutig.

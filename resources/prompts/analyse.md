@@ -82,7 +82,7 @@ Beschreibe in `plan.idee` jeder Grafik in 3–6 Sätzen: was gezeichnet wird, we
 - `meta.titel`: eine Frage oder Formel, die neugierig macht («Wie macht ein Blatt Zucker aus Licht?», «Biotop + Biozönose = Ökosystem»). Höchstens 70 Zeichen.
 - `meta.anleitung`: eine Zeile, was man mit Grafik 1 tun kann («Dreh an den Reglern und schau, was im Blatt passiert.»). Ohne Grafik 1: ein Satz, der sagt, worum es geht und neugierig macht.
 - `meta.emoji`: ein passendes Emoji.
-- `abschnitte`: 1–3 Abschnitte mit kurzer Überschrift (z. B. «Das Rezept», «Was man wissen muss», «Die drei Begriffe»). Bausteine:
+- `abschnitte`: so viele Abschnitte, wie die Zeile «Umfang» angibt, mit kurzer Überschrift (z. B. «Das Rezept», «Was man wissen muss», «Die drei Begriffe»). Bausteine:
     - `absatz`: kurzer Fliesstext.
     - `formel`: Formel oder Merksatz, optional mit `zusatz` (z. B. die chemische Gleichung).
     - `fakten`: 2–4 Fakten mit Titel (oft als Frage: «Wo passiert es?») und kurzem Text.
@@ -93,7 +93,16 @@ Beschreibe in `plan.idee` jeder Grafik in 3–6 Sätzen: was gezeichnet wird, we
 - `probieren`: 2–3 konkrete Experimente mit der Hauptgrafik (Grafik 1) («Stell das Licht auf 100 %, lass aber das CO₂ tief.»), dazu ein Alltagsvergleich. Auf null setzen, wenn Grafik 1 keine Experimente erlaubt oder es keine Grafik 1 gibt.
 - `nachdenken.frage`: eine offene Transferfrage ohne Lösung.
 
-## 5. Sprache
+## 5. Zweck und Umfang
+
+Die Zeile «Zweck» sagt, wofür die Seite da ist:
+
+- «Neuer Stoff»: Das Kind lernt das Thema zum ersten Mal. Erkläre Schritt für Schritt, beginne sanft beim Bekannten und verwende mehr Alltagsvergleiche.
+- «Prüfungsvorbereitung»: Das Kind kennt den Stoff schon und repetiert. Schreib kompakt, mit Fokus auf Fachbegriffe und Definitionen. Der letzte Abschnitt endet mit einem Baustein `box` mit dem Titel «Das Wichtigste für die Prüfung» und 3–5 kurzen Punkten.
+
+Die Zeile «Umfang» sagt, wie viele Abschnitte die Seite hat (z. B. «Umfang: kurz (1–2 Abschnitte)»). Halte dich daran. Bei «kurz» nur das Wesentliche, bei «ausführlich» mehr Beispiele und Zusammenhänge.
+
+## 6. Sprache
 
 - Deutsch, Schweizer Rechtschreibung: immer «ss» statt «ß», Anführungszeichen «…».
 - Kurze Sätze, aktive Verben, Du-Form. Ein Gedanke pro Satz.
@@ -103,7 +112,7 @@ Beschreibe in `plan.idee` jeder Grafik in 3–6 Sätzen: was gezeichnet wird, we
 - Feedback ermutigend, nie herablassend.
 - Keine Namen oder persönlichen Angaben von Personen übernehmen, die auf den Fotos stehen (z. B. Name im Heft).
 
-## 6. Prüfen, bevor du antwortest
+## 7. Prüfen, bevor du antwortest
 
 - Fachliche Richtigkeit aller Aussagen.
 - Enthält die Zusammenfassung alles, was für Quiz und Übungen nötig ist?

@@ -58,6 +58,8 @@ class Prompts
             '',
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
+            self::purposeLine($lesson),
+            self::scopeLine($lesson),
             self::graphicsWish($lesson),
             self::parentInstruction($lesson),
         ], fn ($line) => $line !== null));
@@ -105,12 +107,14 @@ class Prompts
             '{{BEISPIEL}}' => self::json(['module' => LessonFactory::fixture('fotosynthese')['module']]),
         ]);
 
+        $count = self::scopeCounts($lesson)['quiz'];
+
         return new ModelRequest(
             step: 'neu-quiz',
             system: $system,
             prompt: implode("\n\n", [
                 self::context($lesson),
-                'Erstelle nur ein neues Quiz mit genau 5 Fragen (IDs q1–q5). Frag andere Aspekte ab oder stell die Fragen anders als im bisherigen Quiz. Die Regeln für das Quiz gelten unverändert.',
+                "Erstelle nur ein neues Quiz mit genau {$count} Fragen (IDs q1–q{$count}). Frag andere Aspekte ab oder stell die Fragen anders als im bisherigen Quiz. Die Regeln für das Quiz gelten unverändert.",
                 "Bisheriges Quiz:\n".self::json($lesson->content['module']['quiz']),
                 "Textteil der Lernseite:\n".self::json(self::page($lesson->content)),
             ]),
@@ -285,14 +289,18 @@ class Prompts
     }
 
     /**
-     * Gemeinsamer Teil aller Schritte nach der Analyse: Fach, Stufe, Auftrag, Zusammenfassung und Ergänzungen.
-     * Für Teile, die das Kind sieht ($forChild, z. B. die Grafik), ohne Ergänzungen und ohne Markierung «(ergänzt)».
+     * Gemeinsamer Teil aller Schritte nach der Analyse: Fach, Stufe, Zweck, Umfang, Module, Auftrag, Zusammenfassung und Ergänzungen.
+     * Für Teile, die das Kind sieht ($forChild, z. B. die Grafik), ohne Ergänzungen und ohne Markierung «(ergänzt)»;
+     * Zweck, Umfang und Module betreffen dort nichts und bleiben weg.
      */
     private static function context(Lesson $lesson, bool $forChild = false): string
     {
         $header = implode("\n", array_filter([
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
+            $forChild ? null : self::purposeLine($lesson),
+            $forChild ? null : self::scopeLine($lesson),
+            $forChild ? null : self::modulesLine($lesson),
             // Damit «keine Fotos → immer ergaenzt» in module.md greift
             $lesson->isFromTopic() ? 'Quelle: keine Fotos (Auftrag oder Thema)' : null,
             self::parentInstruction($lesson),
@@ -309,6 +317,43 @@ class Prompts
         }
 
         return implode("\n\n", $parts);
+    }
+
+    private static function purposeLine(Lesson $lesson): string
+    {
+        return 'Zweck: '.($lesson->purpose === 'pruefung' ? 'Prüfungsvorbereitung' : 'Neuer Stoff');
+    }
+
+    private static function scopeLine(Lesson $lesson): string
+    {
+        $label = $lesson->scope === 'ausfuehrlich' ? 'ausführlich' : $lesson->scope;
+
+        return "Umfang: {$label} (".self::scopeCounts($lesson)['abschnitte'].' Abschnitte)';
+    }
+
+    /**
+     * Die erlaubten Lernmodule mit den Anzahlen für den Umfang; alte Lernseiten ohne Liste erlauben alle.
+     */
+    private static function modulesLine(Lesson $lesson): string
+    {
+        $counts = self::scopeCounts($lesson);
+
+        $labels = [
+            'quiz' => "Quiz (genau {$counts['quiz']} Fragen)",
+            'sortieren' => "Sortierspiel ({$counts['begriffe']} Begriffe)",
+            'karten' => "Karteikarten ({$counts['karten']} Karten)",
+            'lueckentext' => "Lückentext ({$counts['luecken']} Lücken)",
+        ];
+
+        return 'Erlaubte Lernmodule: '.implode(', ', array_intersect_key($labels, array_flip($lesson->allowedModules())));
+    }
+
+    /**
+     * @return array{abschnitte: string, quiz: int, karten: string, begriffe: string, luecken: string}
+     */
+    private static function scopeCounts(Lesson $lesson): array
+    {
+        return config("lessons.scope.{$lesson->scope}") ?? config('lessons.scope.normal');
     }
 
     /**

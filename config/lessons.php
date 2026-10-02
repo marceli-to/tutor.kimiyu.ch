@@ -22,6 +22,16 @@ return [
         'jpeg_quality' => 85,
     ],
 
+    /*
+    | Anzahlen pro Umfang, für die Prompts. Grenzen des ContentValidator einhalten:
+    | höchstens 4 Abschnitte, 3–8 Quizfragen, 20 Karten, 16 Sortier-Begriffe.
+    */
+    'scope' => [
+        'kurz' => ['abschnitte' => '1–2', 'quiz' => 3, 'karten' => '4–6', 'begriffe' => '6–8', 'luecken' => '3–5'],
+        'normal' => ['abschnitte' => '1–3', 'quiz' => 5, 'karten' => '5–10', 'begriffe' => '8–12', 'luecken' => '4–8'],
+        'ausfuehrlich' => ['abschnitte' => '2–4', 'quiz' => 8, 'karten' => '8–15', 'begriffe' => '10–16', 'luecken' => '6–10'],
+    ],
+
     'max_tokens' => [
         'analyse' => 32000,
         'module' => 32000,

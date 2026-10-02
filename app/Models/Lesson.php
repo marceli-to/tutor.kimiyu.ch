@@ -86,6 +86,16 @@ class Lesson extends Model
     }
 
     /**
+     * Erlaubte Lernmodule; alte Lernseiten ohne Liste erlauben alle.
+     *
+     * @return list<'quiz'|'sortieren'|'karten'|'lueckentext'>
+     */
+    public function allowedModules(): array
+    {
+        return $this->modules ?? self::MODULES;
+    }
+
+    /**
      * Titel für Listen, auch bevor die KI einen Titel gesetzt hat.
      */
     public function displayTitle(): string

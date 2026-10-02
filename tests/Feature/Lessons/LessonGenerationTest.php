@@ -1097,3 +1097,74 @@ describe('purpose, scope and modules', function () {
             ->and($lesson->modules)->toBe(['quiz', 'sortieren', 'karten', 'lueckentext']);
     });
 });
+
+describe('prompts for purpose, scope and modules', function () {
+    it('tells the steps the purpose, the scope and the allowed modules', function () {
+        upload(['purpose' => 'pruefung', 'scope' => 'kurz', 'modules' => ['karten', 'quiz']]);
+
+        $analysis = $this->fake->requestsFor('analyse')[0]->prompt;
+        $modules = $this->fake->requestsFor('module')[0]->prompt;
+
+        expect($analysis)->toContain('Zweck: Prüfungsvorbereitung')
+            ->toContain('Umfang: kurz (1–2 Abschnitte)')
+            ->and($modules)->toContain('Zweck: Prüfungsvorbereitung')
+            ->toContain('Umfang: kurz (1–2 Abschnitte)')
+            ->toContain('Erlaubte Lernmodule: Quiz (genau 3 Fragen), Karteikarten (4–6 Karten)')
+            ->and($this->fake->requestsFor('pruefung')[0]->prompt)->toContain('Erlaubte Lernmodule: Quiz (genau 3 Fragen), Karteikarten (4–6 Karten)');
+    });
+
+    it('explains purpose, scope and modules in the system prompts', function () {
+        upload();
+
+        expect($this->fake->requestsFor('analyse')[0]->system)->toContain('«Prüfungsvorbereitung»')
+            ->toContain('«Das Wichtigste für die Prüfung»')
+            ->toContain('Die Zeile «Umfang»')
+            ->and($this->fake->requestsFor('module')[0]->system)->toContain('Die Zeile «Erlaubte Lernmodule»')
+            ->not->toContain('genau 5 Fragen');
+    });
+
+    it('names each purpose and scope', function (array $data, array $lines) {
+        upload($data);
+
+        expect($this->fake->requestsFor('module')[0]->prompt)->toContain(...$lines);
+    })->with([
+        'defaults' => [[], ['Zweck: Neuer Stoff', 'Umfang: normal (1–3 Abschnitte)', 'Erlaubte Lernmodule: Quiz (genau 5 Fragen), Sortierspiel (8–12 Begriffe), Karteikarten (5–10 Karten), Lückentext (4–8 Lücken)']],
+        'detailed' => [['scope' => 'ausfuehrlich', 'modules' => ['lueckentext', 'sortieren']], ['Umfang: ausführlich (2–4 Abschnitte)', 'Erlaubte Lernmodule: Sortierspiel (10–16 Begriffe), Lückentext (6–10 Lücken)']],
+    ]);
+
+    it('keeps these lines away from the graphic', function () {
+        upload(['purpose' => 'pruefung', 'scope' => 'kurz']);
+
+        expect($this->fake->requestsFor('grafik')[0]->prompt)->not->toContain('Zweck:')
+            ->not->toContain('Umfang:')
+            ->not->toContain('Erlaubte Lernmodule');
+    });
+
+    it('drops modules the parents did not allow', function () {
+        upload(['modules' => ['karten']]);
+
+        $lesson = Lesson::sole();
+        expect($lesson->status)->toBe(LessonStatus::Review)
+            ->and($lesson->content['module']['quiz'])->toBeNull()
+            ->and($lesson->content['module']['lueckentext'])->toBeNull()
+            ->and($lesson->content['module']['karten'])->toBe(LessonFactory::fixture('fotosynthese')['module']['karten'])
+            ->and($this->fake->requestsFor('reparatur-module'))->toBe([]);
+    });
+
+    it('repairs a page left without any module', function () {
+        // Die Fotosynthese hat kein Sortierspiel: ohne die anderen Module bleibt nichts übrig
+        upload(['modules' => ['sortieren']]);
+
+        expect($this->fake->requestsFor('reparatur-module')[0]->prompt)->toContain('Die Seite braucht mindestens ein Lernmodul.')
+            ->and(Lesson::sole()->status)->toBe(LessonStatus::Failed);
+    });
+
+    it('allows all modules on old lessons', function () {
+        $lesson = Lesson::factory()->fromFixture()->create();
+
+        expect($lesson->modules)->toBeNull()
+            ->and(Prompts::modules($lesson, Prompts::page($lesson->content))->prompt)
+            ->toContain('Erlaubte Lernmodule: Quiz (genau 5 Fragen), Sortierspiel (8–12 Begriffe), Karteikarten (5–10 Karten), Lückentext (4–8 Lücken)')
+            ->and(Prompts::quiz($lesson)->prompt)->toContain('genau 5 Fragen (IDs q1–q5)');
+    });
+});

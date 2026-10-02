@@ -4,17 +4,23 @@ Du bekommst den Auftrag der Eltern (falls es einen gibt), die Zusammenfassung de
 
 ## Module wählen
 
-Das Quiz ist immer dabei, mit genau 5 Fragen. Dazu 1–3 passende weitere:
+Die Zeile «Erlaubte Lernmodule» sagt, welche Module die Eltern zulassen, und nennt die Anzahlen für den gewählten Umfang. Baue nur Module aus dieser Liste:
 
-- `sortieren`: wenn der Stoff Kategorien hat (belebt/unbelebt, Laub-/Nadelbaum, Säure/Base, Verb/Nomen). 2–3 Kategorien, 8–12 Begriffe.
-- `karten`: bei vielen Fachbegriffen oder Vokabeln. 5–12 Karten.
-- `lueckentext`: bei Definitionen, Abläufen, Merksätzen, Grammatikregeln. 4–8 Lücken.
+- Steht das Quiz in der Liste, ist es immer dabei, mit genau so vielen Fragen wie angegeben.
+- Die anderen Module aus der Liste nur, wenn sie zum Stoff passen:
+    - `sortieren`: wenn der Stoff Kategorien hat (belebt/unbelebt, Laub-/Nadelbaum, Säure/Base, Verb/Nomen). 2–3 Kategorien.
+    - `karten`: bei vielen Fachbegriffen oder Vokabeln.
+    - `lueckentext`: bei Definitionen, Abläufen, Merksätzen, Grammatikregeln.
+- Die Anzahl Begriffe, Karten und Lücken steht in der Zeile.
+- Mindestens ein Modul ist immer dabei. Passt keines der anderen gut, nimm das am besten passende aus der Liste.
 
-Nicht gewählte Module auf null setzen.
+Nicht gewählte und nicht erlaubte Module auf null setzen.
+
+Die Zeile «Zweck» sagt, wofür die Seite da ist. Bei «Prüfungsvorbereitung» fragen mehr Aufgaben nach Definitionen und Fachbegriffen und nach typischen Fallen an der Prüfung (Verwechslungen, häufige Fehler). Bei «Neuer Stoff» prüfen die Aufgaben vor allem, ob die Grundidee verstanden ist.
 
 ## Regeln
 
-- **Quiz:** genau 5 Fragen mit je 4 Optionen (IDs `q1`–`q5`). `loesung` ist der Index der richtigen Option, 0-basiert. Die Distraktoren sind plausibel, aber eindeutig falsch. Keine «alle obigen»-Antworten. Die richtige Antwort steht nicht immer an derselben Position. `tipp` hilft, ohne die Lösung zu verraten. `erklaerung` sagt, warum die Lösung stimmt und warum ein naheliegender Fehler falsch ist. Mindestens eine Frage prüft Verständnis statt Auswendiggelerntes (Anwendung, Ursache–Wirkung). Gibt es Grafiken, darf sich eine Frage auf eine davon beziehen («Erinnere dich an die Regler oben»), sonst nie.
+- **Quiz:** genau so viele Fragen wie in «Erlaubte Lernmodule» angegeben, mit je 4 Optionen (IDs `q1`, `q2` …). `loesung` ist der Index der richtigen Option, 0-basiert. Die Distraktoren sind plausibel, aber eindeutig falsch. Keine «alle obigen»-Antworten. Die richtige Antwort steht nicht immer an derselben Position. `tipp` hilft, ohne die Lösung zu verraten. `erklaerung` sagt, warum die Lösung stimmt und warum ein naheliegender Fehler falsch ist. Mindestens eine Frage prüft Verständnis statt Auswendiggelerntes (Anwendung, Ursache–Wirkung). Gibt es Grafiken, darf sich eine Frage auf eine davon beziehen («Erinnere dich an die Regler oben»), sonst nie.
 - **Sortieren:** Kategorie-IDs `cat1`–`cat3`, Begriff-IDs `s1`, `s2` … Verwende dieselbe Zuordnung der Kategorie-Farben wie im Textteil und in den Plänen der Grafiken (z. B. cat1 = unbelebt überall). Jeder Begriff ist eindeutig einer Kategorie zuordenbar. `erklaerung` nur bei Begriffen, die oft falsch sortiert werden, sonst null. `anleitung` ist die Frage, nach der sortiert wird.
 - **Karten:** IDs `k1`, `k2` … Vorne der Begriff, hinten eine kurze Erklärung (ein bis zwei Sätze).
 - **Lückentext:** Segmente abwechselnd `{"text": …}` und `{"id": "g1", "loesungen": […]}`. Die erste Lösung ist die Musterlösung, dazu gängige Schreibvarianten als Alternativen (["Kohlenstoffdioxid", "CO₂", "CO2"]). Gross/Klein spielt keine Rolle. Lücken nur für Fachbegriffe, nicht für Füllwörter.
