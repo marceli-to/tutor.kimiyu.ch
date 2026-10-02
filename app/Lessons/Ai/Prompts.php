@@ -2,9 +2,11 @@
 
 namespace App\Lessons\Ai;
 
+use App\Lessons\HeroPattern;
 use App\Lessons\LessonView;
 use App\Lessons\Palettes;
 use App\Models\Lesson;
+use App\Models\LessonGraphic;
 use Database\Factories\LessonFactory;
 use Illuminate\Support\Facades\File;
 
@@ -27,10 +29,14 @@ class Prompts
                 'quelle' => ['lesbar' => true, 'problem' => null],
                 'zusammenfassung' => '…',
                 'ergaenzungen' => [],
-                'hero_plan' => [
-                    'muster' => 'regler',
-                    'idee' => 'Ein Blatt im Querschnitt mit Pfeilen für Licht, CO₂ und Wasser (hinein) sowie Sauerstoff und Traubenzucker (hinaus). Drei Regler steuern Licht, CO₂ und Wasser. Die Pfeile hinaus werden so stark wie die knappste Zutat. Eine Anzeige nennt die Leistung und was gerade bremst, ein Satz darunter erklärt es.',
-                ],
+                'grafik_plaene' => [[
+                    'nr' => 1,
+                    'plan' => [
+                        'muster' => 'regler',
+                        'idee' => 'Ein Blatt im Querschnitt mit Pfeilen für Licht, CO₂ und Wasser (hinein) sowie Sauerstoff und Traubenzucker (hinaus). Drei Regler steuern Licht, CO₂ und Wasser. Die Pfeile hinaus werden so stark wie die knappste Zutat. Eine Anzeige nennt die Leistung und was gerade bremst, ein Satz darunter erklärt es.',
+                    ],
+                    'hinweis' => null,
+                ]],
                 'seite' => self::page(LessonFactory::fixture('fotosynthese')),
             ]),
         ]);
@@ -52,7 +58,7 @@ class Prompts
             '',
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
-            'Interaktive Grafik: '.($lesson->with_hero ? 'ja, wenn ein Muster den Stoff sichtbar macht' : 'nein, von den Eltern abgewählt'),
+            self::graphicsWish($lesson),
             self::parentInstruction($lesson),
         ], fn ($line) => $line !== null));
 
@@ -82,7 +88,7 @@ class Prompts
             system: $system,
             prompt: implode("\n\n", [
                 self::context($lesson),
-                self::heroPlanText($lesson),
+                self::heroPlanText($lesson, $page),
                 "Textteil der Lernseite:\n".self::json($page),
             ]),
             schema: Schemas::modulesResult(),
@@ -204,11 +210,62 @@ class Prompts
         );
     }
 
-    private static function heroPlanText(Lesson $lesson): string
+    /**
+     * Was die Eltern zu den Grafiken gewählt haben, für die Analyse.
+     */
+    private static function graphicsWish(Lesson $lesson): string
     {
-        return $lesson->hero_plan
-            ? "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}"
+        return match ($lesson->graphics_mode) {
+            'none' => 'Grafiken: keine (von den Eltern abgewählt)',
+            'custom' => implode("\n", [
+                'Grafiken nach Wunsch der Eltern:',
+                ...$lesson->graphics()->get()->map(function (LessonGraphic $graphic) {
+                    $pattern = HeroPattern::tryFrom((string) $graphic->pattern);
+
+                    return "Grafik {$graphic->position}: {$graphic->request}"
+                        .($pattern ? " (Muster: {$pattern->value} – {$pattern->label()})" : '');
+                }),
+            ]),
+            default => 'Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht',
+        };
+    }
+
+    /**
+     * Die geplanten Grafiken mit ihrem Platz auf der Seite, für die Module.
+     *
+     * @param  array<string, mixed>  $page
+     */
+    private static function heroPlanText(Lesson $lesson, array $page): string
+    {
+        $plans = $lesson->graphics()->whereNotNull('plan')->get()->map(function (LessonGraphic $graphic) use ($page) {
+            $place = $graphic->position === 1
+                ? 'oben'
+                : (($title = self::graphicSection($page, $graphic->position)) !== null ? "im Abschnitt «{$title}»" : 'weiter unten auf der Seite');
+
+            return "Grafik {$graphic->position} ({$place}): Muster {$graphic->plan['muster']}\n{$graphic->plan['idee']}";
+        });
+
+        return $plans->isNotEmpty()
+            ? "Geplante Grafiken:\n\n".$plans->implode("\n\n")
             : 'Diese Seite hat keine interaktive Grafik. Keine Quizfrage darf sich auf eine Grafik beziehen.';
+    }
+
+    /**
+     * Titel des Abschnitts, in dem der Baustein für Grafik $nr steht.
+     *
+     * @param  array<string, mixed>  $content
+     */
+    public static function graphicSection(array $content, int $nr): ?string
+    {
+        foreach ($content['abschnitte'] ?? [] as $section) {
+            foreach ($section['bloecke'] ?? [] as $block) {
+                if (($block['typ'] ?? null) === 'grafik' && ($block['nr'] ?? null) === $nr) {
+                    return $section['titel'] ?? null;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

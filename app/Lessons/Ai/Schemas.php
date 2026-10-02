@@ -15,7 +15,7 @@ use App\Lessons\Palettes;
 class Schemas
 {
     /**
-     * Erster Schritt: Quelle lesen, Zusammenfassung, Plan für die Grafik und der Textteil der Seite.
+     * Erster Schritt: Quelle lesen, Zusammenfassung, Pläne für die Grafiken und der Textteil der Seite.
      *
      * @return array<string, mixed>
      */
@@ -28,7 +28,11 @@ class Schemas
             ]),
             'zusammenfassung' => ['type' => 'string', 'description' => 'Neutrale, vollständige Zusammenfassung des Stoffs in eigenen Worten'],
             'ergaenzungen' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Pro Ergänzung ein Satz: was auf den Fotos fehlte und was aus Fachwissen ergänzt wurde. Leer, wenn nichts ergänzt wurde oder es keine Fotos gibt.'],
-            'hero_plan' => self::nullable(self::heroPlan()),
+            'grafik_plaene' => ['type' => 'array', 'items' => self::object([
+                'nr' => ['type' => 'integer'],
+                'plan' => self::nullable(self::heroPlan()),
+                'hinweis' => self::nullable(['type' => 'string', 'description' => 'Warum der Wunsch nicht passt, ein Satz für die Eltern']),
+            ])],
             'seite' => self::nullable(self::page()),
         ]);
     }
@@ -163,6 +167,7 @@ class Schemas
                                 'absaetze' => $texts,
                             ])]]),
                             $block('box', ['titel' => $text, 'absaetze' => $texts]),
+                            $block('grafik', ['nr' => ['type' => 'integer']]),
                         ]],
                     ],
                 ]),

@@ -20,7 +20,7 @@ class LessonGenerator
     public function __construct(private LanguageModel $model) {}
 
     /**
-     * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung, Plan für die Grafik, Textteil; danach die Module.
+     * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung, Pläne für die Grafiken, Textteil; danach die Module.
      * Bei Regelverstössen ein Reparatur-Call pro betroffenem Teil.
      *
      * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
@@ -67,8 +67,9 @@ class LessonGenerator
             'additions' => $lesson->isFromTopic()
                 ? null
                 : (array_values(array_filter((array) ($data['ergaenzungen'] ?? []), 'is_string')) ?: null),
-            'hero_plan' => $data['hero_plan'] ?? null,
         ]);
+
+        $this->storeGraphicPlans($lesson, (array) ($data['grafik_plaene'] ?? []));
 
         // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
         $page = $data['seite'];
@@ -107,6 +108,51 @@ class LessonGenerator
         if (config('lessons.delete_images')) {
             $this->deleteImages($lesson);
         }
+    }
+
+    /**
+     * Pläne der Analyse pro Grafik speichern. «auto»: nur Grafik 1; «custom»: nur gewünschte Grafiken;
+     * «none»: keine. Ohne Plan steht der Hinweis der KI als Fehler bei der Grafik.
+     *
+     * @param  array<mixed>  $plans
+     */
+    private function storeGraphicPlans(Lesson $lesson, array $plans): void
+    {
+        $positions = match ($lesson->graphics_mode) {
+            'none' => [],
+            'custom' => $lesson->graphics()->pluck('position')->all(),
+            default => [1],
+        };
+
+        $planned = [];
+
+        foreach ($plans as $entry) {
+            $nr = is_array($entry) ? ($entry['nr'] ?? null) : null;
+
+            if (! is_int($nr) || ! in_array($nr, $positions, true) || isset($planned[$nr])) {
+                continue;
+            }
+
+            $plan = is_array($entry['plan'] ?? null) ? $entry['plan'] : null;
+            $hint = is_string($entry['hinweis'] ?? null) && trim($entry['hinweis']) !== '' ? trim($entry['hinweis']) : null;
+
+            $lesson->graphics()->updateOrCreate(['position' => $nr], [
+                'plan' => $plan,
+                'error' => $plan === null ? $hint : null,
+            ]);
+            $planned[$nr] = $plan;
+        }
+
+        // Die Eltern sollen wissen, warum ein Wunsch fehlt, auch wenn die KI ihn übergangen hat
+        if ($lesson->graphics_mode === 'custom') {
+            $lesson->graphics()->whereNotIn('position', array_keys($planned))->update([
+                'plan' => null,
+                'error' => 'Für diese Grafik hat die KI keinen Plan erstellt.',
+            ]);
+        }
+
+        // Übergang bis Teil 2, Task 8: Grafik 1 auch in der alten Spalte, die Anzeige liest sie noch
+        $lesson->update(['hero_plan' => $planned[1] ?? null]);
     }
 
     /**

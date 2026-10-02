@@ -72,9 +72,22 @@ it('lets the analysis report unreadable photos without content', function () {
         'quelle' => ['lesbar' => false, 'problem' => 'Das Foto ist unscharf.'],
         'zusammenfassung' => '',
         'ergaenzungen' => [],
-        'hero_plan' => null,
+        'grafik_plaene' => [],
         'seite' => null,
     ];
 
     expect(JsonSchema::errors($response, Schemas::analysis()))->toBe([]);
+});
+
+it('plans the graphics in the analysis and places them with a block', function () {
+    $analysis = Schemas::analysis()['properties'];
+    $content = LessonFactory::fixture('fotosynthese');
+    $content['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+
+    expect($analysis)->not->toHaveKey('hero_plan')
+        ->and(JsonSchema::errors(['grafik_plaene' => [
+            ['nr' => 1, 'plan' => ['muster' => 'regler', 'idee' => 'Regler'], 'hinweis' => null],
+            ['nr' => 2, 'plan' => null, 'hinweis' => 'Passt nicht zu den Fotos.'],
+        ]], ['type' => 'object', 'properties' => ['grafik_plaene' => $analysis['grafik_plaene']], 'required' => ['grafik_plaene'], 'additionalProperties' => false]))->toBe([])
+        ->and(JsonSchema::errors($content, Schemas::content()))->toBe([]);
 });

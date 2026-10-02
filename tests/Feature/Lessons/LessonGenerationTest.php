@@ -692,7 +692,7 @@ it('names the prompt or the topic when no lesson could be made', function () {
 
 describe('without a graphic', function () {
     it('skips the graphic when the parents switch it off', function () {
-        $this->fake->push('analyse', [...analysis(), 'hero_plan' => null]);
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
 
         upload(['graphics_mode' => 'none']);
 
@@ -703,7 +703,7 @@ describe('without a graphic', function () {
             ->and($lesson->hero)->toBeNull()
             ->and($lesson->hero_error)->toBeNull()
             ->and($this->fake->requestsFor('grafik'))->toBe([])
-            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Interaktive Grafik: nein');
+            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Grafiken: keine (von den Eltern abgewählt)');
 
         $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page
@@ -714,7 +714,7 @@ describe('without a graphic', function () {
     });
 
     it('lets the ai leave out the graphic when nothing fits', function () {
-        $this->fake->push('analyse', [...analysis(), 'hero_plan' => null]);
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
 
         upload();
 
@@ -723,7 +723,7 @@ describe('without a graphic', function () {
             ->and($lesson->hero)->toBeNull()
             ->and($lesson->hero_error)->toBeNull()
             ->and($this->fake->requestsFor('grafik'))->toBe([])
-            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Interaktive Grafik: ja')
+            ->and($this->fake->requestsFor('analyse')[0]->prompt)->toContain('Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht')
             ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
     });
 
@@ -833,5 +833,98 @@ describe('graphics mode', function () {
         upload(['graphics_mode' => 'alle'])->assertSessionHasErrors('graphics_mode');
 
         expect(Lesson::count())->toBe(0);
+    });
+});
+
+describe('graphic plans', function () {
+    function plan(string $muster, string $idee): array
+    {
+        return ['muster' => $muster, 'idee' => $idee];
+    }
+
+    function wishes(): array
+    {
+        return ['graphics_mode' => 'custom', 'graphics' => [
+            ['beschreibung' => 'Ein Blatt mit Reglern', 'muster' => 'regler'],
+            ['beschreibung' => 'Ein Vulkan'],
+            ['beschreibung' => 'Die Schritte im Chloroplasten', 'muster' => 'schritte'],
+        ]];
+    }
+
+    it('tells the analysis what the parents chose', function (array $data, string $line) {
+        upload($data);
+
+        expect($this->fake->requestsFor('analyse')[0]->prompt)->toContain($line)
+            ->not->toContain('Interaktive Grafik');
+    })->with([
+        'none' => [['graphics_mode' => 'none'], 'Grafiken: keine (von den Eltern abgewählt)'],
+        'auto' => [['graphics_mode' => 'auto'], 'Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht'],
+        'custom' => [wishes(), "Grafiken nach Wunsch der Eltern:\nGrafik 1: Ein Blatt mit Reglern (Muster: regler – Regler)\nGrafik 2: Ein Vulkan\nGrafik 3: Die Schritte im Chloroplasten (Muster: schritte – Schritt für Schritt)"],
+    ]);
+
+    it('stores a plan or a hint for every wish', function () {
+        $page = Prompts::page(LessonFactory::fixture('fotosynthese'));
+        $page['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto'];
+
+        $this->fake->push('analyse', [...analysis(), 'seite' => $page, 'grafik_plaene' => [
+            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+            ['nr' => 2, 'plan' => null, 'hinweis' => 'Ein Vulkan kommt auf den Fotos nicht vor.'],
+            ['nr' => 3, 'plan' => plan('schritte', 'Vier Schritte'), 'hinweis' => null],
+            ['nr' => 4, 'plan' => plan('rechner', 'Zu viel'), 'hinweis' => null],
+        ]]);
+
+        upload(wishes());
+
+        $lesson = Lesson::sole();
+        expect($lesson->graphics->map->only(['position', 'request', 'plan', 'error'])->all())->toBe([
+            ['position' => 1, 'request' => 'Ein Blatt mit Reglern', 'plan' => plan('regler', 'Drei Regler'), 'error' => null],
+            ['position' => 2, 'request' => 'Ein Vulkan', 'plan' => null, 'error' => 'Ein Vulkan kommt auf den Fotos nicht vor.'],
+            ['position' => 3, 'request' => 'Die Schritte im Chloroplasten', 'plan' => plan('schritte', 'Vier Schritte'), 'error' => null],
+        ])
+            ->and($lesson->content['abschnitte'][1]['bloecke'][1])->toBe(['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto']);
+
+        expect($this->fake->requestsFor('module')[0]->prompt)
+            ->toContain("Grafik 1 (oben): Muster regler\nDrei Regler")
+            ->toContain("Grafik 3 (im Abschnitt «Was man wissen muss»): Muster schritte\nVier Schritte")
+            ->not->toContain('Grafik 2')
+            ->not->toContain('keine interaktive Grafik');
+    });
+
+    it('notes a wish the analysis forgot', function () {
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
+            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+        ]]);
+
+        upload(wishes());
+
+        expect(Lesson::sole()->graphics->pluck('error', 'position')->all())->toBe([
+            1 => null,
+            2 => 'Für diese Grafik hat die KI keinen Plan erstellt.',
+            3 => 'Für diese Grafik hat die KI keinen Plan erstellt.',
+        ]);
+    });
+
+    it('only plans graphic 1 when the ai decides', function () {
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
+            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+            ['nr' => 2, 'plan' => plan('schritte', 'Vier Schritte'), 'hinweis' => null],
+        ]]);
+
+        upload(['graphics_mode' => 'auto']);
+
+        $lesson = Lesson::sole();
+        expect($lesson->graphics->pluck('plan', 'position')->all())->toBe([1 => plan('regler', 'Drei Regler')])
+            ->and($this->fake->requestsFor('module')[0]->prompt)->toContain("Grafik 1 (oben): Muster regler\nDrei Regler");
+    });
+
+    it('stores no plan when the parents switched the graphics off', function () {
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => [
+            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+        ]]);
+
+        upload(['graphics_mode' => 'none']);
+
+        expect(Lesson::sole()->graphics()->count())->toBe(0)
+            ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
     });
 });

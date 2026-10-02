@@ -175,3 +175,35 @@ describe('strict mode', function () {
             ->toContain('Neben dem Quiz braucht es mindestens ein weiteres Modul (Sortieren, Karteikarten oder Lückentext).');
     });
 });
+
+describe('graphic blocks', function () {
+    function withGraphicBlock(array $block, int $section = 1): array
+    {
+        $content = lessonFixture();
+        $content['abschnitte'][$section]['bloecke'][] = $block;
+
+        return $content;
+    }
+
+    it('accepts a block for graphic 2 or 3', function (int $nr) {
+        expect(ContentValidator::errors(withGraphicBlock(['typ' => 'grafik', 'nr' => $nr, 'herkunft' => 'foto']), strict: true))->toBe([]);
+    })->with([2, 3]);
+
+    it('rejects a block without a valid number', function (array $block) {
+        expect(ContentValidator::errors(withGraphicBlock($block)))->not->toBe([]);
+    })->with([
+        'graphic 1 is at the top' => [['typ' => 'grafik', 'nr' => 1]],
+        'there are only 3' => [['typ' => 'grafik', 'nr' => 4]],
+        'missing' => [['typ' => 'grafik']],
+        'text' => [['typ' => 'grafik', 'nr' => 'zwei']],
+    ]);
+
+    it('needs explaining text next to a graphic in strict mode', function () {
+        $content = lessonFixture();
+        $content['abschnitte'][] = ['titel' => 'Nur Grafik', 'bloecke' => [['typ' => 'grafik', 'nr' => 2]]];
+
+        expect(ContentValidator::errors($content))->toBe([])
+            ->and(ContentValidator::errors($content, strict: true))
+            ->toContain('Abschnitt «Nur Grafik»: Eine Grafik braucht erklärenden Text daneben.');
+    });
+});

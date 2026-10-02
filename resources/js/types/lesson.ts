@@ -19,6 +19,8 @@ export type LessonBlock = Origin &
               }[];
           }
         | { typ: 'box'; titel: string; absaetze: string[] }
+        // Grafik 2 oder 3 an dieser Stelle; Grafik 1 steht oben
+        | { typ: 'grafik'; nr: number }
     );
 
 export type QuizQuestion = Origin & {

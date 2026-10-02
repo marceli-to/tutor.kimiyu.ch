@@ -16,7 +16,8 @@ class ContentValidator
 {
     public const SCHEMA_VERSION = 1;
 
-    public const BLOCK_TYPES = ['absatz', 'formel', 'fakten', 'spalten', 'box'];
+    // «grafik» setzt Grafik 2 oder 3 in einen Abschnitt; Grafik 1 steht immer oben
+    public const BLOCK_TYPES = ['absatz', 'formel', 'fakten', 'spalten', 'box', 'grafik'];
 
     public const CATEGORIES = ['cat1', 'cat2', 'cat3'];
 
@@ -87,6 +88,7 @@ class ContentValidator
             'abschnitte.*.bloecke' => ['required', 'array', 'min:1', 'max:4'],
             'abschnitte.*.bloecke.*.typ' => ['required', Rule::in(self::BLOCK_TYPES)],
             'abschnitte.*.bloecke.*.herkunft' => ['sometimes', Rule::in(self::ORIGINS)],
+            'abschnitte.*.bloecke.*.nr' => ['required_if:abschnitte.*.bloecke.*.typ,grafik', 'integer', 'min:2', 'max:3'],
 
             'probieren' => ['present', 'nullable', 'array'],
             'probieren.experimente' => ['required_with:probieren', 'array', 'min:1', 'max:3'],
@@ -175,6 +177,7 @@ class ContentValidator
                     'formel' => $this->isText($block['text'] ?? null)
                         && (! isset($block['zusatz']) || is_string($block['zusatz'])),
                     'box' => $this->isText($block['titel'] ?? null) && $this->isTextList($block['absaetze'] ?? null),
+                    'grafik' => is_int($block['nr'] ?? null),
                     'fakten' => $this->isList($block['eintraege'] ?? null, 1, 6, fn ($e) => $this->isText($e['titel'] ?? null) && $this->isText($e['text'] ?? null)),
                     'spalten' => $this->isList($block['eintraege'] ?? null, 2, 3, fn ($e) => $this->isText($e['titel'] ?? null)
                         && in_array($e['kategorie'] ?? null, self::CATEGORIES, true)
@@ -311,6 +314,12 @@ class ContentValidator
 
         if ($module['sortieren'] === null && $module['karten'] === null && $module['lueckentext'] === null) {
             $this->fail('module', 'Neben dem Quiz braucht es mindestens ein weiteres Modul (Sortieren, Karteikarten oder Lückentext).');
+        }
+
+        foreach ($this->content['abschnitte'] as $i => $section) {
+            if (array_diff(array_column($section['bloecke'], 'typ'), ['grafik']) === []) {
+                $this->fail("abschnitte.$i", "Abschnitt «{$section['titel']}»: Eine Grafik braucht erklärenden Text daneben.");
+            }
         }
     }
 
