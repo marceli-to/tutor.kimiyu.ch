@@ -7,16 +7,16 @@ use App\Lessons\GraphicPattern;
 use App\Lessons\Palettes;
 
 /**
- * JSON-Schemas für die strukturierte Ausgabe.
+ * JSON schemas for the structured output.
  *
- * Die API erzwingt nur Form und Typen (keine Längen oder Anzahlen). Alles Weitere
- * prüft der ContentValidator bzw. GraphicValidator danach serverseitig.
+ * The API only enforces shape and types (no lengths or counts). Everything else
+ * is checked afterwards on the server by the ContentValidator or GraphicValidator.
  */
 class Schemas
 {
     /**
-     * Erster Schritt: Quelle lesen, Fach, Zusammenfassung und Pläne für die Grafiken. Der Textteil kommt
-     * separat (part('page')): zusammen lehnt die API die Grammatik als zu gross ab.
+     * First step: read the source, subject, summary and plans for the graphics. The text part comes
+     * separately (part('page')): together the API rejects the grammar as too large.
      *
      * @return array<string, mixed>
      */
@@ -39,7 +39,7 @@ class Schemas
     }
 
     /**
-     * Zweiter Schritt: Quiz, Sortierspiel, Karteikarten, Lückentext.
+     * Second step: quiz, sorting game, flashcards, cloze.
      *
      * @return array<string, mixed>
      */
@@ -49,7 +49,7 @@ class Schemas
     }
 
     /**
-     * Neues Quiz für eine bestehende Seite.
+     * New quiz for an existing page.
      *
      * @return array<string, mixed>
      */
@@ -59,8 +59,8 @@ class Schemas
     }
 
     /**
-     * Ein Teil der Seite: Textteil (Schritt «page» und Reparatur) oder Module (Reparatur). Die ganze
-     * Seite ist für eine einzelne strukturierte Antwort zu gross (die API lehnt die Grammatik ab).
+     * One part of the page: text part (step «page» and repair) or modules (repair). The whole
+     * page is too large for a single structured answer (the API rejects the grammar).
      *
      * @return array<string, mixed>
      */
@@ -70,7 +70,7 @@ class Schemas
     }
 
     /**
-     * Prüfung: nur die Korrekturen, nicht die ganze Seite.
+     * Check: only the corrections, not the whole page.
      *
      * @return array<string, mixed>
      */
@@ -115,8 +115,8 @@ class Schemas
     }
 
     /**
-     * Inhalt einer Lernseite, passend zu ContentValidator (Schema-Version 1).
-     * Wird nicht so an die API geschickt, sondern in page() und modules() geteilt.
+     * Content of a lesson, matching ContentValidator (schema version 1).
+     * Not sent to the API like this, but split into page() and modules().
      *
      * @return array<string, mixed>
      */
@@ -130,7 +130,7 @@ class Schemas
     }
 
     /**
-     * Textteil der Seite: alles ausser den Modulen.
+     * Text part of the page: everything except the modules.
      *
      * @return array<string, mixed>
      */
@@ -182,7 +182,7 @@ class Schemas
     }
 
     /**
-     * Fragen des Quiz.
+     * Questions of the quiz.
      *
      * @return array<string, mixed>
      */
@@ -215,7 +215,7 @@ class Schemas
         $origin = self::origin();
 
         return self::object([
-            // null, wenn die Eltern kein Quiz wollen
+            // null if the parents don't want a quiz
             'quiz' => self::nullable(self::quiz()),
             'sorting' => self::nullable(self::object([
                 'instructions' => self::nullable($text),
@@ -253,7 +253,7 @@ class Schemas
     }
 
     /**
-     * Herkunft eines Bausteins: von den Fotos oder aus Fachwissen ergänzt.
+     * Origin of a block: from the photos or added from subject knowledge.
      *
      * @return array<string, mixed>
      */
@@ -263,7 +263,7 @@ class Schemas
     }
 
     /**
-     * Objekt mit allen Feldern als Pflichtfelder, wie es die strukturierte Ausgabe verlangt.
+     * Object with all fields required, as the structured output demands.
      *
      * @param  array<string, mixed>  $properties
      * @return array<string, mixed>

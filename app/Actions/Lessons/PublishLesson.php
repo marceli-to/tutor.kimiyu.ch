@@ -6,7 +6,7 @@ use App\Enums\LessonStatus;
 use App\Models\Lesson;
 
 /**
- * Freigeben: Das Kind sieht die Seite über seinen Link.
+ * Publish: the child sees the page through its link.
  */
 class PublishLesson
 {

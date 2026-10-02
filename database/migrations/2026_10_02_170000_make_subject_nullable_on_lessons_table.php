@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Das Fach darf leer bleiben: Die KI erkennt es in der Analyse und speichert es dann.
+     * The subject may stay empty: the AI detects it in the analysis and stores it then.
      */
     public function up(): void
     {
@@ -19,7 +19,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Lernseiten, deren Fach noch nicht erkannt wurde, bekommen «Allgemein»
+        // Lessons whose subject hasn't been detected yet get «Allgemein»
         DB::table('lessons')->whereNull('subject')->update(['subject' => 'Allgemein']);
 
         Schema::table('lessons', function (Blueprint $table) {

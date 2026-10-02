@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('lessons', function (Blueprint $table) {
-            // Eltern können die interaktive Grafik abwählen, z. B. bei reinen Rechenverfahren
+            // Parents can deselect the interactive graphic, e.g. for pure calculation methods
             $table->boolean('with_hero')->default(true)->after('notes');
         });
     }

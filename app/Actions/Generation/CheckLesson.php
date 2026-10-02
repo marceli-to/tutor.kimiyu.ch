@@ -13,8 +13,8 @@ class CheckLesson
     public function __construct(private CallModel $callModel) {}
 
     /**
-     * Zweiter Durchgang, der fachliche Fehler korrigiert. Die Prüfung liefert nur Korrekturen;
-     * ungültige werden verworfen. Scheitert der Aufruf, bleibt die Seite wie sie ist.
+     * Second pass that corrects factual errors. The check returns only corrections;
+     * invalid ones are discarded. If the call fails, the page stays as it is.
      */
     public function handle(Lesson $lesson): void
     {
@@ -35,7 +35,7 @@ class CheckLesson
         $lesson->update([
             'title' => $result['content']['meta']['title'],
             'content' => $result['content'],
-            // Eine Änderung kann mehrere Korrekturen brauchen (z. B. Optionen und Lösung): ein Hinweis genügt.
+            // One change can need several corrections (e.g. options and solution): one note is enough.
             'check_notes' => array_values(array_unique(array_map(
                 fn (array $c) => ['area' => $c['area'], 'change' => $c['change']],
                 $result['applied'],

@@ -5,7 +5,7 @@ namespace App\Actions\Children;
 use App\Models\Child;
 
 /**
- * Neuer Link, z. B. wenn der alte an die falsche Person ging. Der alte Link funktioniert danach nicht mehr.
+ * New link, e.g. when the old one went to the wrong person. The old link stops working.
  */
 class RenewShareLink
 {

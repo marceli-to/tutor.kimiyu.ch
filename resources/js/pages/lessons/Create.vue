@@ -96,7 +96,7 @@ const form = useForm<{
 const preparing = ref(false);
 const promptInput = ref<HTMLTextAreaElement | null>(null);
 
-// Bausteine für den Auftrag, die «…» füllen die Eltern selbst aus
+// Building blocks for the request; the parents fill in the «…» themselves
 const promptChips = [
     'Prüfung am …',
     'Nur die Fachbegriffe',
@@ -122,7 +122,7 @@ function withChip(text: string): string {
         : `${current}. ${text}`;
 }
 
-// Ein Baustein darf den Auftrag nicht über die erlaubte Länge schieben
+// A building block must not push the request beyond the allowed length
 function chipFits(text: string): boolean {
     return withChip(text).length <= PROMPT_MAX;
 }
@@ -135,7 +135,7 @@ async function addChip(text: string) {
     }
 
     const next = withChip(text);
-    // Der neue Baustein steht am Ende; seine «…» markieren, damit die Eltern sie gleich überschreiben
+    // The new building block is at the end; select its «…» so the parents overwrite it right away
     const placeholder = next.indexOf('…', next.length - text.length);
     form.prompt = next;
 
@@ -151,7 +151,7 @@ type FormMode = 'simple' | 'advanced';
 
 const MODE_KEY = 'lernseite.formMode';
 
-// Gemerkter Modus; ohne Speicher (privates Fenster, blockiert) gilt «einfach»
+// Remembered mode; without storage (private window, blocked) «simple» applies
 function storedMode(): FormMode {
     try {
         const stored = localStorage.getItem(MODE_KEY);
@@ -172,12 +172,12 @@ const selectedChild = computed(() =>
     props.children.find((c) => c.id === form.child_id),
 );
 
-// Im einfachen Modus kommt die Stufe vom Kind; das Feld braucht es nur ohne Stufe oder beim ersten Kind
+// In simple mode the level comes from the child; the field is only needed without a level or for the first child
 const needsLevel = computed(
     () => !props.children.length || !selectedChild.value?.level,
 );
 
-// Stufe vom gewählten Kind übernehmen, solange nichts anderes eingetragen ist
+// Take the level from the selected child as long as nothing else is entered
 watch(
     () => form.child_id,
     (id) => {
@@ -198,7 +198,7 @@ const rememberedFields: RememberedField[] = [
     'graphics_mode',
 ];
 
-// Felder, die die Eltern in diesem Formular selbst geändert haben, überschreibt das Merken nicht mehr
+// Fields the parents changed themselves in this form are no longer overwritten by the remembered settings
 const touched = new Set<RememberedField>();
 let applying = false;
 
@@ -223,8 +223,8 @@ function currentSettings(): LessonSettings {
     };
 }
 
-// Werte einer Karte ins Formular schreiben. Von Hand gewählt zählt als geändert,
-// dann überschreibt das Merken pro Fach diese Felder nicht mehr.
+// Writes the values of a card into the form. Chosen by hand counts as changed,
+// then the remembered settings per subject no longer overwrite these fields.
 function applySettings(values: LessonSettings, byHand: boolean) {
     applying = !byHand;
     form.purpose = values.purpose;
@@ -234,19 +234,19 @@ function applySettings(values: LessonSettings, byHand: boolean) {
     applying = false;
 }
 
-// Letzte Lernseite des gewählten Kindes, egal in welchem Fach
+// Last lesson of the selected child, whatever the subject
 const lastForChild = computed<LessonSettings | null>(() =>
     form.child_id !== null ? (props.lastByChild[form.child_id] ?? null) : null,
 );
 
-// «Wie letztes Mal» nur, wenn die letzte Lernseite zu keiner Voreinstellung passt
+// «last» only if the last lesson matches no preset
 const lastCard = computed(() =>
     lastForChild.value && !matchPreset(lastForChild.value)
         ? lastForChild.value
         : null,
 );
 
-// Was im erweiterten Modus eingestellt wurde und zu keiner Karte passt, samt eigenen Grafikwünschen
+// What was set in advanced mode and matches no card, including custom graphic wishes
 const customSettings = ref<
     (LessonSettings & { graphics: GraphicWish[] }) | null
 >(null);
@@ -294,15 +294,15 @@ function pickPreset(choice: PresetChoice) {
 
 selectPreset(defaultChoice(), false);
 
-// Anderes Kind: Vorgabe neu bestimmen, ausser die Eltern haben schon eine Karte gewählt
+// Other child: determine the default again, unless the parents already chose a card
 watch(
     () => form.child_id,
     () => {
         if (!advanced.value && !presetByHand) {
             selectPreset(defaultChoice(), false);
         } else if (!advanced.value && preset.value === 'last') {
-            // «Wie letztes Mal» means the new child's last settings, never the previous child's.
-            // Without them (or when they match a card) fall back to that card or «Normal».
+            // «last» means the new child's last settings, never the previous child's.
+            // Without them (or when they match a card) fall back to that card or «normal».
             selectPreset(
                 lastCard.value
                     ? 'last'
@@ -316,7 +316,7 @@ watch(
 
 function setMode(next: FormMode, remember = true) {
     if (next === 'simple') {
-        // Passende Karte wählen; sonst «Eigene Einstellungen», damit nichts stillschweigend überschrieben wird
+        // Choose the matching card; otherwise «custom», so nothing is silently overwritten
         const current = currentSettings();
         const match =
             matchPreset(current) ??
@@ -341,15 +341,15 @@ function setMode(next: FormMode, remember = true) {
         try {
             localStorage.setItem(MODE_KEY, next);
         } catch {
-            // Ohne Speicher gilt der Modus nur für diesen Besuch
+            // Without storage the mode applies only to this visit
         }
     }
 }
 
 const appliedFrom = ref<{ child: string; subject: string } | null>(null);
 
-// Einstellungen der letzten Lernseite für dieses Kind in diesem Fach übernehmen.
-// Nur im erweiterten Modus, im einfachen ist das Fach meist leer.
+// Take over the settings of the last lesson for this child in this subject.
+// Only in advanced mode; in simple mode the subject is usually empty.
 function applyRemembered() {
     if (!advanced.value) {
         return;
@@ -370,7 +370,7 @@ function applyRemembered() {
     const values: RememberedSettings = {
         ...remembered,
         modules: [...remembered.modules],
-        // Eigene Grafikwünsche gelten nur für die eine Lernseite
+        // Custom graphic wishes apply only to that one lesson
         graphics_mode:
             remembered.graphics_mode === 'custom'
                 ? 'auto'
@@ -393,10 +393,10 @@ watch(
     applyRemembered,
 );
 
-// Felder, die es nur im erweiterten Modus gibt
+// Fields that only exist in advanced mode
 const advancedFields = ['subject', 'purpose', 'scope', 'modules', 'graphics'];
 
-// Fehler in diesen Feldern sollen sichtbar sein
+// Errors in these fields must be visible
 watch(
     () => Object.keys(form.errors),
     (keys) => {
@@ -427,10 +427,10 @@ function submit() {
         ...data,
         child_id: props.children.length ? data.child_id : null,
         child_name: props.children.length ? '' : data.child_name,
-        // Im einfachen Modus erkennt die KI das Fach, die Stufe kommt vom Kind
+        // In simple mode the AI detects the subject; the level comes from the child
         subject: advanced.value ? data.subject : '',
         level: advanced.value || needsLevel.value ? data.level : '',
-        // Wünsche nur bei «Selbst beschreiben» mitschicken
+        // Send wishes only with graphics mode «custom»
         graphics: data.graphics_mode === 'custom' ? data.graphics : [],
     })).post(store().url, { forceFormData: true });
 }

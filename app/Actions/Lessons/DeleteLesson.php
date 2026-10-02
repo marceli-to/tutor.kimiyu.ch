@@ -18,12 +18,12 @@ class DeleteLesson
     {
         $this->deleteImages->handle($lesson);
 
-        // Inhalt und Lernstand verschwinden; die Zeile bleibt nur für die Kostenübersicht
-        // (Titel, Fach, Stufe, Kind). «Fehlgeschlagen» statt «Zur Prüfung», weil es keinen Inhalt
-        // mehr gibt: so lässt sie sich weder freigeben noch neu erstellen.
+        // Content and progress disappear; the row stays only for the cost overview
+        // (title, subject, level, child). «failed» instead of «review», because there is no content
+        // any more: so it can neither be published nor regenerated.
         DB::transaction(function () use ($lesson) {
             $lesson->attempts()->delete();
-            // Die Grafiken sind Inhalt der Lernseite
+            // The graphics are content of the lesson
             $lesson->graphics()->delete();
 
             $lesson->updateQuietly([

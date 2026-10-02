@@ -1,13 +1,13 @@
 export type ImageQuality = { dark: boolean; blurry: boolean };
 
-// Startwerte, noch an echten Handyfotos von Buchseiten abzustimmen; lieber zu selten warnen als zu oft
-const DARK_BELOW = 70; // mittlere Helligkeit 0–255
-const BLURRY_BELOW = 60; // Varianz des Laplace-Filters
+// Initial values, still to be tuned on real phone photos of book pages; better warn too rarely than too often
+const DARK_BELOW = 70; // mean brightness 0–255
+const BLURRY_BELOW = 60; // variance of the Laplacian filter
 const SAMPLE_EDGE = 400;
 
 /**
- * Grobe Prüfung eines Fotos im Browser: zu dunkel oder unscharf?
- * Arbeitet auf einer verkleinerten Graustufen-Kopie, damit es auch auf dem Handy schnell ist.
+ * Rough check of a photo in the browser: too dark or blurry?
+ * Works on a scaled-down greyscale copy, so it is fast on phones too.
  */
 export async function checkImageQuality(file: Blob): Promise<ImageQuality> {
     try {
@@ -50,12 +50,12 @@ export async function checkImageQuality(file: Blob): Promise<ImageQuality> {
             blurry: sharpness < BLURRY_BELOW,
         };
     } catch {
-        // Eine fehlgeschlagene Prüfung darf das Hochladen nie verhindern
+        // A failed check must never prevent the upload
         return { dark: false, blurry: false };
     }
 }
 
-/** Reine Berechnung, getrennt vom Canvas, damit sie nachvollziehbar bleibt. */
+/** Pure calculation, separate from the canvas, so it stays easy to follow. */
 export function measure(
     gray: Uint8ClampedArray,
     width: number,
@@ -69,7 +69,7 @@ export function measure(
 
     const brightness = gray.length ? sum / gray.length : 0;
 
-    // Varianz des 4-Nachbarn-Laplace-Filters über die inneren Pixel
+    // Variance of the 4-neighbour Laplacian filter over the inner pixels
     let count = 0;
     let lapSum = 0;
     let lapSquares = 0;

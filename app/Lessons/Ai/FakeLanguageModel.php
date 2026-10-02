@@ -7,10 +7,10 @@ use Database\Factories\LessonFactory;
 use Throwable;
 
 /**
- * Ersatz für Claude in Tests und lokal (LESSON_FAKE_AI=true).
+ * Stand-in for Claude in tests and locally (LESSON_FAKE_AI=true).
  *
- * Ohne vorbereitete Antworten liefert es die Fotosynthese-Fixtures. In Tests lassen sich
- * pro Schritt Antworten, Closures oder Exceptions einreihen.
+ * Without prepared answers it returns the photosynthesis fixtures. In tests answers,
+ * closures or exceptions can be queued per step.
  */
 class FakeLanguageModel implements LanguageModel
 {

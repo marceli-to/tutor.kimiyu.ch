@@ -6,7 +6,7 @@ use App\Actions\Generation\DeleteLessonImages;
 use App\Models\Child;
 
 /**
- * Löscht das Kind mit allen Lernseiten und dem Lernstand.
+ * Deletes the child with all lessons and progress.
  */
 class DeleteChild
 {

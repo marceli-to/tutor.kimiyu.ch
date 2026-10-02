@@ -32,7 +32,7 @@ class LessonPage
                 ],
                 // How many questions a new quiz gets, for the confirm dialog
                 'quizCount' => config('lessons.scope')[$this->lesson->scope]['quiz'],
-                // Fehler der Grafiken sehen nur die Eltern
+                // Only the parents see the graphics' errors
                 'graphics' => $this->lesson->graphics->map(fn (LessonGraphic $graphic) => [
                     'number' => $graphic->position,
                     'error' => $graphic->error,
@@ -55,8 +55,8 @@ class LessonPage
     }
 
     /**
-     * Welche Grafiken gebaut werden, für die Fortschrittsanzeige. Nach der Analyse die mit Plan,
-     * vorher Grafik 1 («KI entscheidet») oder die Wünsche der Eltern.
+     * Which graphics are being built, for the progress display. After the analysis those with a plan,
+     * before it graphic 1 («auto») or the parents' wishes.
      *
      * @return list<int>
      */

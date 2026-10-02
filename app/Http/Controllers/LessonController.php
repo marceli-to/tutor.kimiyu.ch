@@ -56,7 +56,7 @@ class LessonController extends Controller
     }
 
     /**
-     * Freigeben: Das Kind sieht die Seite über seinen Link.
+     * Publish: the child sees the page through its link.
      */
     public function publish(Lesson $lesson, PublishLesson $publishLesson): RedirectResponse
     {
@@ -85,7 +85,7 @@ class LessonController extends Controller
     }
 
     /**
-     * Nur das Quiz neu erstellen lassen.
+     * Regenerates only the quiz.
      */
     public function regenerate(Lesson $lesson, string $part, RegenerateQuiz $regenerateQuiz): RedirectResponse
     {
@@ -99,7 +99,7 @@ class LessonController extends Controller
     }
 
     /**
-     * Nur eine Grafik neu erstellen lassen; die anderen bleiben.
+     * Regenerates only one graphic; the others stay.
      */
     public function regenerateGraphic(Lesson $lesson, int $number, RegenerateGraphic $regenerateGraphic): RedirectResponse
     {
@@ -124,7 +124,7 @@ class LessonController extends Controller
     }
 
     /**
-     * Nur lokal: Lernseite ohne Login ansehen, für das Review von Darstellung und Modulen.
+     * Local only: view a lesson without login, for reviewing layout and modules.
      */
     public function preview(Lesson $lesson): Response
     {
@@ -134,14 +134,14 @@ class LessonController extends Controller
     }
 
     /**
-     * Eine Grafik als eigenständiges Dokument für das sandboxed iframe.
-     * Signierte URL statt Session, weil das iframe keinen eigenen Origin hat.
+     * A graphic as a standalone document for the sandboxed iframe.
+     * Signed URL instead of a session, because the iframe has no origin of its own.
      */
     public function graphic(Lesson $lesson, int $number): HttpResponse
     {
         $graphic = $lesson->graphic($number);
 
-        // Ausgeblendete Grafiken sind auch über die signierte URL nicht erreichbar
+        // Hidden graphics can't be reached through the signed URL either
         abort_unless($graphic?->graphic !== null && ! $graphic->hidden, 404);
 
         return GraphicDocument::response($lesson, $graphic->graphic);

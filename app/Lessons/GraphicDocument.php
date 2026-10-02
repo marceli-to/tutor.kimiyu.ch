@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Baut das eigenständige HTML-Dokument für eine interaktive Grafik.
+ * Builds the standalone HTML document for an interactive graphic.
  *
- * Es wird in einem iframe mit sandbox="allow-scripts" (ohne allow-same-origin) angezeigt
- * und bekommt eine CSP ohne jeden Netzwerkzugriff.
+ * It is shown in an iframe with sandbox="allow-scripts" (without allow-same-origin)
+ * and gets a CSP without any network access.
  */
 class GraphicDocument
 {
@@ -63,8 +63,8 @@ class GraphicDocument
     }
 
     /**
-     * @font-face-Regeln aus dem Font-Manifest des Vite-Plugins, mit den WOFF2-Dateien als data:-URIs.
-     * So braucht das iframe keinen Netzwerkzugriff und keine CORS-Header auf dem Server.
+     * @font-face rules from the font manifest of the Vite plugin, with the WOFF2 files as data: URIs.
+     * So the iframe needs no network access and no CORS headers on the server.
      */
     private static function fontFaces(): string
     {
@@ -77,12 +77,12 @@ class GraphicDocument
         return Cache::rememberForever('graphic-font-faces:'.md5_file($manifest), function () use ($manifest) {
             $styles = json_decode(File::get($manifest), true)['style']['familyStyles'] ?? [];
 
-            // Kursive Schnitte braucht die Grafik nicht
+            // The graphic doesn't need italic styles
             $faces = preg_split('/(?=@font-face)/', implode("\n", $styles)) ?: [];
             $faces = array_filter($faces, fn (string $face) => str_starts_with($face, '@font-face') && ! str_contains($face, 'font-style: italic'));
 
             return implode("\n", array_map(function (string $face) {
-                // Nur die WOFF2-Quelle behalten und einbetten
+                // Keep and embed only the WOFF2 source
                 if (! preg_match('#url\("/(build/[^"]+\.woff2)"\)#', $face, $match)) {
                     return '';
                 }

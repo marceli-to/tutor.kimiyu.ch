@@ -40,8 +40,8 @@ class EditLessonPage
     }
 
     /**
-     * Kurzer Text pro Grafik für die Bearbeiten-Ansicht: Beschreibung der fertigen Grafik,
-     * sonst die Idee aus dem Plan, sonst der Wunsch der Eltern.
+     * Short text per graphic for the edit view: description of the finished graphic,
+     * else the idea from the plan, else the parents' wish.
      *
      * @return array<int, string>
      */

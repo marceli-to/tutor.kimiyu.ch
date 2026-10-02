@@ -15,7 +15,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Was das Kind über seinen Link sieht: nur freigegebene Lernseiten, nur lesen, ohne Login.
+ * What the child sees through its link: only published lessons, read only, without login.
  */
 class SharedLessonController extends Controller
 {
@@ -39,7 +39,7 @@ class SharedLessonController extends Controller
     }
 
     /**
-     * Eine Antwort des Kindes. Der Server prüft sie selbst gegen den Inhalt.
+     * One answer of the child. The server checks it itself against the content.
      */
     public function answer(Request $request, string $token, Lesson $lesson, RecordAnswer $recordAnswer): JsonResponse
     {
@@ -62,7 +62,7 @@ class SharedLessonController extends Controller
 
     private function child(string $token): Child
     {
-        // Falscher Link: 404 wie bei einer nicht vorhandenen Seite, damit nichts über gültige Links verraten wird
+        // Wrong link: 404 like for a missing page, so nothing is revealed about valid links
         return Child::query()->where('share_token', $token)->firstOrFail();
     }
 }

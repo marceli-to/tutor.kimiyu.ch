@@ -7,7 +7,7 @@ use App\Models\Lesson;
 use App\Models\User;
 
 /**
- * Bibliothek: pro Kind die Lernseiten, nach Fach gruppiert und neueste zuerst.
+ * Library: per child the lessons, grouped by subject and newest first.
  */
 class Dashboard
 {

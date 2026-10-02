@@ -12,9 +12,9 @@ class GenerateGraphic
     public function __construct(private CallModel $callModel) {}
 
     /**
-     * Die Grafik an Position $position. Scheitert sie, fehlt nur diese Grafik, mit einem Hinweis.
-     * Beim Neu-Erstellen ($keepExisting) bleibt die bisherige Grafik, wenn die neue scheitert.
-     * Ohne Plan (abgewählt, kein Muster passt oder der Wunsch passt nicht zum Stoff) passiert nichts.
+     * The graphic at position $position. If it fails, only this graphic is missing, with a note.
+     * When regenerating ($keepExisting) the previous graphic stays if the new one fails.
+     * Without a plan (deselected, no pattern fits or the wish doesn't fit the material) nothing happens.
      *
      * @return bool whether a new graphic was stored
      */
@@ -64,7 +64,7 @@ class GenerateGraphic
                 'script' => $result['script'],
             ],
             'error' => null,
-            // Eine neu erstellte Grafik ist wieder sichtbar (am Ende des letzten Abschnitts, ohne Baustein)
+            // A regenerated graphic is visible again (at the end of the last section, without a block)
             'hidden' => false,
         ]);
 

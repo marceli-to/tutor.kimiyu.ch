@@ -7,12 +7,12 @@ use App\Models\LessonGraphic;
 use Illuminate\Support\Facades\URL;
 
 /**
- * Was die Vue-Komponente LessonPage zum Anzeigen braucht, für Eltern und für den geteilten Link.
+ * What the Vue component LessonPage needs for display, for parents and for the shared link.
  */
 class LessonView
 {
     /**
-     * Die Herkunft (photo/added) sehen nur Eltern, und nur bei Lernseiten mit Fotos.
+     * Only parents see the origin (photo/added), and only for lessons with photos.
      *
      * @return array<string, mixed>
      */
@@ -40,17 +40,17 @@ class LessonView
     }
 
     /**
-     * Nur fertige, nicht ausgeblendete Grafiken, nur URL und Beschreibung: Fehler, Wünsche und Pläne sehen nur die Eltern.
+     * Only finished, not hidden graphics, only URL and description: errors, wishes and plans are for the parents only.
      *
      * @return array<int, array{url: string, description: string}>
      */
     private static function graphics(Lesson $lesson): array
     {
         return $lesson->graphics
-            // Ausgeblendete Grafiken zeigt die Seite gar nicht, auch nicht am Ende
+            // The page doesn't show hidden graphics at all, not even at the end
             ->filter(fn (LessonGraphic $graphic) => $graphic->graphic !== null && ! $graphic->hidden)
             ->mapWithKeys(fn (LessonGraphic $graphic) => [$graphic->position => [
-                // Signiert, weil das iframe ohne eigenen Origin keine Session hat
+                // Signed, because the iframe without its own origin has no session
                 'url' => URL::signedRoute('lessons.graphic', [
                     'lesson' => $lesson,
                     'number' => $graphic->position,
@@ -62,8 +62,8 @@ class LessonView
     }
 
     /**
-     * Blöcke von Grafiken, die nicht fertig sind, entfernen. Eine fertige Grafik 2 oder 3 ohne Block
-     * kommt ans Ende des letzten Abschnitts, damit sie nie verloren geht. Sections left empty are dropped.
+     * Removes blocks of graphics that aren't finished. A finished graphic 2 or 3 without a block
+     * goes to the end of the last section, so it is never lost. Sections left empty are dropped.
      *
      * @param  array<string, mixed>  $content
      * @param  list<int>  $finished
@@ -83,7 +83,7 @@ class LessonView
 
                     $number = $block['number'] ?? null;
 
-                    // Jede Grafik nur einmal zeigen
+                    // Show each graphic only once
                     if (! in_array($number, $finished, true) || in_array($number, $placed, true)) {
                         return false;
                     }
@@ -115,7 +115,7 @@ class LessonView
     }
 
     /**
-     * Entfernt «origin» in jeder Tiefe.
+     * Removes «origin» at every depth.
      *
      * @param  array<mixed>  $data
      * @return array<mixed>

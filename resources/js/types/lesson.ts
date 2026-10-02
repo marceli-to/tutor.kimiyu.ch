@@ -1,8 +1,8 @@
-// Inhalt einer Lernseite, Schema-Version 1 (siehe app/Lessons/ContentValidator.php)
+// Content of a lesson, schema version 1 (see app/Lessons/ContentValidator.php)
 
 export type CategoryId = 'cat1' | 'cat2' | 'cat3';
 
-// Herkunft eines Bausteins: von den Fotos oder aus Fachwissen ergänzt (fehlt bei alten Seiten)
+// Origin of a block: from the photos or added from subject knowledge (missing on old pages)
 export type Origin = { origin?: 'photo' | 'added' };
 
 export type LessonBlock = Origin &
@@ -19,7 +19,7 @@ export type LessonBlock = Origin &
               }[];
           }
         | { type: 'box'; title: string; paragraphs: string[] }
-        // Grafik 2 oder 3 an dieser Stelle; Grafik 1 steht oben
+        // Graphic 2 or 3 at this place; graphic 1 is at the top
         | { type: 'graphic'; number: number }
     );
 
@@ -70,7 +70,7 @@ export type LessonContent = {
         everyday_comparison?: string | null;
     } | null;
     modules: {
-        // null, wenn die Eltern kein Quiz wollten
+        // null if the parents didn't want a quiz
         quiz: QuizQuestion[] | null;
         sorting: SortModuleData | null;
         flashcards: FlashcardModuleData | null;
@@ -102,24 +102,24 @@ export type LessonGraphic = {
     description: string;
 };
 
-// Fertige Grafiken nach Position (1 oben, 2 und 3 an ihrem Block im Inhalt)
+// Finished graphics by position (1 at the top, 2 and 3 at their block in the content)
 export type LessonGraphics = Partial<Record<number, LessonGraphic>>;
 
-// Nur für Eltern: Zustand jeder Grafik, auch der fehlgeschlagenen
+// Parents only: state of every graphic, including failed ones
 export type GraphicState = {
     number: number;
     error: string | null;
     canRegenerate: boolean;
-    // Von den Eltern in der Bearbeiten-Ansicht ausgeblendet
+    // Hidden by the parents in the edit view
     hidden: boolean;
 };
 
-// Ergebnis einer einzelnen Antwort, für den Lernstand (Phase 4)
+// Result of a single answer, for the progress (phase 4)
 export type ModuleAnswer = {
     module: 'quiz' | 'sorting' | 'cloze';
     itemId: string;
-    // Gewählte Option (Quiz), gewählter Korb (Sortieren) oder Eingabe (Lückentext);
-    // der Server prüft selbst, ob sie stimmt
+    // Chosen option (quiz), chosen basket (sorting) or input (cloze);
+    // the server checks itself whether it is right
     answer: number | string;
     correct: boolean;
 };

@@ -6,7 +6,7 @@ use App\Lessons\GenerationPipeline;
 use App\Models\Lesson;
 
 /**
- * Nur eine Grafik neu erstellen lassen; die anderen bleiben.
+ * Regenerates only one graphic; the others stay.
  */
 class RegenerateGraphic
 {

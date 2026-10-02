@@ -5,7 +5,7 @@ namespace App\Lessons\Ai;
 final readonly class ModelResponse
 {
     /**
-     * @param  array<string, mixed>  $data  die geparste JSON-Antwort
+     * @param  array<string, mixed>  $data  the parsed JSON answer
      */
     public function __construct(
         public array $data,
@@ -17,7 +17,7 @@ final readonly class ModelResponse
     ) {}
 
     /**
-     * Kosten in USD nach config/lessons.php. Unbekannte Modelle kosten 0, damit das Log nicht bricht.
+     * Cost in USD according to config/lessons.php. Unknown models cost 0, so the log doesn't break.
      */
     public function costUsd(): float
     {

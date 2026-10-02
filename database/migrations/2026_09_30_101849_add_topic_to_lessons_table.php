@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('lessons', function (Blueprint $table) {
-            // Thema als Quelle, wenn es keine Fotos gibt
+            // Topic as the source when there are no photos
             $table->string('topic')->nullable()->after('level');
         });
     }

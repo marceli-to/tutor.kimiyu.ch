@@ -503,7 +503,7 @@ it('deletes a lesson', function () {
     $this->actingAs($this->user)->delete(route('lessons.destroy', $this->lesson))
         ->assertRedirect(route('dashboard'));
 
-    // Weich gelöscht: die Kosten bleiben, die Fotos sind weg
+    // Soft-deleted: the costs stay, the photos are gone
     expect(Lesson::count())->toBe(0)
         ->and($this->lesson->fresh()->trashed())->toBeTrue()
         ->and($this->lesson->images()->count())->toBe(0)

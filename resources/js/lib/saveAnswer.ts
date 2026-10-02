@@ -7,8 +7,8 @@ function xsrfToken(): string {
 }
 
 /**
- * Schickt eine Antwort für den Lernstand. Scheitert das (offline, Limit),
- * läuft die Übung einfach weiter: Der Lernstand ist nett, aber nicht wichtig genug für eine Fehlermeldung.
+ * Sends an answer for the progress. If that fails (offline, limit),
+ * the exercise simply goes on: the progress is nice, but not important enough for an error message.
  */
 export function saveAnswer(url: string, answer: ModuleAnswer): void {
     void fetch(url, {

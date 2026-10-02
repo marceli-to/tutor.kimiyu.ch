@@ -13,7 +13,7 @@ defineProps<Props>();
 </script>
 
 <template>
-    <!-- Aufgeschlagenes Buch -->
+    <!-- Open book -->
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"

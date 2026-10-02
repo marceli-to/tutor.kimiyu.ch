@@ -38,7 +38,7 @@ it('rejects changes to ids', function () {
 });
 
 it('rejects changes to the origin', function (string $path) {
-    // Die Herkunft bestimmt, was die Eltern als ergänzt sehen; die Prüfung darf sie nicht umschreiben
+    // The origin decides what the parents see as added; the check must not rewrite it
     $result = Corrections::apply($this->content, [correction($path, 'added')]);
 
     expect($result['content'])->toBe($this->content)

@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Eltern können eine Grafik in der Bearbeiten-Ansicht ausblenden. Sie bleibt gespeichert
-     * und kommt mit «Grafik neu erstellen» zurück.
+     * Parents can hide a graphic in the edit view. It stays stored
+     * and comes back with «Grafik neu erstellen».
      */
     public function up(): void
     {

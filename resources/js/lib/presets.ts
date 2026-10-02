@@ -16,7 +16,7 @@ export type PresetKey = 'short' | 'normal' | 'exam';
 
 const ALL_MODULES: LessonModule[] = ['quiz', 'sorting', 'flashcards', 'cloze'];
 
-// Voreinstellungen im einfachen Modus, sie füllen die Felder des erweiterten Modus
+// Presets in simple mode; they fill the fields of advanced mode
 export const PRESETS: {
     key: PresetKey;
     label: string;
@@ -64,7 +64,7 @@ export function presetSettings(key: PresetKey): LessonSettings {
     return { ...settings, modules: [...settings.modules] };
 }
 
-// Gleich, wenn Zweck, Umfang, Grafik und die Menge der Module übereinstimmen
+// Equal if purpose, scope, graphic and the set of modules match
 export function sameSettings(a: LessonSettings, b: LessonSettings): boolean {
     return (
         a.purpose === b.purpose &&
@@ -82,7 +82,7 @@ export function matchPreset(settings: LessonSettings): PresetKey | null {
     );
 }
 
-// Eine Zeile wie «Neuer Stoff · Ausführlich · 2 Module · ohne Grafik»
+// A line like «Neuer Stoff · Ausführlich · 2 Module · ohne Grafik»
 export function settingsSummary(settings: LessonSettings): string {
     const purpose = settings.purpose === 'exam' ? 'Prüfung' : 'Neuer Stoff';
     const scope = {

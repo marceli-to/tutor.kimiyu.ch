@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Was die Lernseiten bei der Claude API gekostet haben, aus dem Log der API-Aufrufe.
+ * What the lessons cost at the Claude API, from the log of API calls.
  */
 class CostOverview
 {
@@ -30,15 +30,15 @@ class CostOverview
             ->groupBy(fn (Generation $g) => $g->created_at?->format('Y-m') ?? 'unbekannt')
             ->map(fn (Collection $items, string $month) => [
                 'month' => $items->first()->created_at?->translatedFormat('F Y'),
-                // Ohne Lernseite (samt Kind gelöscht) ist nicht mehr bekannt, wie viele es waren
+                // Without a lesson (deleted with the child) it is no longer known how many there were
                 'lessons' => $items->pluck('lesson_id')->filter()->unique()->count(),
                 'calls' => $items->count(),
                 'costUsd' => round((float) $items->sum('cost_usd'), 2),
             ])
             ->values();
 
-        // Weich gelöschte Lernseiten behalten ihre Zeile; Aufrufe ohne Lernseite (samt Kind gelöscht)
-        // landen gemeinsam in «Gelöschte Lernseiten».
+        // Soft-deleted lessons keep their row; calls without a lesson (deleted with the child)
+        // end up together in «Gelöschte Lernseiten».
         $lessons = $generations
             ->groupBy(fn (Generation $g) => $g->lesson_id ?? 'geloescht')
             ->map(fn (Collection $items) => [
@@ -53,8 +53,8 @@ class CostOverview
             ->values()
             ->take(50);
 
-        // Pro Schritt und Modell, teuerste zuerst: zeigt, wo sich Sparen lohnt.
-        // Der Durchschnitt zählt nur erfolgreiche Aufrufe, sonst drücken Fehlschläge ohne Tokens ihn nach unten.
+        // Per step and model, most expensive first: shows where saving pays off.
+        // The average counts only successful calls, otherwise failures without tokens push it down.
         $steps = $generations
             ->groupBy(fn (Generation $g) => "{$g->step}|{$g->model}")
             ->map(function (Collection $items) {

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Lernseiten werden weich gelöscht, damit ihre Kosten erhalten bleiben.
+     * Lessons are soft-deleted, so their costs are kept.
      */
     public function up(): void
     {
@@ -19,9 +19,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Verloren beim Rollback: die gelöschten Lernseiten (ohnehin leer, nur Titel, Fach, Stufe, Kind)
-        // und mit ihnen ihre Kosten, weil generations.lesson_id nach dem Rollback von user_id wieder
-        // cascadeOnDelete ist.
+        // Lost on rollback: the deleted lessons (empty anyway, only title, subject, level, child)
+        // and with them their costs, because generations.lesson_id is cascadeOnDelete again after
+        // the rollback of user_id.
         DB::table('lessons')->whereNotNull('deleted_at')->delete();
 
         Schema::table('lessons', function (Blueprint $table) {

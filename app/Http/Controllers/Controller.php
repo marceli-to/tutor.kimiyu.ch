@@ -7,7 +7,7 @@ use Inertia\Inertia;
 abstract class Controller
 {
     /**
-     * Kurze Rückmeldung als Toast nach der nächsten Seitenanzeige.
+     * Short feedback as a toast after the next page view.
      */
     protected function toast(string $message, string $type = 'success'): void
     {

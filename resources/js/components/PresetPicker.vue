@@ -6,9 +6,9 @@ import type { LessonSettings, PresetKey } from '@/lib/presets';
 export type PresetChoice = PresetKey | 'last' | 'custom';
 
 const props = defineProps<{
-    // Einstellungen der letzten Lernseite des Kindes, nur wenn sie zu keiner Voreinstellung passen
+    // Settings of the child's last lesson, only if they match no preset
     last: LessonSettings | null;
-    // Im erweiterten Modus geänderte Einstellungen, die zu keiner Karte passen
+    // Settings changed in advanced mode that match no card
     custom: LessonSettings | null;
 }>();
 

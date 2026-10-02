@@ -32,7 +32,7 @@ const emit = defineEmits<{
 const isDark = useIsDark();
 const { updateAppearance } = useAppearance();
 
-// Themenfarben für hell und dunkel, lesson.css wählt die passende Variante
+// Theme colours for light and dark; lesson.css picks the matching variant
 const paletteStyle = computed(() => {
     const vars: Record<string, string> = {};
 

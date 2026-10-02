@@ -14,7 +14,7 @@
 {!! $graphic['css'] !!}
 </style>
 <script>
-/* Brücke zur Lernseite: Theme übernehmen, Höhe und Fehler melden. */
+/* Bridge to the lesson: take over the theme, report height and errors. */
 (function(){
   var root=document.documentElement;
   var setTheme=function(t){root.setAttribute('data-theme',t==='dark'?'dark':'light');};

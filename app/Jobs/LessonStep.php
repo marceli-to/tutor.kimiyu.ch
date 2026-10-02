@@ -13,17 +13,17 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Ein Schritt der Generierung. Die Schritte laufen als Kette (Bus::chain):
- * scheitert einer endgültig, bricht die Kette ab und die Lernseite wird als fehlgeschlagen markiert.
+ * One step of the generation. The steps run as a chain (Bus::chain):
+ * if one fails for good, the chain stops and the lesson is marked as failed.
  */
 abstract class LessonStep implements ShouldQueue
 {
     use Queueable;
 
-    // Ein API-Call kann mehrere Minuten dauern
+    // An API call can take several minutes
     public int $timeout = 900;
 
-    // Ein zweiter Versuch bei vorübergehenden Fehlern (Überlast, Verbindung)
+    // A second attempt on temporary errors (overload, connection)
     public int $tries = 2;
 
     public int $backoff = 60;
@@ -35,7 +35,7 @@ abstract class LessonStep implements ShouldQueue
     abstract protected function run(): void;
 
     /**
-     * Status nach einem Fehler. Beim Neu-Erstellen einzelner Teile bleibt die Seite brauchbar.
+     * Status after an error. When single parts are regenerated, the page stays usable.
      * null keeps the status (and the publication) as it is.
      */
     protected function statusAfterFailure(): ?LessonStatus
@@ -45,7 +45,7 @@ abstract class LessonStep implements ShouldQueue
 
     public function handle(): void
     {
-        // Die Queue lädt auch gelöschte Lernseiten: dann nichts mehr tun, keine Kosten verursachen
+        // The queue also loads deleted lessons: then do nothing more, cause no costs
         if ($this->lesson->trashed()) {
             return;
         }
@@ -73,7 +73,7 @@ abstract class LessonStep implements ShouldQueue
     }
 
     /**
-     * Unerwartete Fehler (auch Timeouts) landen hier.
+     * Unexpected errors (timeouts too) end up here.
      */
     public function failed(?Throwable $e): void
     {

@@ -9,7 +9,7 @@ export function shuffle<T>(items: readonly T[]): T[] {
     return result;
 }
 
-// Gleiche Schwellen wie in der Vorlage
+// Same thresholds as in the template
 export function resultMessage(score: number, total: number): string {
     if (score === total) {
         return 'Alles richtig. Bereit für die Prüfung!';
@@ -22,12 +22,12 @@ export function resultMessage(score: number, total: number): string {
     return 'Lies den Teil oben nochmals durch und versuch es erneut.';
 }
 
-// Muss zu App\Lessons\ClozeParser::normalize passen
+// Must match App\Lessons\ClozeParser::normalize
 export function normalizeAnswer(value: string): string {
     return value.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-// Statische Klassennamen pro Kategorie, damit Tailwind sie findet
+// Static class names per category, so Tailwind finds them
 export const categoryClasses = {
     cat1: {
         text: 'text-ls-cat1',

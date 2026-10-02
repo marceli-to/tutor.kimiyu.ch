@@ -11,16 +11,16 @@ use Database\Factories\LessonFactory;
 use Illuminate\Support\Facades\File;
 
 /**
- * Baut die Anfragen für die einzelnen Schritte.
+ * Builds the requests for the individual steps.
  *
- * Die System-Prompts (resources/prompts) sind für alle Lernseiten gleich.
- * Alles, was sich pro Lernseite ändert, steht im Benutzer-Prompt. Der Name des Kindes wird nie mitgeschickt.
+ * The system prompts (resources/prompts) are the same for every lesson.
+ * Everything that changes per lesson is in the user prompt. The child's name is never sent.
  */
 class Prompts
 {
     /**
-     * Erster Schritt: Quelle prüfen, Zusammenfassung, Ergänzungen und Pläne für die Grafiken.
-     * Der Textteil kommt in einem eigenen Aufruf (pageRequest), zusammen ist das Schema für die API zu gross.
+     * First step: check the source, summary, additions and plans for the graphics.
+     * The text part comes in a call of its own (pageRequest); together the schema is too large for the API.
      *
      * @param  list<array{mime: string, data: string}>  $images
      */
@@ -55,8 +55,8 @@ class Prompts
     }
 
     /**
-     * Zweiter Teil der Analyse: der Textteil der Seite, mit denselben Fotos (damit die Begriffe dem Buch folgen),
-     * der gespeicherten Zusammenfassung, den Ergänzungen und den Plänen für die Grafiken.
+     * Second part of the analysis: the text part of the page, with the same photos (so the terms follow the book),
+     * the stored summary, the additions and the plans for the graphics.
      *
      * @param  list<array{mime: string, data: string}>  $images
      */
@@ -87,7 +87,7 @@ class Prompts
     }
 
     /**
-     * Gemeinsames Regelwerk beider Aufrufe der Analyse, mit dem Beispiel für die Felder des jeweiligen Aufrufs.
+     * Rules shared by both calls of the analysis, with the example for the fields of the respective call.
      *
      * @param  array<string, mixed>  $example
      */
@@ -100,7 +100,7 @@ class Prompts
     }
 
     /**
-     * Quelle und Auftrag, für beide Aufrufe der Analyse gleich.
+     * Source and request, the same for both calls of the analysis.
      */
     private static function sourceLines(Lesson $lesson, int $count): string
     {
@@ -108,7 +108,7 @@ class Prompts
 
         $source = match (true) {
             $count === 0 && $lesson->prompt !== null => 'Erstelle eine Lernseite nach dem Auftrag der Eltern. Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).',
-            // Alte Lernseite aus einem Thema (vor dem Auftrag), z. B. beim erneuten Versuch
+            // Old lesson from a topic (before the request), e.g. on a retry
             $count === 0 => "Erstelle eine Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).",
             $lesson->prompt !== null => "Erstelle eine Lernseite aus {$photos}. Die Fotos sind der Rahmen, der Auftrag der Eltern setzt den Fokus (siehe «Fotos und Auftrag»).",
             default => "Erstelle eine Lernseite aus {$photos}.",
@@ -118,7 +118,7 @@ class Prompts
             $source,
             $count > 1 ? 'Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.' : null,
             '',
-            // Ohne Fach erkennt es die Analyse; im zweiten Aufruf steht es schon fest
+            // Without a subject the analysis detects it; in the second call it is already set
             'Fach: '.($lesson->subject ?? 'unbekannt, erkenne es aus den Fotos oder dem Auftrag'),
             "Stufe: {$lesson->level}",
             self::purposeLine($lesson),
@@ -129,7 +129,7 @@ class Prompts
     }
 
     /**
-     * Zweiter Schritt: die Lernmodule aus Zusammenfassung und Textteil.
+     * Second step: the learning modules from the summary and the text part.
      *
      * @param  array<string, mixed>  $page
      */
@@ -153,7 +153,7 @@ class Prompts
     }
 
     /**
-     * Neues Quiz mit anderen Fragen, der Rest der Seite bleibt.
+     * New quiz with other questions; the rest of the page stays.
      */
     public static function quiz(Lesson $lesson): ModelRequest
     {
@@ -201,7 +201,7 @@ class Prompts
     }
 
     /**
-     * Prüfung der ganzen Seite in einem Aufruf. Die Antwort enthält nur Korrekturen.
+     * Check of the whole page in one call. The answer contains only corrections.
      *
      * @param  array<string, mixed>  $content
      */
@@ -220,7 +220,7 @@ class Prompts
     }
 
     /**
-     * Textteil einer Seite: alles ausser den Modulen.
+     * Text part of a page: everything except the modules.
      *
      * @param  array<string, mixed>  $content
      * @return array<string, mixed>
@@ -233,11 +233,11 @@ class Prompts
     }
 
     /**
-     * Eine Grafik nach ihrem Plan. Grafik 1 steht oben, 2 und 3 im Abschnitt mit ihrem Baustein.
+     * One graphic from its plan. Graphic 1 is at the top, 2 and 3 in the section with their block.
      */
     public static function graphic(Lesson $lesson, LessonGraphic $graphic): ModelRequest
     {
-        // Ein Beispiel reicht als Massstab; jedes weitere kostet nur Input
+        // One example is enough as a benchmark; each further one only costs input
         $example = '### '.LessonFactory::fixture('fotosynthese')['meta']['title']."\n\n```json\n".self::json(LessonFactory::fixture('fotosynthese.graphic'))."\n```";
 
         $place = null;
@@ -251,9 +251,9 @@ class Prompts
             step: 'graphic',
             system: strtr(self::load('graphic'), ['{{BEISPIELE}}' => $example]),
             prompt: implode("\n\n", array_filter([
-                self::graphicPlanText($graphic),
+                self::planTextForGraphic($graphic),
                 $place,
-                // Die Grafik sieht das Kind: ohne Herkunft und ohne Liste der Ergänzungen
+                // The child sees the graphic: no origin and no list of additions
                 self::context($lesson, forChild: true),
                 "Inhalt der Lernseite:\n".self::json(LessonView::withoutOrigin($lesson->content ?? [])),
             ])),
@@ -272,7 +272,7 @@ class Prompts
             step: 'graphic-repair',
             system: self::load('graphic-repair'),
             prompt: implode("\n\n", [
-                self::graphicPlanText($graphic),
+                self::planTextForGraphic($graphic),
                 "Diese Probleme müssen behoben werden:\n- ".implode("\n- ", $errors),
                 "Bisheriges Ergebnis:\n".self::json($result),
             ]),
@@ -281,13 +281,13 @@ class Prompts
         );
     }
 
-    private static function graphicPlanText(LessonGraphic $graphic): string
+    private static function planTextForGraphic(LessonGraphic $graphic): string
     {
         return "Plan für die Grafik:\nMuster: {$graphic->plan['pattern']}\n{$graphic->plan['idea']}";
     }
 
     /**
-     * Was die Eltern zu den Grafiken gewählt haben, für die Analyse.
+     * What the parents chose for the graphics, for the analysis.
      */
     private static function graphicsWish(Lesson $lesson): string
     {
@@ -307,8 +307,8 @@ class Prompts
     }
 
     /**
-     * Die Pläne aus dem ersten Schritt, für den Textteil: wo Bausteine «graphic» hingehören
-     * und ob es Grafik 1 für «meta.instructions» und «try_it» gibt.
+     * The plans from the first step, for the text part: where «graphic» blocks belong
+     * and whether there is a graphic 1 for «meta.instructions» and «try_it».
      */
     private static function pagePlanText(Lesson $lesson): string
     {
@@ -332,7 +332,7 @@ class Prompts
     }
 
     /**
-     * Die geplanten Grafiken mit ihrem Platz auf der Seite, für die Module (and the repair of the text part).
+     * The planned graphics with their place on the page, for the modules (and the repair of the text part).
      *
      * @param  array<string, mixed>  $page
      */
@@ -352,7 +352,7 @@ class Prompts
     }
 
     /**
-     * Titel des Abschnitts, in dem der Baustein für Grafik $number steht.
+     * Title of the section that holds the block for graphic $number.
      *
      * @param  array<string, mixed>  $content
      */
@@ -370,9 +370,9 @@ class Prompts
     }
 
     /**
-     * Gemeinsamer Teil aller Schritte nach der Analyse: Fach, Stufe, Zweck, Umfang, Module, Auftrag, Zusammenfassung und Ergänzungen.
-     * Für Teile, die das Kind sieht ($forChild, z. B. die Grafik), ohne Ergänzungen und ohne Markierung «(ergänzt)»;
-     * Zweck, Umfang und Module betreffen dort nichts und bleiben weg.
+     * Part shared by all steps after the analysis: subject, level, purpose, scope, modules, request, summary and additions.
+     * For parts the child sees ($forChild, e.g. the graphic) without additions and without the «(ergänzt)» mark;
+     * purpose, scope and modules don't matter there and are left out.
      */
     private static function context(Lesson $lesson, bool $forChild = false): string
     {
@@ -382,7 +382,7 @@ class Prompts
             $forChild ? null : self::purposeLine($lesson),
             $forChild ? null : self::scopeLine($lesson),
             $forChild ? null : self::modulesLine($lesson),
-            // Damit «keine Fotos → immer added» in modules.md greift
+            // So that «keine Fotos → immer added» in modules.md applies
             $lesson->isFromTopic() ? 'Quelle: keine Fotos (Auftrag oder Thema)' : null,
             self::parentInstruction($lesson),
         ], fn ($line) => $line !== null));
@@ -417,7 +417,7 @@ class Prompts
     }
 
     /**
-     * Die erlaubten Lernmodule mit den Anzahlen für den Umfang; alte Lernseiten ohne Liste erlauben alle.
+     * The allowed learning modules with the counts for the scope; old lessons without a list allow all.
      */
     private static function modulesLine(Lesson $lesson): string
     {
@@ -442,7 +442,7 @@ class Prompts
     }
 
     /**
-     * Auftrag der Eltern; alte Lernseiten haben stattdessen Hinweise.
+     * The parents' request; old lessons have notes instead.
      */
     private static function parentInstruction(Lesson $lesson): ?string
     {

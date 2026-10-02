@@ -1,9 +1,9 @@
 /**
- * Verkleinert ein Foto im Browser und speichert es als JPEG.
+ * Scales a photo down in the browser and saves it as JPEG.
  *
- * - Die Ausrichtung aus den EXIF-Daten wird ins Bild übernommen (imageOrientation).
- * - Das neue JPEG enthält keine Metadaten mehr (kein GPS, keine Kamera).
- * - HEIC-Fotos vom iPhone kann nur Safari lesen; andere Browser werfen einen Fehler.
+ * - The orientation from the EXIF data is applied to the image (imageOrientation).
+ * - The new JPEG contains no metadata (no GPS, no camera).
+ * - Only Safari can read HEIC photos from the iPhone; other browsers throw an error.
  */
 export async function resizeImage(file: File, maxEdge: number): Promise<File> {
     let bitmap: ImageBitmap;

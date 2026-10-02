@@ -5,8 +5,8 @@ namespace App\Lessons;
 use Illuminate\Support\Facades\File;
 
 /**
- * Getestete Themen-Paletten aus resources/lesson/palettes.json.
- * Dieselbe Datei wird im Frontend importiert.
+ * Tested theme palettes from resources/lesson/palettes.json.
+ * The frontend imports the same file.
  */
 class Palettes
 {

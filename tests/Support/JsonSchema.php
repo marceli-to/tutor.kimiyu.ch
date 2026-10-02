@@ -3,9 +3,9 @@
 namespace Tests\Support;
 
 /**
- * Minimaler Prüfer für die Teilmenge von JSON Schema, die die strukturierte Ausgabe verwendet
+ * Minimal validator for the subset of JSON Schema that the structured output uses
  * (type, properties, required, additionalProperties, items, anyOf, enum, const).
- * So lässt sich ohne zusätzliches Paket testen, dass Fixtures und Schema zusammenpassen.
+ * So we can test without an extra package that fixtures and schema match.
  */
 class JsonSchema
 {
@@ -80,7 +80,7 @@ class JsonSchema
     }
 
     /**
-     * Schlüssel, die die strukturierte Ausgabe nicht unterstützt.
+     * Keys the structured output doesn't support.
      *
      * @param  array<string, mixed>  $schema
      * @return list<string>

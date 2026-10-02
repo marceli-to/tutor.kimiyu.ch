@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Eltern korrigieren Texte, Quizfragen und Lösungen, bevor sie die Seite freigeben.
+ * Parents correct texts, quiz questions and solutions before they publish the page.
  */
 class LessonContentController extends Controller
 {

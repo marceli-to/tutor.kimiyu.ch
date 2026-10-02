@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Bus;
 use InvalidArgumentException;
 
 /**
- * Startet die Job-Kette. Bei einem neuen Versuch werden erledigte Schritte übersprungen.
+ * Starts the job chain. On a retry finished steps are skipped.
  */
 class GenerationPipeline
 {
@@ -30,7 +30,7 @@ class GenerationPipeline
             }
         }
 
-        // Ein Job pro möglicher Grafik; welche einen Plan haben, steht erst nach der Analyse fest
+        // One job per possible graphic; which ones have a plan is only known after the analysis
         $positions = match ($lesson->graphics_mode) {
             'none' => [],
             'custom' => [1, 2, 3],
@@ -54,7 +54,7 @@ class GenerationPipeline
     }
 
     /**
-     * Einen Teil einer fertigen Seite neu erstellen lassen: «quiz» oder die Grafik an Position $position.
+     * Regenerates a part of a finished page: «quiz» or the graphic at position $position.
      */
     public static function regenerate(Lesson $lesson, string $part, int $position = 1): void
     {
@@ -74,7 +74,7 @@ class GenerationPipeline
     }
 
     /**
-     * Eine Grafik lässt sich nur neu erstellen, wenn es für sie einen Plan gibt, das Quiz nur, wenn es eines gibt.
+     * A graphic can only be regenerated if it has a plan, the quiz only if there is one.
      */
     public static function canRegenerate(Lesson $lesson, string $part, int $position = 1): bool
     {
@@ -86,7 +86,7 @@ class GenerationPipeline
     }
 
     /**
-     * Ein neuer Versuch geht nur, wenn es eine Quelle gibt (Fotos, Auftrag ohne Fotos oder Thema) oder der Inhalt schon steht.
+     * A retry is only possible if there is a source (photos, request without photos or topic) or the content already exists.
      */
     public static function canRetry(Lesson $lesson): bool
     {

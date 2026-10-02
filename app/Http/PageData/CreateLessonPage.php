@@ -19,7 +19,7 @@ class CreateLessonPage
      */
     public function props(): array
     {
-        // Eine Abfrage für beide Vorgaben: neueste zuerst, gelöschte nicht
+        // One query for both defaults: newest first, deleted ones excluded
         $recent = Lesson::query()
             ->whereIn('child_id', $this->user->children()->select('id'))
             ->latest()
@@ -41,8 +41,8 @@ class CreateLessonPage
     }
 
     /**
-     * Einstellungen der jüngsten Lernseite pro Kind und Fach, Schlüssel «{childId}|{fach}».
-     * Das Fach ist frei eingegeben, darum klein geschrieben und ohne Leerzeichen am Rand.
+     * Settings of the latest lesson per child and subject, key «{childId}|{subject}».
+     * The subject is free text, so it is lower-cased and trimmed.
      *
      * @param  Collection<int, Lesson>  $recent
      * @return array<string, array{purpose: string, scope: string, modules: list<string>, graphics_mode: string}>
@@ -50,7 +50,7 @@ class CreateLessonPage
     private static function lastSettings(Collection $recent): array
     {
         return $recent
-            // Noch nicht erkanntes Fach: gehört zu keinem Fach
+            // Subject not detected yet: belongs to no subject
             ->whereNotNull('subject')
             ->unique(fn (Lesson $lesson) => self::settingsKey($lesson->child_id, $lesson->subject))
             ->mapWithKeys(fn (Lesson $lesson) => [
@@ -65,8 +65,8 @@ class CreateLessonPage
     }
 
     /**
-     * Einstellungen der jüngsten Lernseite pro Kind, egal welches Fach, für «Wie letztes Mal».
-     * Eigene Grafikwünsche gelten nur für die eine Seite, daraus wird «KI entscheidet».
+     * Settings of the latest lesson per child, whatever the subject, for the «last» preset.
+     * Custom graphic wishes apply only to that one page, so they become «auto».
      *
      * @param  Collection<int, Lesson>  $recent
      * @return array<int, array{purpose: string, scope: string, modules: list<string>, graphics_mode: string}>

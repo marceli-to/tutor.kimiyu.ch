@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Eine Antwort eines Kindes auf eine Quizfrage, einen Sortierbegriff oder eine Lücke.
+ * A child's answer to a quiz question, a sorting term or a gap.
  *
  * @property int $id
  * @property int $child_id

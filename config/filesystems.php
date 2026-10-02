@@ -38,7 +38,7 @@ return [
             'report' => false,
         ],
 
-        // Fotos der Buchseiten: privat, nie öffentlich ausgeliefert
+        // Photos of the book pages: private, never served publicly
         'lesson-images' => [
             'driver' => 'local',
             'root' => storage_path('app/private/lesson-images'),

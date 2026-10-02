@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Zweck, Umfang und erlaubte Lernmodule. Alte Lernseiten haben keine Liste (null): alle Module erlaubt.
+     * Purpose, scope and allowed learning modules. Old lessons have no list (null): all modules allowed.
      */
     public function up(): void
     {
@@ -20,7 +20,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Verloren beim Rollback: Zweck, Umfang und erlaubte Lernmodule.
+        // Lost on rollback: purpose, scope and allowed learning modules.
         Schema::table('lessons', function (Blueprint $table) {
             $table->dropColumn(['purpose', 'scope', 'modules']);
         });

@@ -11,7 +11,7 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Demo-Konto mit einem Kind und den beiden Referenz-Lernseiten.
+     * Demo account with one child and the two reference lessons.
      */
     public function run(): void
     {

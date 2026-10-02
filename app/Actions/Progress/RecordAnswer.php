@@ -7,7 +7,7 @@ use App\Models\Child;
 use App\Models\Lesson;
 
 /**
- * Eine Antwort des Kindes. Der Server prüft sie selbst gegen den Inhalt.
+ * One answer of the child. The server checks it itself against the content.
  */
 class RecordAnswer
 {

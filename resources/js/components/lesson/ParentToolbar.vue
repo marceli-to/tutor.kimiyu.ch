@@ -45,7 +45,7 @@ const props = defineProps<{
 
 type Confirm = 'quiz' | 'graphic' | 'delete' | null;
 const confirm = ref<Confirm>(null);
-// Welche Grafik neu erstellt werden soll
+// Which graphic to regenerate
 const graphicNumber = ref(1);
 
 function graphicLabel(number: number) {

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Ein API-Call (Analyse, Hero, Prüfung, Reparatur) mit Token-Verbrauch und Kosten.
- * Gehört dem Konto: Wird die Lernseite samt Kind gelöscht, bleibt der Eintrag mit lesson_id = null.
+ * One API call (analysis, graphic, check, repair) with token usage and cost.
+ * Belongs to the account: if the lesson is deleted with the child, the entry stays with lesson_id = null.
  *
  * @property int $id
  * @property int $user_id
@@ -31,7 +31,7 @@ use Illuminate\Support\Carbon;
 class Generation extends Model
 {
     /**
-     * Auch weich gelöschte Lernseiten, damit die Kosten-Seite sie noch benennen kann.
+     * Soft-deleted lessons too, so the cost page can still name them.
      *
      * @return BelongsTo<Lesson, $this>
      */

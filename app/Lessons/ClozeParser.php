@@ -5,14 +5,14 @@ namespace App\Lessons;
 use InvalidArgumentException;
 
 /**
- * Wandelt Lückentext-Markup («Die Pflanze nimmt [CO₂|CO2] auf.») in Segmente um und zurück.
+ * Converts cloze markup («Die Pflanze nimmt [CO₂|CO2] auf.») into segments and back.
  *
- * Segmente: ['text' => '…'] oder ['id' => 'g1', 'answers' => ['CO₂', 'CO2']].
+ * Segments: ['text' => '…'] or ['id' => 'g1', 'answers' => ['CO₂', 'CO2']].
  */
 class ClozeParser
 {
     /**
-     * @param  list<string>  $existingIds  IDs, die nicht vergeben werden dürfen
+     * @param  list<string>  $existingIds  IDs that must not be assigned
      * @return list<array<string, string|list<string>>>
      */
     public static function parse(string $markup, array $existingIds = []): array
@@ -76,7 +76,7 @@ class ClozeParser
     }
 
     /**
-     * Gleiche Normalisierung wie im Frontend: trimmen, Kleinbuchstaben, Leerraum zusammenfassen.
+     * Same normalisation as in the frontend: trim, lower case, collapse whitespace.
      */
     public static function normalize(string $answer): string
     {

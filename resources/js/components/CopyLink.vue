@@ -16,7 +16,7 @@ async function copy() {
         copied.value = true;
         setTimeout(() => (copied.value = false), 2000);
     } catch {
-        // Ohne Zugriff auf die Zwischenablage: Link markieren, damit man ihn kopieren kann
+        // Without clipboard access: select the link so it can be copied
         window.prompt('Link kopieren:', props.url);
     }
 }

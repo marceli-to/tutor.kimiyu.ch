@@ -45,13 +45,13 @@ Route::get('lernseiten/{lesson}/grafik/{number}', [LessonController::class, 'gra
     ->middleware('signed')
     ->name('lessons.graphic');
 
-// Für Kinder: nicht erratbarer Link pro Kind, nur freigegebene Seiten, kein Login
+// For children: unguessable link per child, only published pages, no login
 Route::middleware(['noindex', 'throttle:60,1'])->group(function () {
     Route::get('k/{token}', [SharedLessonController::class, 'index'])->name('shared.index');
     Route::get('k/{token}/{lesson}', [SharedLessonController::class, 'show'])->name('shared.show');
 });
 
-// Antworten für den Lernstand: eigenes, höheres Limit, weil ein Sortierspiel viele Antworten schickt
+// Answers for the progress: own, higher limit, because a sorting game sends many answers
 Route::post('k/{token}/{lesson}/antwort', [SharedLessonController::class, 'answer'])
     ->middleware(['noindex', 'throttle:answers'])
     ->name('shared.answer');

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Die Grafiken stehen in lesson_graphics, der Modus in graphics_mode: die alten Spalten weg.
+     * The graphics live in lesson_graphics, the mode in graphics_mode: drop the old columns.
      */
     public function up(): void
     {
@@ -18,9 +18,9 @@ return new class extends Migration
     }
 
     /**
-     * Stellt die alten Spalten wieder her und kopiert Grafik 1 zurück. lesson_graphics bleibt;
-     * die alten Spalten kennen aber nur eine Grafik: Grafiken 2 und 3, Wünsche und «ausgeblendet»
-     * gibt es dort nicht. «Selbst beschreiben» wird zu «mit Grafik».
+     * Restores the old columns and copies graphic 1 back. lesson_graphics stays;
+     * but the old columns know only one graphic: graphics 2 and 3, wishes and «hidden»
+     * don't exist there. «custom» becomes with_hero = true.
      */
     public function down(): void
     {

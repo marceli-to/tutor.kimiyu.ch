@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Kosten gehören dem Konto, nicht der Lernseite: Sie bleiben, wenn eine Lernseite oder ein Kind
-     * gelöscht wird, und verschwinden erst mit dem Konto.
+     * Costs belong to the account, not the lesson: they stay when a lesson or a child
+     * is deleted, and only disappear with the account.
      */
     public function up(): void
     {
@@ -37,8 +37,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Verloren beim Rollback: Kosten ohne Lernseite (Lernseite samt Kind gelöscht) und die Zuordnung
-        // der Kosten zum Konto (user_id). Danach verschwinden Kosten wieder mit der Lernseite.
+        // Lost on rollback: costs without a lesson (lesson deleted with the child) and the link
+        // of the costs to the account (user_id). Afterwards costs disappear with the lesson again.
         DB::table('generations')->whereNull('lesson_id')->delete();
 
         Schema::table('generations', function (Blueprint $table) {

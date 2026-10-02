@@ -161,7 +161,7 @@ return [
     */
 
     'features' => [
-        // Registrierung ist aus: Konten werden von Hand angelegt (php artisan tinker)
+        // Registration is off: accounts are created by hand (php artisan tinker)
         // Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),

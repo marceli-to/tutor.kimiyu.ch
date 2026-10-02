@@ -8,23 +8,23 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Bis zu drei Grafiken pro Lernseite statt einer in der Lernseite selbst.
-     * Bestehende Grafiken werden zu Grafik 1; die alten Spalten bleiben vorerst (entfernt in einer späteren Migration).
+     * Up to three graphics per lesson instead of one in the lesson itself.
+     * Existing graphics become graphic 1; the old columns stay for now (removed in a later migration).
      */
     public function up(): void
     {
         Schema::create('lesson_graphics', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lesson_id')->constrained()->cascadeOnDelete();
-            // 1 steht oben auf der Seite, 2 und 3 im passenden Abschnitt
+            // 1 is at the top of the page, 2 and 3 in the matching section
             $table->unsignedTinyInteger('position');
-            // Wunsch der Eltern («Selbst beschreiben»)
+            // The parents' wish (graphics mode «custom»)
             $table->text('request')->nullable();
-            // Gewünschtes Muster (HeroPattern)
+            // Requested pattern (GraphicPattern)
             $table->string('pattern')->nullable();
-            // Plan der Analyse: {muster, idee}
+            // Plan from the analysis: {pattern, idea}
             $table->json('plan')->nullable();
-            // Fertige Grafik: {muster, beschreibung, css, markup, script}
+            // Finished graphic: {pattern, description, css, markup, script}
             $table->json('graphic')->nullable();
             $table->text('error')->nullable();
             $table->timestamps();
@@ -33,7 +33,7 @@ return new class extends Migration
         });
 
         Schema::table('lessons', function (Blueprint $table) {
-            // none: keine Grafik, auto: die KI entscheidet (höchstens eine), custom: Wünsche der Eltern
+            // none: no graphic, auto: the AI decides (at most one), custom: the parents' wishes
             $table->string('graphics_mode')->default('auto')->after('with_hero');
         });
 
@@ -55,8 +55,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Verloren beim Rollback: die Wünsche der Eltern und alle Grafiken ausser Grafik 1,
-        // die noch in den alten Spalten steht. «Selbst beschreiben» wird zu «mit Grafik».
+        // Lost on rollback: the parents' wishes and all graphics except graphic 1,
+        // which is still in the old columns. «custom» becomes with_hero = true.
         Schema::dropIfExists('lesson_graphics');
 
         Schema::table('lessons', function (Blueprint $table) {

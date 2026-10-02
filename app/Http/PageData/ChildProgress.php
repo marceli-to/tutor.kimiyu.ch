@@ -9,7 +9,7 @@ use App\Models\Lesson;
 use Illuminate\Support\Carbon;
 
 /**
- * Lernstand: pro Lernseite, was sitzt und was noch geübt werden muss.
+ * Progress: per lesson, what is mastered and what still needs practice.
  */
 class ChildProgress
 {

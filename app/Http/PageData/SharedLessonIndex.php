@@ -30,7 +30,7 @@ class SharedLessonIndex
             'token' => $this->child->share_token,
             'childName' => $this->child->name,
             'subjects' => $lessons
-                // Freigegebene Lernseiten haben nach der Analyse immer ein Fach; trotzdem absichern
+                // Published lessons always have a subject after the analysis; guard anyway
                 ->groupBy(fn (Lesson $lesson) => (string) $lesson->subject)
                 ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
                 ->map(fn ($lessons, string $subject) => [

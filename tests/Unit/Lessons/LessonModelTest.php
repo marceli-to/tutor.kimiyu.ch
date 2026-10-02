@@ -2,7 +2,7 @@
 
 use App\Models\Lesson;
 
-// child_id gesetzt, damit make() kein Kind in der Datenbank anlegt
+// child_id set, so make() doesn't create a child in the database
 function makeLesson(array $attributes = []): Lesson
 {
     return Lesson::factory()->make(['child_id' => 1, ...$attributes]);

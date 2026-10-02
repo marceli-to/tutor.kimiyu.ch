@@ -12,7 +12,7 @@ use App\Lessons\LessonGone;
 use App\Models\Lesson;
 
 /**
- * Ein API-Call mit Eintrag im Kosten-Log, auch wenn er scheitert.
+ * One API call with an entry in the cost log, even when it fails.
  */
 class CallModel
 {
@@ -20,17 +20,17 @@ class CallModel
 
     /**
      * @throws GenerationFailed when the lesson belongs to no child any more
-     * @throws ModelException bei API-Fehlern
+     * @throws ModelException on API errors
      * @throws LessonGone when the lesson was deleted during the call
      */
     public function handle(Lesson $lesson, ModelRequest $request): ModelResponse
     {
         $started = hrtime(true);
-        // Kind nur einmal laden, nicht bei jedem Aufruf neu
+        // Load the child only once, not again on every call
         $lesson->loadMissing('child');
         $userId = $lesson->child?->user_id;
 
-        // Ohne Kind kein Konto für die Kosten: dann gar nicht erst aufrufen
+        // Without a child there is no account for the costs: don't call at all
         if ($userId === null) {
             throw new GenerationFailed('Diese Lernseite gehört zu keinem Kind mehr.');
         }

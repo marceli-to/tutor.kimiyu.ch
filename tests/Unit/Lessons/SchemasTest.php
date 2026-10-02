@@ -27,20 +27,20 @@ it('allows modules without quiz but a new quiz always has questions', function (
 });
 
 it('never sends the whole page as one schema', function () {
-    // Die API lehnt das Schema der ganzen Seite ab: «The compiled grammar is too large».
-    // Auch Analyse und Textteil zusammen sind zu gross, deshalb schreibt ein eigener Schritt den Textteil.
+    // The API rejects the schema of the whole page: «The compiled grammar is too large».
+    // Analysis and text part together are too large as well, so a step of its own writes the text part.
     expect(Schemas::analysis()['properties'])->not->toHaveKey('page')
         ->and(Schemas::part('page')['properties']['page']['properties'])->not->toHaveKey('modules');
 });
 
 it('keeps the schemas small enough for the api', function () {
-    // Die API kompiliert jedes Schema zu einer Grammatik und lehnt zu grosse ab
-    // («The compiled grammar is too large»). Die Grenze ist nicht dokumentiert; gemessen mit echten
-    // Aufrufen: die frühere Analyse mit Textteil (5261 Bytes JSON) war zu gross; die Analyse ohne
-    // Textteil (1586) und {page: page()} (3721; mit den englischen Schlüsseln 1677 und 3692, geprüft 2026-10-02) gehen durch, ebenso ein Schema mit 4409 Bytes.
-    // Die Länge des JSON ist nur eine Faustregel für die Grösse der Grammatik (anyOf und enum zählen
-    // mehr als Text). Schlägt dieser Test fehl, das Schema mit einem echten Aufruf prüfen, bevor die
-    // Grenze erhöht wird.
+    // The API compiles every schema to a grammar and rejects ones that are too large
+    // («The compiled grammar is too large»). The limit isn't documented; measured with real
+    // calls: the earlier analysis with the text part (5261 bytes JSON) was too large; the analysis without
+    // text part (1586) and {page: page()} (3721; with the English keys 1677 and 3692, checked 2026-10-02) go through, as does a schema of 4409 bytes.
+    // The JSON length is only a rule of thumb for the grammar size (anyOf and enum count
+    // more than text). If this test fails, check the schema with a real call before raising
+    // the limit.
     expect(strlen(json_encode(Schemas::analysis())))->toBeLessThan(2500)
         ->and(strlen(json_encode(Schemas::part('page'))))->toBeLessThan(4500);
 });

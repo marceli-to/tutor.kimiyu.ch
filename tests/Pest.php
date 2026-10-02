@@ -18,7 +18,7 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
-// Unit-Tests brauchen den Container (Validator, Pfade), aber keine Datenbank
+// Unit tests need the container (validator, paths), but no database
 pest()->extend(TestCase::class)->in('Unit');
 
 /*

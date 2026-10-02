@@ -22,7 +22,7 @@ return [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
         'effort' => env('ANTHROPIC_EFFORT', 'high'),
-        // Serverseitiger Ersatz, falls das Modell eine Anfrage ablehnt
+        // Server-side fallback in case the model refuses a request
         'fallbacks' => (bool) env('ANTHROPIC_FALLBACKS', true),
         'timeout' => (int) env('ANTHROPIC_TIMEOUT', 600),
     ],

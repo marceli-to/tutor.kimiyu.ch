@@ -60,7 +60,7 @@ const moduleLabels: Record<LessonModule, string> = {
 
 const allModules = Object.keys(moduleLabels) as LessonModule[];
 
-// Mindestens ein Modul bleibt angekreuzt
+// At least one module stays checked
 function isLast(value: LessonModule): boolean {
     return modules.value.length === 1 && modules.value[0] === value;
 }
@@ -70,7 +70,7 @@ function toggleModule(value: LessonModule, checked: boolean) {
         return;
     }
 
-    // Reihenfolge wie in der Liste, egal in welcher Reihenfolge angekreuzt wurde
+    // Order as in the list, whatever order they were checked in
     modules.value = allModules.filter((m) =>
         m === value ? checked : modules.value.includes(m),
     );

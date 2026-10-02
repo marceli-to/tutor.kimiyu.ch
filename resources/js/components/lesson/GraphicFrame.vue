@@ -16,7 +16,7 @@ const height = ref(420);
 const failed = ref(false);
 const isDark = useIsDark();
 
-// Startwert per Hash, damit die Grafik nicht erst hell aufblitzt
+// Initial value via hash, so the graphic doesn't flash light first
 const src = computed(
     () => `${props.graphic.url}#${isDark.value ? 'dark' : 'light'}`,
 );
@@ -30,7 +30,7 @@ type GraphicMessage = {
 };
 
 function onMessage(event: MessageEvent<GraphicMessage>) {
-    // Das iframe hat keinen eigenen Origin, also am Absender-Fenster erkennen
+    // The iframe has no origin of its own, so identify it by the sender window
     if (!frame.value || event.source !== frame.value.contentWindow) {
         return;
     }

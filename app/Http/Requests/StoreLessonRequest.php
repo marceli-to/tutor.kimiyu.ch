@@ -21,21 +21,21 @@ class StoreLessonRequest extends FormRequest
                 Rule::exists('children', 'id')->where('user_id', $this->user()->id),
             ],
             'child_name' => ['required_without:child_id', 'nullable', 'string', 'max:60'],
-            // Leer: Die KI erkennt das Fach in der Analyse
+            // Empty: the AI detects the subject in the analysis
             'subject' => ['nullable', 'string', 'max:60'],
-            // Leer: Die Stufe kommt vom Kind; nur nötig, wenn das Kind keine hat oder neu ist
+            // Empty: the level comes from the child; only needed if the child has none or is new
             'level' => [Rule::requiredIf(fn () => $this->childLevel() === null), 'nullable', 'string', 'max:60'],
             'graphics_mode' => ['required', Rule::in(['none', 'auto', 'custom'])],
-            // Wünsche der Eltern, nur bei «Selbst beschreiben»
+            // The parents' wishes, only with graphics mode «custom»
             'graphics' => ['exclude_unless:graphics_mode,custom', 'required', 'array', 'min:1', 'max:3'],
             'graphics.*.description' => ['exclude_unless:graphics_mode,custom', 'required', 'string', 'max:500'],
             'graphics.*.pattern' => ['exclude_unless:graphics_mode,custom', 'nullable', Rule::enum(GraphicPattern::class)],
             'purpose' => ['required', Rule::in(Lesson::PURPOSES)],
             'scope' => ['required', Rule::in(Lesson::SCOPES)],
-            // Erlaubte Lernmodule: ein Quiz in der Liste kommt immer, die anderen nur, wenn sie zum Stoff passen
+            // Allowed learning modules: a listed quiz always comes, the others only if they fit the material
             'modules' => ['required', 'array', 'min:1'],
             'modules.*' => ['distinct', Rule::in(Lesson::MODULES)],
-            // Fotos sind der verbindliche Rahmen, der Auftrag sagt, was daraus werden soll; eines von beiden genügt
+            // Photos are the binding frame, the request says what to make of them; one of both is enough
             'prompt' => ['nullable', 'string', 'max:1000'],
             'images' => ['required_without:prompt', 'array', 'max:'.config('lessons.images.max_count')],
             'images.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:'.config('lessons.images.max_upload_kb')],
@@ -43,7 +43,7 @@ class StoreLessonRequest extends FormRequest
     }
 
     /**
-     * Stufe des gewählten Kindes, null für ein neues Kind oder ein Kind ohne Stufe.
+     * Level of the selected child, null for a new child or a child without a level.
      */
     public function childLevel(): ?string
     {

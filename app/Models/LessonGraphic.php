@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Eine interaktive Grafik einer Lernseite. Grafik 1 steht oben, 2 und 3 im passenden Abschnitt.
+ * An interactive graphic of a lesson. Graphic 1 is at the top, 2 and 3 in the matching section.
  *
  * @property int $id
  * @property int $lesson_id
  * @property int $position 1–3
- * @property string|null $request Wunsch der Eltern
- * @property string|null $pattern Gewünschtes Muster (GraphicPattern)
- * @property array{pattern: string, idea: string}|null $plan null: (noch) kein Plan, z. B. weil der Wunsch nicht zum Stoff passt
+ * @property string|null $request The parents' wish
+ * @property string|null $pattern Requested pattern (GraphicPattern)
+ * @property array{pattern: string, idea: string}|null $plan null: no plan (yet), e.g. because the wish doesn't fit the material
  * @property array{pattern: string, description: string, css: string, markup: string, script: string}|null $graphic
- * @property string|null $error Hinweis für die Eltern, warum die Grafik fehlt
- * @property bool $hidden Von den Eltern ausgeblendet (Baustein entfernt); kommt mit «Grafik neu erstellen» zurück
+ * @property string|null $error Note for the parents why the graphic is missing
+ * @property bool $hidden Hidden by the parents (block removed); comes back with «Grafik neu erstellen»
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -43,7 +43,7 @@ class LessonGraphic extends Model
      */
     public function lesson(): BelongsTo
     {
-        // Auch für gelöschte Lernseiten, z. B. in einem Job, der noch in der Queue steht
+        // Also for deleted lessons, e.g. in a job still waiting in the queue
         return $this->belongsTo(Lesson::class)->withTrashed();
     }
 }

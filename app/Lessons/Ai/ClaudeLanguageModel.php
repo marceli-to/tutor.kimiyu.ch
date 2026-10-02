@@ -20,14 +20,14 @@ use Anthropic\Core\Exceptions\RateLimitException;
 use Anthropic\Lib\Streaming\MessageAccumulator;
 
 /**
- * Claude API über das offizielle PHP-SDK.
+ * Claude API through the official PHP SDK.
  *
- * - Strukturierte Ausgabe per JSON-Schema (output_config.format)
- * - Modell und Effort kommen pro Schritt aus dem ModelRequest (config/lessons.php)
- * - Streaming, weil Antworten gross sein können und sonst HTTP-Timeouts drohen
- * - Kein Prompt-Caching: Lernseiten entstehen zu selten, der Cache (5 Min.) wurde nie gelesen
- *   und das Schreiben kostet 25 % mehr als normaler Input
- * - Serverseitiger Ersatz (fallbacks), falls das Modell eine Anfrage ablehnt
+ * - Structured output via JSON schema (output_config.format)
+ * - Model and effort come per step from the ModelRequest (config/lessons.php)
+ * - Streaming, because answers can be large and would otherwise risk HTTP timeouts
+ * - No prompt caching: lessons are created too rarely, the cache (5 min) was never read
+ *   and writing costs 25 % more than normal input
+ * - Server-side fallbacks in case the model refuses a request
  */
 class ClaudeLanguageModel implements LanguageModel
 {
@@ -41,7 +41,7 @@ class ClaudeLanguageModel implements LanguageModel
 
     public function generate(ModelRequest $request): ModelResponse
     {
-        // Tippfehler in LESSON_EFFORT_* oder ANTHROPIC_EFFORT: Schritt sauber abbrechen statt den Job abstürzen lassen
+        // Typo in LESSON_EFFORT_* or ANTHROPIC_EFFORT: fail the step cleanly instead of crashing the job
         $effort = Effort::tryFrom($request->effort());
 
         if ($effort === null) {
@@ -131,7 +131,7 @@ class ClaudeLanguageModel implements LanguageModel
     }
 
     /**
-     * Bilder vor dem Text, wie von Anthropic empfohlen.
+     * Images before the text, as recommended by Anthropic.
      *
      * @return list<BetaImageBlockParam|BetaTextBlockParam>
      */

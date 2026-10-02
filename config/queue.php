@@ -40,7 +40,7 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            // Länger als der Job-Timeout (900 s), sonst startet ein laufender API-Call ein zweites Mal
+            // Longer than the job timeout (900 s), otherwise a running API call starts a second time
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 960),
             'after_commit' => false,
         ],

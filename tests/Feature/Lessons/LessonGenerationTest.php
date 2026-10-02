@@ -27,7 +27,7 @@ use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /**
- * Ein JPEG mit EXIF-Block (wie von einer Handykamera), grösser als erlaubt.
+ * A JPEG with an EXIF block (as from a phone camera), larger than allowed.
  */
 function photo(string $name = 'page.jpg', int $width = 3000, int $height = 2000): UploadedFile
 {
@@ -37,7 +37,7 @@ function photo(string $name = 'page.jpg', int $width = 3000, int $height = 2000)
     imagejpeg($image);
     $jpeg = (string) ob_get_clean();
 
-    // APP1-Segment mit «Exif» und einem erkennbaren Marker direkt nach dem SOI einfügen
+    // Insert an APP1 segment with «Exif» and a recognisable marker right after the SOI
     $payload = "Exif\0\0II*\0\x08\0\0\0\0\0GPS-MARKER-47.3769N";
     $app1 = "\xFF\xE1".pack('n', strlen($payload) + 2).$payload;
 
@@ -686,7 +686,7 @@ describe('remembered settings', function () {
                     'graphics_mode' => 'none',
                 ])
                 ->where("lastSettings.{$this->child->id}|mathematik.scope", 'detailed')
-                // Alte Lernseiten ohne Liste: alle Module waren erlaubt
+                // Old lessons without a list: all modules were allowed
                 ->where("lastSettings.{$this->child->id}|mathematik.modules", ['quiz', 'sorting', 'flashcards', 'cloze'])
                 ->where("lastSettings.{$leo->id}|biologie.modules", ['sorting'])
                 ->where("lastSettings.{$leo->id}|biologie.graphics_mode", 'custom')
@@ -721,7 +721,7 @@ describe('remembered settings', function () {
                     'modules' => ['quiz'],
                     'graphics_mode' => 'none',
                 ])
-                // Eigene Grafikwünsche gelten nur für die eine Seite: daraus wird «KI entscheidet»
+                // Custom graphic wishes apply only to that one page: they become «auto»
                 ->where("lastByChild.{$leo->id}", [
                     'purpose' => 'new',
                     'scope' => 'normal',
@@ -1190,7 +1190,7 @@ describe('graphic plans', function () {
 
 describe('graphic generation', function () {
     /**
-     * Textteil mit dem Baustein für Grafik 2, als Antwort des Schritts «page».
+     * Text part with the block for graphic 2, as the answer of the step «page».
      */
     function pageWithGraphic2(): array
     {
@@ -1418,7 +1418,7 @@ describe('prompts for purpose, scope and modules', function () {
     });
 
     it('repairs a page left without any module', function () {
-        // Die Fotosynthese hat kein Sortierspiel: ohne die anderen Module bleibt nichts übrig
+        // Photosynthesis has no sorting game: without the other modules nothing is left
         upload(['modules' => ['sorting']]);
 
         expect($this->fake->requestsFor('repair-modules')[0]->prompt)->toContain('Die Seite braucht mindestens ein Lernmodul.')

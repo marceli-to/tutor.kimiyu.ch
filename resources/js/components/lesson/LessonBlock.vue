@@ -11,7 +11,7 @@ defineProps<{
 </script>
 
 <template>
-    <!-- Eigene Zeile über dem Baustein, damit das Layout ohne Marke gleich bleibt -->
+    <!-- Own line above the block, so the layout stays the same without a badge -->
     <div
         v-if="block.origin === 'added'"
         class="mt-4 mb-1 flex justify-end"

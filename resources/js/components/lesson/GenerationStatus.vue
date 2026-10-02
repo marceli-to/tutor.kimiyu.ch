@@ -12,7 +12,7 @@ const props = defineProps<{
     step: string | null;
     error: string | null;
     canRetry: boolean;
-    // Positionen der Grafiken, die gebaut werden
+    // Positions of the graphics being built
     plannedGraphics: number[];
 }>();
 
@@ -23,7 +23,7 @@ const fullSteps = [
     { key: 'check', label: 'Inhalt nachprüfen' },
 ];
 
-// Beim Neu-Erstellen einzelner Teile gibt es nur einen Schritt
+// Regenerating a single part has only one step
 const partSteps: Record<string, { key: string; label: string }[]> = {
     'regenerate-quiz': [
         { key: 'regenerate-quiz', label: 'Neues Quiz schreiben' },
@@ -64,7 +64,7 @@ const current = computed(() => {
         return index;
     }
 
-    // Ein Job für eine Grafik ohne Plan läuft nur kurz durch: als nächste geplante Grafik anzeigen
+    // A job for a graphic without a plan finishes quickly: show the next planned graphic
     const next = steps.value.findIndex(
         (s) =>
             s.key.startsWith('graphic-') && Number(s.key.slice(8)) > position,

@@ -1,7 +1,7 @@
 /*
-  Lernseiten-Design-Tokens (aus docs/lernseite-skill/assets/template.html).
-  Basisfarben sind fix, Themenfarben kommen aus resources/lesson/palettes.json
-  und werden als --p-*-light / --p-*-dark inline auf .lesson gesetzt.
+  Lesson design tokens (from docs/lernseite-skill/assets/template.html).
+  Base colours are fixed; theme colours come from resources/lesson/palettes.json
+  and are set inline on .lesson as --p-*-light / --p-*-dark.
 */
 
 @theme inline {
@@ -93,7 +93,7 @@
         outline-offset: 2px;
     }
 
-    /* Pillen-Buttons wie in der Vorlage (.btn / .btn.primary) */
+    /* Pill buttons as in the template (.btn / .btn.primary) */
     .ls-btn {
         @apply cursor-pointer rounded-full border-[1.5px] border-ls-accent bg-transparent px-5 py-2 text-base text-ls-ink;
     }

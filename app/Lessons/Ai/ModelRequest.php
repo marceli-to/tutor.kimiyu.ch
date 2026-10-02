@@ -3,14 +3,14 @@
 namespace App\Lessons\Ai;
 
 /**
- * Ein Aufruf mit strukturierter Ausgabe: System-Prompt, Benutzerinhalt (Text und Bilder), JSON-Schema.
+ * One call with structured output: system prompt, user content (text and images), JSON schema.
  */
 final readonly class ModelRequest
 {
     /**
      * @param  string  $step  analysis, page, modules, regenerate-quiz, repair-*, check, graphic or graphic-repair
-     * @param  list<array{mime: string, data: string}>  $images  Bilder als Binärdaten
-     * @param  array<string, mixed>  $schema  JSON-Schema der Antwort
+     * @param  list<array{mime: string, data: string}>  $images  images as binary data
+     * @param  array<string, mixed>  $schema  JSON schema of the answer
      */
     public function __construct(
         public string $step,
@@ -32,8 +32,8 @@ final readonly class ModelRequest
     }
 
     /**
-     * Einstellung für diesen Schritt aus config/lessons.php: zuerst der genaue Schritt
-     * («graphic-repair»), dann der Teil vor dem Bindestrich («graphic»).
+     * Setting for this step from config/lessons.php: first the exact step
+     * («graphic-repair»), then the part before the hyphen («graphic»).
      */
     private function setting(string $key): ?string
     {

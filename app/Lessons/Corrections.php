@@ -3,17 +3,17 @@
 namespace App\Lessons;
 
 /**
- * Wendet die Korrekturen des Prüf-Schritts auf eine Lernseite an.
+ * Applies the corrections of the check step to a lesson.
  *
- * Die Prüfung schickt nur, was sie ändert (JSON-Pointer + neuer Wert), statt die ganze Seite neu zu schreiben.
- * Korrekturen am selben Eintrag (gleicher Pointer ohne letztes Segment, z. B. /modules/quiz/0) gehören zusammen:
- * Optionen und Lösung einer Quizfrage etwa sind nur gemeinsam gültig. Jede Gruppe wird darum als Ganzes
- * angewendet und nur behalten, wenn die Seite danach gültig ist; sonst wird die ganze Gruppe verworfen.
+ * The check sends only what it changes (JSON pointer + new value) instead of rewriting the whole page.
+ * Corrections to the same entry (same pointer without the last segment, e.g. /modules/quiz/0) belong together:
+ * options and solution of a quiz question, for example, are only valid together. So each group is applied
+ * as a whole and only kept if the page is valid afterwards; otherwise the whole group is discarded.
  *
- * Ersetzt werden nur einzelne Werte (Text, Zahl, Wahrheitswert) und Listen aus Texten oder Zahlen
- * (z. B. options, answers), jeweils mit dem gleichen Typ wie bisher. Ganze Objekte, Module, Listen
- * von Objekten und leere Felder (null) bleiben unangetastet, und kein Wert wird auf null gesetzt.
- * IDs und die Herkunft (`origin`) werden nie geändert.
+ * Only single values (text, number, boolean) and lists of texts or numbers are replaced
+ * (e.g. options, answers), each with the same type as before. Whole objects, modules, lists
+ * of objects and empty fields (null) stay untouched, and no value is set to null.
+ * IDs and the origin (`origin`) are never changed.
  */
 class Corrections
 {
@@ -52,8 +52,8 @@ class Corrections
     }
 
     /**
-     * Gruppiert Korrekturen nach Eintrag (Pointer ohne letztes Segment), in der Reihenfolge des ersten Auftretens.
-     * Ungültige Pointer bilden je eine eigene Gruppe, damit sie keine gültigen Korrekturen mitreissen.
+     * Groups corrections by entry (pointer without the last segment), in order of first appearance.
+     * Invalid pointers each form a group of their own, so they don't take valid corrections down with them.
      *
      * @param  list<array{path: string, value: string, area: string, change: string}>  $corrections
      * @return list<list<array{path: string, value: string, area: string, change: string}>>
@@ -76,11 +76,11 @@ class Corrections
 
     /**
      * @param  array<string, mixed>  $content
-     * @return array<string, mixed>|null null, wenn der Pfad nicht existiert oder nicht geändert werden darf
+     * @return array<string, mixed>|null null if the path doesn't exist or must not be changed
      */
     private static function replace(array $content, string $pointer, string $value): ?array
     {
-        // IDs und Herkunft bleiben, wie sie sind: die Herkunft bestimmt, was die Eltern als ergänzt sehen
+        // IDs and origin stay as they are: the origin decides what the parents see as added
         if (! str_starts_with($pointer, '/') || str_ends_with($pointer, '/id') || str_ends_with($pointer, '/origin')) {
             return null;
         }
@@ -94,7 +94,7 @@ class Corrections
     }
 
     /**
-     * Ersetzt den Wert am Ende von $keys. Arbeitet auf Kopien, die Seite des Aufrufers bleibt unverändert.
+     * Replaces the value at the end of $keys. Works on copies; the caller's page stays unchanged.
      *
      * @param  array<array-key, mixed>  $node
      * @param  list<string>  $keys
@@ -108,7 +108,7 @@ class Corrections
             return null;
         }
 
-        // In Listen sind die Schlüssel Zahlen, in Objekten Texte.
+        // In lists the keys are numbers, in objects strings.
         $index = array_is_list($node) && ctype_digit($key) ? (int) $key : $key;
 
         if (! array_key_exists($index, $node)) {
@@ -143,12 +143,12 @@ class Corrections
     }
 
     /**
-     * Wandelt den neuen Wert in den Typ des bisherigen um.
+     * Converts the new value to the type of the previous one.
      *
-     * Texte dürfen direkt oder als JSON-Text kommen; Zahlen, Wahrheitswerte und Listen aus Texten als JSON.
-     * Objekte, Listen von Objekten und leere Felder (null) werden nie ersetzt.
+     * Strings may come directly or as JSON strings; numbers, booleans and lists of strings as JSON.
+     * Objects, lists of objects and empty fields (null) are never replaced.
      *
-     * @return string|int|float|bool|list<string|int|float>|null null, wenn der Wert nicht passt
+     * @return string|int|float|bool|list<string|int|float>|null null if the value doesn't fit
      */
     private static function convert(mixed $old, string $value): string|int|float|bool|array|null
     {

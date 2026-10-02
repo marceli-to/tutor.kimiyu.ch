@@ -12,9 +12,9 @@ class RegenerateQuizQuestions
     public function __construct(private CallModel $callModel) {}
 
     /**
-     * Neues Quiz für eine bestehende Seite.
+     * New quiz for an existing page.
      *
-     * @throws GenerationFailed wenn das neue Quiz ungültig ist; das alte bleibt dann
+     * @throws GenerationFailed when the new quiz is invalid; the old one stays then
      */
     public function handle(Lesson $lesson): void
     {

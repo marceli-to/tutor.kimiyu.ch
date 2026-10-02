@@ -5,7 +5,7 @@ namespace App\Lessons;
 use RuntimeException;
 
 /**
- * Die Generierung kann nicht weitergehen. Die Nachricht wird den Eltern angezeigt.
+ * The generation can't continue. The message is shown to the parents.
  */
 class GenerationFailed extends RuntimeException
 {

@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Kinderprofil. Der Name bleibt in der App und wird nie an die API geschickt.
+ * Child profile. The name stays in the app and is never sent to the API.
  *
  * @property int $id
  * @property int $user_id

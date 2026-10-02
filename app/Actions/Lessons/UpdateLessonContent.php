@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
- * Eltern korrigieren Texte, Quizfragen und Lösungen, bevor sie die Seite freigeben.
+ * Parents correct texts, quiz questions and solutions before they publish the page.
  */
 class UpdateLessonContent
 {
@@ -21,12 +21,12 @@ class UpdateLessonContent
      */
     public function handle(Lesson $lesson, array $content, ?string $clozeMarkup): void
     {
-        // Der Lückentext wird als Text mit [Lücke|Alternative] bearbeitet
+        // The cloze is edited as text with [gap|alternative]
         if (is_array($content['modules']['cloze'] ?? null)) {
             try {
                 $content['modules']['cloze']['segments'] = ClozeParser::parse((string) $clozeMarkup);
 
-                // Die Herkunft wird nicht im Markup bearbeitet, also vom gespeicherten Lückentext übernehmen
+                // The origin isn't edited in the markup, so take it from the stored cloze
                 $origin = $lesson->content['modules']['cloze']['origin'] ?? null;
                 if ($origin !== null) {
                     $content['modules']['cloze']['origin'] = $origin;
@@ -46,7 +46,7 @@ class UpdateLessonContent
             );
         }
 
-        // Verglichen wird mit dem, was die Bearbeiten-Ansicht gezeigt hat, inklusive der Grafiken ohne festen Platz
+        // Compared against what the edit view showed, including the graphics without a fixed place
         $this->hideRemovedGraphics($lesson, GraphicBlocks::withUnplaced($lesson, $lesson->content), $content);
 
         $lesson->update([
@@ -56,9 +56,9 @@ class UpdateLessonContent
     }
 
     /**
-     * Entfernt die Mutter oder der Vater den Baustein einer Grafik, wird sie ausgeblendet (sie bleibt
-     * gespeichert). Kommt der Baustein zurück, ist sie wieder sichtbar. Grafiken, die nie einen Baustein
-     * hatten (Grafik 1, Grafiken am Ende des letzten Abschnitts), bleiben, wie sie sind.
+     * If a parent removes a graphic's block, the graphic is hidden (it stays
+     * stored). If the block comes back, it is visible again. Graphics that never had a block
+     * (graphic 1, graphics at the end of the last section) stay as they are.
      *
      * @param  array<string, mixed>  $old
      * @param  array<string, mixed>  $new

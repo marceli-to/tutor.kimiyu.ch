@@ -6,7 +6,7 @@ use App\Actions\Generation\GenerateGraphic;
 use App\Models\Lesson;
 
 /**
- * Eine Grafik der Lernseite. Ohne Plan für diese Position tut der Job nichts.
+ * One graphic of the lesson. Without a plan for this position the job does nothing.
  */
 class GenerateLessonGraphic extends LessonStep
 {

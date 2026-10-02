@@ -29,7 +29,7 @@ class CreateLesson
      */
     public function handle(User $user, array $data, ?string $childLevel): Lesson
     {
-        // Zuerst alle Fotos verarbeiten, damit bei einem kaputten Bild nichts halb gespeichert wird
+        // Process all photos first, so a broken image doesn't leave anything half stored
         $images = [];
         /** @var array<int, UploadedFile> $files */
         $files = $data['images'] ?? [];
@@ -56,7 +56,7 @@ class CreateLesson
             /** @var Child $child */
             $lesson = $child->lessons()->create([
                 'status' => LessonStatus::Draft,
-                // Leer: Die KI erkennt das Fach in der Analyse
+                // Empty: the AI detects the subject in the analysis
                 'subject' => $data['subject'] ?? null,
                 'level' => $level,
                 'prompt' => $data['prompt'] ?? null,
@@ -67,7 +67,7 @@ class CreateLesson
                 'modules' => array_values($data['modules']),
             ]);
 
-            // Wünsche der Eltern als Grafik 1 bis 3
+            // The parents' wishes as graphics 1 to 3
             foreach (array_values($data['graphics'] ?? []) as $index => $wish) {
                 $lesson->graphics()->create([
                     'position' => $index + 1,

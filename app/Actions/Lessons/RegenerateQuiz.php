@@ -6,7 +6,7 @@ use App\Lessons\GenerationPipeline;
 use App\Models\Lesson;
 
 /**
- * Nur das Quiz neu erstellen lassen.
+ * Regenerates only the quiz.
  */
 class RegenerateQuiz
 {

@@ -13,9 +13,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->child = Child::factory()->for($this->user)->create(['name' => 'Mia']);
-    // Fotosynthese: 5 Quizfragen, 5 Lücken, kein Sortierspiel
+    // Photosynthesis: 5 quiz questions, 5 gaps, no sorting game
     $this->lesson = Lesson::factory()->for($this->child)->fromFixture('fotosynthese')->create();
-    // Ökosystem: 5 Quizfragen, 12 Sortier-Begriffe
+    // Ecosystem: 5 quiz questions, 12 sorting terms
     $this->eco = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create();
 });
 
@@ -42,7 +42,7 @@ function attempts(Child $child, Lesson $lesson, string $module, string $itemId, 
 
 describe('answers', function () {
     it('checks quiz answers on the server', function () {
-        // q1: richtige Antwort ist Index 1
+        // q1: the correct answer is index 1
         answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1])->assertOk()->assertJson(['correct' => true]);
         answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 0])->assertOk()->assertJson(['correct' => false]);
 
@@ -209,10 +209,10 @@ describe('pages', function () {
     it('shows deleted lessons and orphaned costs on the costs page', function () {
         $this->eco->generations()->forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.3, 'created_at' => now()->subMinute()]);
         $this->eco->delete();
-        // Lernseite samt Kind gelöscht: nur noch das Konto ist bekannt
+        // Lesson deleted with the child: only the account is still known
         Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2, 'created_at' => now()->subMinutes(2)]);
         Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'error', 'cost_usd' => 0.1, 'created_at' => now()->subMinutes(3)]);
-        // Fremde Kosten ohne Lernseite zählen nicht
+        // Other users' costs without a lesson don't count
         Generation::create(['user_id' => User::factory()->create()->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99]);
 
         $this->actingAs($this->user)->get(route('costs'))
@@ -245,7 +245,7 @@ describe('pages', function () {
             ['user_id' => $this->user->id, 'step' => 'modules', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
         ]);
 
-        // Der Durchschnitt zählt nur erfolgreiche Aufrufe, die Summe alle
+        // The average counts only successful calls, the sum all
         $this->actingAs($this->user)->get(route('costs'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('steps.0', [

@@ -3,7 +3,7 @@
 namespace App\Lessons;
 
 /**
- * Hero-Muster aus SKILL.md.
+ * Graphic patterns from SKILL.md.
  */
 enum GraphicPattern: string
 {

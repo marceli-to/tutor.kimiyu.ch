@@ -7,10 +7,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Prüft den Inhalt einer Lernseite (Schema-Version 1).
+ * Validates the content of a lesson (schema version 1).
  *
- * Nicht-strikt: was eine Seite zum Anzeigen und Bearbeiten braucht.
- * Strikt: zusätzlich die Didaktik-Regeln aus SKILL.md, die für frisch generierte Seiten gelten.
+ * Non-strict: what a page needs to be shown and edited.
+ * Strict: additionally the didactic rules from SKILL.md that apply to freshly generated pages.
  */
 class ContentValidator
 {
@@ -21,7 +21,7 @@ class ContentValidator
 
     public const CATEGORIES = ['cat1', 'cat2', 'cat3'];
 
-    // Herkunft eines Bausteins; fehlt bei alten Seiten
+    // Origin of a block; missing on old pages
     public const ORIGINS = ['photo', 'added'];
 
     /**
@@ -52,7 +52,7 @@ class ContentValidator
     }
 
     /**
-     * Fehler aufgeteilt nach Teil der Seite: «modules» (Quiz usw.) und «page» (alles andere).
+     * Errors split by part of the page: «modules» (quiz etc.) and «page» (everything else).
      *
      * @param  array<string, mixed>  $content
      * @return array{page: list<string>, modules: list<string>}
@@ -97,7 +97,7 @@ class ContentValidator
 
             'modules' => ['required', 'array'],
 
-            // Das Quiz ist optional; die genaue Anzahl Fragen gibt der Prompt je nach Umfang vor
+            // The quiz is optional; the prompt sets the exact number of questions depending on the scope
             'modules.quiz' => $strict ? ['present', 'nullable', 'array', 'min:3', 'max:8'] : ['present', 'nullable', 'array', 'min:1', 'max:10'],
             'modules.quiz.*.id' => ['required', 'string', 'max:20'],
             'modules.quiz.*.question' => ['required', 'string', 'max:300'],
@@ -379,7 +379,7 @@ class ContentValidator
     {
         $module = $this->content['modules'];
 
-        // Bei weniger als 3 Fragen kann die Position zufällig gleich sein
+        // With fewer than 3 questions the position can be the same by chance
         $positions = array_column($module['quiz'] ?? [], 'answer');
         if (count($positions) >= 3 && count(array_unique($positions)) === 1) {
             $this->fail('modules.quiz', 'Quiz: Die richtige Antwort steht immer an derselben Position.');

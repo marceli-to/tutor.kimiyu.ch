@@ -1,8 +1,8 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 /**
- * Folgt der Klasse «dark» auf <html>, die useAppearance setzt.
- * So stimmt der Wert auch, wenn das System-Theme wechselt.
+ * Follows the «dark» class on <html> that useAppearance sets.
+ * So the value is also right when the system theme changes.
  */
 export function useIsDark() {
     const isDark = ref(false);

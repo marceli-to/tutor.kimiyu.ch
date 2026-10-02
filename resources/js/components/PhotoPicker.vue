@@ -41,7 +41,7 @@ type Item = {
     quality: ImageQuality | null;
 };
 
-// Eigener Typ beim Verschieben einer Vorschau, damit er sich nie mit Dateien vermischt
+// Own type when moving a preview, so it never mixes with files
 const TILE_DRAG_TYPE = 'application/x-photo-tile';
 
 const items = ref<Item[]>([]);
@@ -53,7 +53,7 @@ const cameraInput = ref<HTMLInputElement | null>(null);
 const grid = ref<HTMLElement | null>(null);
 const isTouch = ref(false);
 
-// Dateien über dem Bereich; ein Zähler, weil enter/leave auch bei Kindelementen feuern
+// Files over the area; a counter, because enter/leave also fire on child elements
 const fileDragDepth = ref(0);
 const draggingIndex = ref<number | null>(null);
 const dropTarget = ref<{ index: number; side: 'before' | 'after' } | null>(
@@ -79,7 +79,7 @@ function emitFiles() {
     );
 }
 
-// Setzt das Formular die Fotos von aussen zurück, verschwinden die Vorschauen mit
+// If the form resets the photos from outside, the previews disappear too
 watch(
     () => props.modelValue,
     (files) => {
@@ -96,14 +96,14 @@ watch(
 );
 
 function isImage(file: File): boolean {
-    // HEIC vom iPhone kommt in manchen Browsern ohne Typ an
+    // HEIC from the iPhone arrives without a type in some browsers
     return (
         file.type.startsWith('image/') ||
         (file.type === '' && /\.(heic|heif)$/i.test(file.name))
     );
 }
 
-/** Einziger Weg, wie Fotos dazukommen: Dateiauswahl, Kamera, Ablegen, Einfügen. */
+/** The only way photos are added: file picker, camera, drop, paste. */
 async function addFiles(files: File[]) {
     imageError.value = '';
 
@@ -121,7 +121,7 @@ async function addFiles(files: File[]) {
 
     try {
         for (const file of images) {
-            // Pro Foto prüfen, weil mehrere Quellen gleichzeitig Fotos liefern können
+            // Check per photo, because several sources can deliver photos at the same time
             if (items.value.length >= props.maxImages) {
                 imageError.value = `Höchstens ${props.maxImages} Fotos pro Lernseite.`;
                 break;
@@ -150,7 +150,7 @@ async function addFiles(files: File[]) {
                 items.value.push(item);
                 emitFiles();
 
-                // Läuft im Hintergrund, das Hochladen wartet nicht darauf
+                // Runs in the background; the upload doesn't wait for it
                 void checkImageQuality(resized).then((quality) => {
                     const current = items.value.find((i) => i.id === item.id);
 
@@ -197,7 +197,7 @@ async function moveWithButton(index: number, direction: -1 | 1) {
     moveItem(index, to);
     announcement.value = `Foto ${index + 1} nach ${direction < 0 ? 'vorne' : 'hinten'} verschoben, jetzt Foto ${to + 1}.`;
 
-    // Fokus bleibt beim verschobenen Foto, auch wenn sein Knopf am Rand verschwindet
+    // Focus stays on the moved photo, even if its button at the edge disappears
     await nextTick();
     const own = direction < 0 ? 'prev' : 'next';
     const other = direction < 0 ? 'next' : 'prev';
@@ -215,7 +215,7 @@ function isFileDrag(event: DragEvent): boolean {
     return event.dataTransfer?.types.includes('Files') ?? false;
 }
 
-// Ablegen von Dateien auf dem ganzen Bereich
+// Dropping files on the whole area
 
 function onZoneDragEnter(event: DragEvent) {
     if (draggingIndex.value !== null || !isFileDrag(event)) {
@@ -256,14 +256,14 @@ function onZoneDrop(event: DragEvent) {
     void addFiles(Array.from(event.dataTransfer?.files ?? []));
 }
 
-// Verschieben einer Vorschau mit der Maus
+// Moving a preview with the mouse
 
 function onTileDragStart(event: DragEvent, index: number) {
     draggingIndex.value = index;
 
     if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move';
-        // Firefox startet das Ziehen nur mit Daten
+        // Firefox only starts dragging with data
         event.dataTransfer.setData(TILE_DRAG_TYPE, String(index));
     }
 }
@@ -311,7 +311,7 @@ function onTileDragEnd() {
     dropTarget.value = null;
 }
 
-// Neben dem Bereich abgelegte Dateien soll der Browser nicht öffnen
+// The browser must not open files dropped next to the area
 function onWindowDragOver(event: DragEvent) {
     if (isFileDrag(event)) {
         event.preventDefault();
@@ -341,7 +341,7 @@ function onPaste(event: ClipboardEvent) {
         return;
     }
 
-    // Text aus Word oder Excel bringt oft auch ein Bild mit; im Textfeld gewinnt der Text
+    // Text from Word or Excel often brings an image along; in the text field the text wins
     if (
         isTextField(event.target) &&
         (event.clipboardData?.types.includes('text/plain') ||
@@ -355,7 +355,7 @@ function onPaste(event: ClipboardEvent) {
 }
 
 onMounted(() => {
-    // Desktop-Browser ignorieren «capture» und zeigen sonst den gleichen Dialog doppelt
+    // Desktop browsers ignore «capture» and would otherwise show the same dialog twice
     isTouch.value = window.matchMedia('(pointer: coarse)').matches;
 
     window.addEventListener('dragover', onWindowDragOver);

@@ -14,7 +14,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 describe('migration', function () {
     it('moves existing graphics to position 1 and sets the graphics mode', function () {
-        // Die späteren Migrationen zuerst zurücknehmen, damit die alten Spalten wieder da sind
+        // Roll back the later migrations first, so the old columns are back
         (require database_path('migrations/2026_10_02_150000_drop_hero_columns_from_lessons_table.php'))->down();
         (require database_path('migrations/2026_10_02_145000_add_hidden_to_lesson_graphics_table.php'))->down();
         $migration = require database_path('migrations/2026_10_02_140000_create_lesson_graphics_table.php');
@@ -117,7 +117,7 @@ describe('display', function () {
         $this->user = User::factory()->create();
         $this->child = Child::factory()->for($this->user)->create();
 
-        // Grafik 2 im zweiten Abschnitt; Grafik 3 ist fehlgeschlagen, hat aber einen Platz
+        // Graphic 2 in the second section; graphic 3 failed but has a place
         $content = LessonFactory::fixture('oekosystem');
         $content['sections'][] = ['title' => 'Die Nahrungskette', 'blocks' => [
             ['type' => 'paragraph', 'text' => 'Pflanzen werden von Tieren gefressen.', 'origin' => 'photo'],
@@ -372,12 +372,12 @@ describe('display', function () {
                 });
             });
 
-        // Unverändert speichern: Grafik 2 bleibt sichtbar und hat jetzt einen festen Platz
+        // Save unchanged: graphic 2 stays visible and now has a fixed place
         $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $edited])
             ->assertSessionHasNoErrors();
         expect($this->lesson->graphic(2)->fresh()->hidden)->toBeFalse();
 
-        // Ohne den Baustein speichern: ausgeblendet
+        // Save without the block: hidden
         $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => withoutGraphicBlock($edited, 2)])
             ->assertSessionHasNoErrors();
         expect($this->lesson->graphic(2)->fresh()->hidden)->toBeTrue();

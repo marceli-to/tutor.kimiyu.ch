@@ -22,7 +22,7 @@ class RegenerateQuiz extends LessonStep
         $this->lesson->update(RegenerateGraphic::needsReview());
     }
 
-    // Scheitert es, bleibt die Seite wie vorher, auch freigegeben
+    // If it fails, the page stays as before, published too
     protected function statusAfterFailure(): ?LessonStatus
     {
         return null;

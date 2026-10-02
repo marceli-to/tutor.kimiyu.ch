@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Markiert, was nicht auf den Fotos stand. Das Kind bekommt keine Herkunft,
-// darum kann die Marke überall ohne weitere Bedingung eingebunden werden.
+// Marks what wasn't on the photos. The child gets no origin,
+// so the badge can be included anywhere without further conditions.
 withDefaults(
     defineProps<{
         origin?: 'photo' | 'added';
-        // «app» für die Bearbeiten-Seite, die ausserhalb der Lernseiten-Farben liegt
+        // «app» for the edit page, which is outside the lesson colours
         variant?: 'lesson' | 'app';
     }>(),
     { origin: undefined, variant: 'lesson' },

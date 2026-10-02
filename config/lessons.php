@@ -3,28 +3,28 @@
 return [
 
     /*
-    | Fake-Modell statt Claude API: liefert die Fixtures aus database/fixtures/lessons.
-    | Praktisch für die lokale Entwicklung ohne API-Key.
+    | Fake model instead of the Claude API: returns the fixtures from database/fixtures/lessons.
+    | Handy for local development without an API key.
     */
     'fake_ai' => (bool) env('LESSON_FAKE_AI', false),
 
-    // Zweiter Durchgang, der Quiz-Lösungen, Sortierung und Fakten prüft und korrigiert
+    // Second pass that checks and corrects quiz solutions, sorting and facts
     'check_enabled' => (bool) env('LESSON_CHECK_ENABLED', true),
 
-    // Fotos nach erfolgreicher Analyse löschen (revDSG)
+    // Delete photos after a successful analysis (revDSG)
     'delete_images' => (bool) env('LESSON_DELETE_IMAGES', true),
 
     'images' => [
         'max_count' => 4,
         'max_upload_kb' => 12 * 1024,
-        // Längere Seite in Pixeln, grössere Bilder bringen der Analyse nichts mehr
+        // Longer side in pixels; larger images don't help the analysis any more
         'max_edge' => 1600,
         'jpeg_quality' => 85,
     ],
 
     /*
-    | Anzahlen pro Umfang, für die Prompts. Grenzen des ContentValidator einhalten:
-    | höchstens 4 Abschnitte, 3–8 Quizfragen, 20 Karten, 16 Sortier-Begriffe.
+    | Counts per scope, for the prompts. Keep within the limits of the ContentValidator:
+    | at most 4 sections, 3–8 quiz questions, 20 cards, 16 sorting terms.
     */
     'scope' => [
         'short' => ['sections' => '1–2', 'quiz' => 3, 'flashcards' => '4–6', 'terms' => '6–8', 'gaps' => '3–5'],
@@ -42,14 +42,14 @@ return [
     ],
 
     /*
-    | Modell und Effort pro Schritt. Leer: globaler Standard aus services.anthropic.
-    | Fotos lesen und interaktive Grafiken bauen braucht Opus; strukturiertes Schreiben
-    | und Prüfen aus vorhandenem Stoff schafft Sonnet zum halben Preis.
-    | Schritte ohne eigenen Eintrag nehmen den Teil vor dem Bindestrich (graphic-repair → graphic).
+    | Model and effort per step. Empty: global default from services.anthropic.
+    | Reading photos and building interactive graphics needs Opus; Sonnet manages structured
+    | writing and checking from existing material at half the price.
+    | Steps without an entry of their own use the part before the hyphen (graphic-repair → graphic).
     */
     'models' => [
         'analysis' => ['model' => env('LESSON_MODEL_ANALYSIS'), 'effort' => env('LESSON_EFFORT_ANALYSIS')],
-        // Textteil, der zweite Teil der Analyse: liest dieselben Fotos, deshalb dieselben Einstellungen
+        // Text part, the second part of the analysis: reads the same photos, so the same settings
         'page' => ['model' => env('LESSON_MODEL_ANALYSIS'), 'effort' => env('LESSON_EFFORT_ANALYSIS')],
         'modules' => ['model' => env('LESSON_MODEL_MODULES', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULES', 'medium')],
         'regenerate-quiz' => ['model' => env('LESSON_MODEL_MODULES', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULES', 'medium')],
@@ -59,8 +59,8 @@ return [
     ],
 
     /*
-    | Preise in USD pro Million Tokens, für das Kosten-Log.
-    | Quelle: Anthropic-Preisliste, Stand September 2026. Cache-Schreiben kostet 1.25× Input.
+    | Prices in USD per million tokens, for the cost log.
+    | Source: Anthropic price list, as of September 2026. Cache writes cost 1.25× input.
     */
     'pricing' => [
         'claude-opus-5-5' => ['input' => 4.00, 'output' => 20.00, 'cache_read' => 0.20, 'cache_write' => 5.00],

@@ -3,10 +3,10 @@
 namespace App\Lessons;
 
 /**
- * Prüft ein generiertes Hero-Fragment, bevor es gespeichert wird.
+ * Validates a generated graphic fragment before it is stored.
  *
- * Die eigentliche Sicherheit kommt vom sandboxed iframe und der CSP. Diese Prüfung fängt
- * Fehler ab, die die Grafik kaputt machen würden, und gibt der Reparatur klare Hinweise.
+ * The actual security comes from the sandboxed iframe and the CSP. This check catches
+ * errors that would break the graphic and gives the repair clear hints.
  */
 class GraphicValidator
 {
@@ -16,7 +16,7 @@ class GraphicValidator
         'script' => 40_000,
     ];
 
-    // Namespaces in SVG und createElementNS sind keine Netzwerkadressen
+    // Namespaces in SVG and createElementNS are not network addresses
     private const ALLOWED_URLS = [
         'http://www.w3.org/2000/svg',
         'http://www.w3.org/1999/xlink',

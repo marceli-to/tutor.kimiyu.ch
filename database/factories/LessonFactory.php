@@ -30,7 +30,7 @@ class LessonFactory extends Factory
     }
 
     /**
-     * Freigegebene Seite mit Inhalt und Grafik 1 aus database/fixtures/lessons.
+     * Published page with content and graphic 1 from database/fixtures/lessons.
      */
     public function fromFixture(string $name = 'fotosynthese'): static
     {

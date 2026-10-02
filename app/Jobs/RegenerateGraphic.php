@@ -30,7 +30,7 @@ class RegenerateGraphic extends LessonStep
     }
 
     /**
-     * Neuer Inhalt von der KI: die Eltern prüfen und geben wieder frei.
+     * New content from the AI: the parents review and publish again.
      *
      * @return array<string, mixed>
      */
@@ -44,7 +44,7 @@ class RegenerateGraphic extends LessonStep
         ];
     }
 
-    // Scheitert es, bleibt die Seite wie vorher, auch freigegeben
+    // If it fails, the page stays as before, published too
     protected function statusAfterFailure(): ?LessonStatus
     {
         return null;

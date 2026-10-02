@@ -21,10 +21,10 @@ const props = defineProps<{
         content: LessonContent;
     };
     clozeMarkup: string | null;
-    // Nur bei Lernseiten mit Fotos: was die KI ergänzt hat, ist markiert
+    // Only for lessons with photos: what the AI added is marked
     showOrigin: boolean;
     palettes: { value: string; label: string; accent: string }[];
-    // Kurzer Text pro Grafik (Beschreibung, Idee oder Wunsch), nach Nummer
+    // Short text per graphic (description, idea or wish), by number
     graphicLabels: Partial<Record<number, string>>;
 }>();
 
@@ -36,7 +36,7 @@ setLayoutProps({
 });
 
 const form = useForm({
-    // Props sind reaktive Proxys, structuredClone kann sie nicht kopieren
+    // Props are reactive proxies; structuredClone can't copy them
     content: JSON.parse(JSON.stringify(props.lesson.content)) as LessonContent,
     clozeMarkup: props.clozeMarkup ?? '',
 });
@@ -50,7 +50,7 @@ function err(path: string): string | undefined {
     return errors.value[`content.${path}`];
 }
 
-// Absätze werden als ein Textfeld bearbeitet, getrennt durch eine Leerzeile
+// Paragraphs are edited as one text field, separated by a blank line
 function joinParagraphs(paragraphs: string[]): string {
     return paragraphs.join('\n\n');
 }
@@ -62,8 +62,8 @@ function splitParagraphs(value: string | null | undefined): string[] {
         .filter(Boolean);
 }
 
-// Stabile Schlüssel für Bausteine, auch wenn einer entfernt wird (splice). Nur im Browser,
-// damit der Inhalt für den Server unverändert bleibt.
+// Stable keys for blocks, even when one is removed (splice). Only in the browser,
+// so the content stays unchanged for the server.
 const blockKeys = new WeakMap<object, number>();
 let nextBlockKey = 0;
 
@@ -323,7 +323,7 @@ function save() {
             />
         </section>
 
-        <!-- Ohne Quiz kein Editor; ein Quiz hinzufügen gehört nicht hierher -->
+        <!-- No quiz, no editor; adding a quiz doesn't belong here -->
         <section v-if="c.modules.quiz" class="space-y-4">
             <h2 class="text-lg font-semibold">Quiz</h2>
             <InputError :message="err('modules.quiz')" />

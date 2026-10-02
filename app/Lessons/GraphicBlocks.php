@@ -11,9 +11,9 @@ use App\Models\LessonGraphic;
 class GraphicBlocks
 {
     /**
-     * Fertige, sichtbare Grafiken 2 und 3 ohne Baustein zeigt die Seite am Ende des letzten Abschnitts.
-     * In der Bearbeiten-Ansicht bekommen sie einen Baustein, damit die Eltern sie ausblenden können.
-     * Er kommt in den letzten Abschnitt, der noch Platz hat (höchstens 4 Bausteine pro Abschnitt).
+     * The page shows finished, visible graphics 2 and 3 without a block at the end of the last section.
+     * In the edit view they get a block, so the parents can hide them.
+     * It goes into the last section that still has room (at most 4 blocks per section).
      *
      * @param  array<string, mixed>  $content
      * @return array<string, mixed>

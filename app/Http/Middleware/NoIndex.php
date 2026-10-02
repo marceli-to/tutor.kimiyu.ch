@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Geteilte Links der Kinder sollen nicht in Suchmaschinen landen und keine Adresse weitergeben.
+ * The children's shared links must not end up in search engines or pass on their address.
  */
 class NoIndex
 {

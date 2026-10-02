@@ -22,12 +22,12 @@ class AnalyzeLesson
     ) {}
 
     /**
-     * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung und Pläne für die Grafiken; danach der Textteil
-     * (eigener Aufruf, zusammen ist das Schema für die API zu gross) und die Module.
-     * Bei Regelverstössen ein Reparatur-Call pro betroffenem Teil. Scheitert ein Aufruf, beginnt ein neuer Versuch von vorn.
+     * Photos, request or (for old lessons) topic → summary and plans for the graphics; then the text part
+     * (a call of its own; together the schema is too large for the API) and the modules.
+     * On rule violations one repair call per affected part. If a call fails, a new attempt starts from the beginning.
      *
-     * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
-     * @throws ModelException bei API-Fehlern
+     * @throws GenerationFailed when no usable content comes out
+     * @throws ModelException on API errors
      */
     public function handle(Lesson $lesson): void
     {
@@ -35,7 +35,7 @@ class AnalyzeLesson
         $disk = Storage::disk('lesson-images');
 
         foreach ($lesson->images as $image) {
-            // Die Disk wirft bei fehlenden Dateien; fehlende Fotos werden unten verständlich gemeldet
+            // The disk throws on missing files; missing photos are reported clearly below
             $data = $disk->exists($image->path) ? $disk->get($image->path) : null;
 
             if (is_string($data)) {
@@ -61,19 +61,19 @@ class AnalyzeLesson
                 ($data['source']['problem'] ?? null) ?: match (true) {
                     ! $lesson->isFromTopic() => 'Auf den Fotos war kein Schulstoff zu erkennen.',
                     $lesson->prompt !== null => 'Zu diesem Auftrag konnte keine Lernseite erstellt werden.',
-                    // Alte Lernseiten aus einem Thema
+                    // Old lessons from a topic
                     default => 'Zu diesem Thema konnte keine Lernseite erstellt werden.',
                 },
             );
         }
 
-        // Zuerst Fach, Zusammenfassung und Pläne speichern, die nächsten Aufrufe brauchen sie.
-        // Das Fach nur, wenn die Eltern keines angegeben haben.
+        // Store subject, summary and plans first; the next calls need them.
+        // The subject only if the parents didn't give one.
         $lesson->update([
             'subject_detected' => $lesson->subject === null,
             'subject' => $lesson->subject ?? self::detectedSubject($data['subject'] ?? null),
             'source_summary' => (string) ($data['summary'] ?? ''),
-            // Ohne Fotos ist alles ergänzt, eine Liste wäre bedeutungslos
+            // Without photos everything is added; a list would be meaningless
             'additions' => $lesson->isFromTopic()
                 ? null
                 : (array_values(array_filter((array) ($data['additions'] ?? []), 'is_string')) ?: null),
@@ -81,19 +81,19 @@ class AnalyzeLesson
 
         $this->storeGraphicPlans($lesson, (array) ($data['graphic_plans'] ?? []));
 
-        // Der Textteil mit denselben Fotos, damit die Begriffe dem Buch folgen
+        // The text part with the same photos, so the terms follow the book
         $page = $this->callModel->handle($lesson, Prompts::pageRequest($lesson, $images))->data['page'] ?? null;
 
         if (! is_array($page)) {
             throw new GenerationFailed('Die KI hat keinen gültigen Inhalt geliefert.', 'Der Textteil fehlt in der Antwort.');
         }
 
-        // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
+        // The whole page is too large for one structured answer, so the modules come separately
         $lesson->update(['step' => 'modules']);
         $modules = $this->callModel->handle($lesson, Prompts::modules($lesson, $page))->data['modules'] ?? [];
         $content = self::assemble($page, self::onlyAllowed($lesson, $modules));
 
-        // Fehlerhafte Teile einmal reparieren
+        // Repair faulty parts once
         foreach (ContentValidator::errorsByPart($content, strict: true) as $part => $errors) {
             if ($errors === []) {
                 continue;
@@ -108,7 +108,7 @@ class AnalyzeLesson
 
         $errors = ContentValidator::errors($content, strict: true);
 
-        // Nach der Reparatur reichen die normalen Regeln; die Eltern prüfen den Rest
+        // After the repair the normal rules are enough; the parents check the rest
         if ($errors !== [] && ContentValidator::errors($content) !== []) {
             throw new GenerationFailed(
                 'Die KI hat keinen gültigen Inhalt geliefert.',
@@ -128,8 +128,8 @@ class AnalyzeLesson
     }
 
     /**
-     * Pläne der Analyse pro Grafik speichern. «auto»: nur Grafik 1; «custom»: nur gewünschte Grafiken;
-     * «none»: keine. Ohne Plan steht der Hinweis der KI als Fehler bei der Grafik.
+     * Stores the analysis plans per graphic. «auto»: only graphic 1; «custom»: only requested graphics;
+     * «none»: none. Without a plan the AI's note is stored as the graphic's error.
      *
      * @param  array<mixed>  $plans
      */
@@ -165,7 +165,7 @@ class AnalyzeLesson
             $planned[$number] = $plan;
         }
 
-        // Die Eltern sollen wissen, warum ein Wunsch fehlt, auch wenn die KI ihn übergangen hat
+        // The parents should know why a wish is missing, even if the AI skipped it
         if ($lesson->graphics_mode === 'custom') {
             $lesson->graphics()->whereNotIn('position', array_keys($planned))->update([
                 'plan' => null,
@@ -178,7 +178,7 @@ class AnalyzeLesson
     }
 
     /**
-     * Das von der KI erkannte Fach, gekürzt; ohne brauchbare Antwort «Allgemein».
+     * The subject detected by the AI, shortened; «Allgemein» without a usable answer.
      */
     private static function detectedSubject(mixed $subject): string
     {
@@ -188,9 +188,9 @@ class AnalyzeLesson
     }
 
     /**
-     * Setzt Textteil und Module zu einer Seite zusammen, in der Reihenfolge der Fixtures.
+     * Joins text part and modules into one page, in the order of the fixtures.
      *
-     * @param  array<string, mixed>  $page  Textteil (oder ganze Seite, deren Module ersetzt werden)
+     * @param  array<string, mixed>  $page  text part (or whole page whose modules are replaced)
      * @param  array<string, mixed>  $modules
      * @return array<string, mixed>
      */
@@ -203,8 +203,8 @@ class AnalyzeLesson
     }
 
     /**
-     * Module, welche die Eltern nicht erlaubt haben, auf null setzen, auch wenn die KI sie trotzdem liefert.
-     * Bleibt keines übrig, meldet das die Prüfung des Inhalts wie jeden anderen Fehler.
+     * Sets modules the parents didn't allow to null, even if the AI delivers them anyway.
+     * If none is left, the content validation reports it like any other error.
      *
      * @param  array<string, mixed>  $modules
      * @return array<string, mixed>

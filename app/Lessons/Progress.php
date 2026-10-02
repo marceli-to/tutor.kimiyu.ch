@@ -8,19 +8,19 @@ use App\Models\Lesson;
 use Illuminate\Support\Collection;
 
 /**
- * Lernstand: pro Aufgabe (Quizfrage, Sortier-Begriff, Lücke) ein Status aus den letzten Antworten.
+ * Progress: per item (quiz question, sorting term, gap) a status from the latest answers.
  *
- * - mastered: die letzten zwei Antworten waren richtig
- * - almost: die letzte Antwort war richtig, davor falsch oder nur ein Versuch (beim Quiz kann das geraten sein)
- * - practice: die letzte Antwort war falsch
- * - open: noch nie beantwortet
+ * - mastered: the last two answers were correct
+ * - almost: the last answer was correct, the one before wrong or only one attempt (in the quiz it may have been a guess)
+ * - practice: the last answer was wrong
+ * - open: never answered
  */
 class Progress
 {
     public const STATUSES = ['mastered', 'almost', 'practice', 'open'];
 
     /**
-     * Alle Aufgaben einer Lernseite, die der Lernstand erfasst.
+     * All items of a lesson that the progress tracks.
      *
      * @return list<array{module: string, id: string, text: string}>
      */
@@ -47,9 +47,9 @@ class Progress
     }
 
     /**
-     * Prüft eine Antwort gegen den Inhalt. Die Richtigkeit kommt nie vom Browser.
+     * Checks an answer against the content. Correctness never comes from the browser.
      *
-     * @return bool|null null, wenn es die Aufgabe nicht (mehr) gibt
+     * @return bool|null null if the item doesn't exist (any more)
      */
     public static function check(Lesson $lesson, string $module, string $itemId, mixed $answer): ?bool
     {
@@ -74,7 +74,7 @@ class Progress
     }
 
     /**
-     * Status aller Aufgaben einer Lernseite für ein Kind.
+     * Status of all items of a lesson for a child.
      *
      * @return list<array{module: string, id: string, text: string, status: string}>
      */
@@ -84,7 +84,7 @@ class Progress
     }
 
     /**
-     * Zusammenfassung pro Lernseite: Anzahl pro Status und die Aufgaben, die noch nicht sitzen.
+     * Summary per lesson: count per status and the items not yet mastered.
      *
      * @param  Collection<int, Lesson>  $lessons
      * @return array<int, array{counts: array<string, int>, total: int, open: list<array{module: string, id: string, text: string, status: string}>}>
@@ -102,7 +102,7 @@ class Progress
                 $counts[$item['status']]++;
             }
 
-            // Zuerst was geübt werden muss, dann was fast sitzt
+            // First what needs practice, then what is almost mastered
             $open = array_values(array_filter($items, fn ($item) => in_array($item['status'], ['practice', 'almost'], true)));
             usort($open, fn ($a, $b) => ($a['status'] === 'practice' ? 0 : 1) <=> ($b['status'] === 'practice' ? 0 : 1));
 
@@ -118,7 +118,7 @@ class Progress
 
     /**
      * @param  list<array{module: string, id: string, text: string}>  $items
-     * @param  list<Attempt>  $attempts  Antworten einer Lernseite, neueste zuerst
+     * @param  list<Attempt>  $attempts  answers of a lesson, newest first
      * @return list<array{module: string, id: string, text: string, status: string}>
      */
     private static function withStatus(array $items, array $attempts): array
@@ -144,7 +144,7 @@ class Progress
 
     /**
      * @param  list<int>  $lessonIds
-     * @return array<int, list<Attempt>> Antworten pro Lernseite, neueste zuerst
+     * @return array<int, list<Attempt>> answers per lesson, newest first
      */
     private static function attempts(Child $child, array $lessonIds): array
     {

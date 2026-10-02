@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Auftrag statt Thema und Hinweise; Anzahl Fotos und Ergänzungen der KI.
-     * Alte Foto-Lernseiten haben kein Thema und gelten deshalb auch mit photo_count 0 nicht als «aus dem Thema».
+     * Request instead of topic and notes; number of photos and the AI's additions.
+     * Old photo lessons have no topic, so even with photo_count 0 they don't count as «from the topic».
      */
     public function up(): void
     {
@@ -21,8 +21,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Verloren beim Rollback: der Auftrag der Eltern, die Anzahl Fotos und die Ergänzungen der KI.
-        // Lernseiten nur aus einem Auftrag haben danach weder Thema noch Auftrag und lassen sich nicht neu erstellen.
+        // Lost on rollback: the parents' request, the number of photos and the AI's additions.
+        // Lessons from a request only then have neither topic nor request and can't be regenerated.
         Schema::table('lessons', function (Blueprint $table) {
             $table->dropColumn(['prompt', 'photo_count', 'additions']);
         });

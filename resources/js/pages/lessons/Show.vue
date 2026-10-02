@@ -13,7 +13,7 @@ import type {
 } from '@/types';
 
 const props = defineProps<{
-    // Nur für die Eltern, nicht in der lokalen Vorschau
+    // Only for the parents, not in the local preview
     parent: {
         childName: string;
         shareUrl: string | null;
@@ -30,7 +30,7 @@ const props = defineProps<{
         error: string | null;
         canRetry: boolean;
         fromTopic: boolean;
-        // Positionen der Grafiken, die gebaut werden (für die Fortschrittsanzeige)
+        // Positions of the graphics being built (for the progress display)
         plannedGraphics: number[];
         subject: string;
         level: string;
@@ -52,7 +52,7 @@ const generating = computed(
         regenerating.value,
 );
 
-// Solange die Seite entsteht, alle 3 Sekunden den Stand abfragen
+// While the page is being created, poll the state every 3 seconds
 // (with the parent's actions and graphic errors, which change at the end as well)
 const { start, stop } = usePoll(
     3000,

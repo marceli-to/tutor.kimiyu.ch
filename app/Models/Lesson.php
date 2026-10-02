@@ -19,27 +19,27 @@ use Illuminate\Support\Str;
  * @property LessonStatus $status
  * @property string|null $step
  * @property string|null $title
- * @property string|null $subject Leer, bis die KI das Fach erkannt hat
+ * @property string|null $subject Empty until the AI has detected the subject
  * @property bool $subject_detected The AI detected the subject; the parents did not give one
  * @property string $level
  * @property string|null $topic
  * @property string|null $notes
- * @property string|null $prompt Auftrag der Eltern, frei formuliert
+ * @property string|null $prompt The parents' request, free text
  * @property int $photo_count
- * @property 'none'|'auto'|'custom' $graphics_mode Keine Grafik, die KI entscheidet oder nach Wunsch der Eltern
- * @property 'new'|'exam' $purpose Neuer Stoff oder Prüfungsvorbereitung
- * @property 'short'|'normal'|'detailed' $scope Umfang der Seite
- * @property list<'quiz'|'sorting'|'flashcards'|'cloze'>|null $modules Erlaubte Lernmodule, null bei alten Lernseiten: alle
+ * @property 'none'|'auto'|'custom' $graphics_mode No graphic, the AI decides, or as the parents wish
+ * @property 'new'|'exam' $purpose New material or exam preparation
+ * @property 'short'|'normal'|'detailed' $scope Scope of the page
+ * @property list<'quiz'|'sorting'|'flashcards'|'cloze'>|null $modules Allowed learning modules, null for old lessons: all
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
  * @property list<array{area: string, change: string}>|null $check_notes
  * @property string|null $source_summary
- * @property list<string>|null $additions Was die KI aus eigenem Wissen ergänzt hat
+ * @property list<string>|null $additions What the AI added from its own knowledge
  * @property string|null $error
  * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property Carbon|null $deleted_at Weich gelöscht: Fotos sind weg, die Kosten bleiben erhalten
+ * @property Carbon|null $deleted_at Soft-deleted: photos are gone, the costs are kept
  */
 #[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
@@ -47,7 +47,7 @@ class Lesson extends Model
     /** @use HasFactory<LessonFactory> */
     use HasFactory, SoftDeletes;
 
-    /** Anzeige, solange die KI das Fach noch nicht erkannt hat */
+    /** Shown while the AI hasn't detected the subject yet */
     public const SUBJECT_PENDING = 'Fach wird erkannt …';
 
     /** Shown when the generation failed before the AI detected the subject */
@@ -60,7 +60,7 @@ class Lesson extends Model
     public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze'];
 
     /**
-     * Wie der Standardwert in der Datenbank, damit auch ungespeicherte Lernseiten ihn haben.
+     * Like the database default, so unsaved lessons have it too.
      *
      * @var array<string, mixed>
      */
@@ -87,7 +87,7 @@ class Lesson extends Model
     }
 
     /**
-     * Ohne Fotos erstellt (Thema oder Auftrag): Inhalt stammt aus dem Wissen der KI.
+     * Created without photos (topic or request): the content comes from the AI's knowledge.
      */
     public function isFromTopic(): bool
     {
@@ -95,7 +95,7 @@ class Lesson extends Model
     }
 
     /**
-     * Erlaubte Lernmodule; alte Lernseiten ohne Liste erlauben alle.
+     * Allowed learning modules; old lessons without a list allow all.
      *
      * @return list<'quiz'|'sorting'|'flashcards'|'cloze'>
      */
@@ -148,7 +148,7 @@ class Lesson extends Model
     }
 
     /**
-     * Titel für Listen, auch bevor die KI einen Titel gesetzt hat.
+     * Title for lists, also before the AI has set a title.
      */
     public function displayTitle(): string
     {

@@ -7,11 +7,11 @@ use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
 
 /**
- * Bereitet ein hochgeladenes Foto für die Analyse vor.
+ * Prepares an uploaded photo for the analysis.
  *
- * Das Bild wird mit GD neu kodiert. Dabei gehen alle Metadaten verloren (EXIF, GPS, Kamera),
- * die Ausrichtung wird ins Bild übernommen und die längere Seite auf max_edge verkleinert.
- * Der Browser verkleinert die Fotos schon vorher; das hier ist die Absicherung auf dem Server.
+ * The image is re-encoded with GD. This drops all metadata (EXIF, GPS, camera),
+ * applies the orientation to the image and scales the longer side down to max_edge.
+ * The browser already scales the photos down; this is the safeguard on the server.
  */
 class ImageProcessor
 {

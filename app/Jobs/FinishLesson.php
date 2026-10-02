@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Enums\LessonStatus;
 
 /**
- * Letzter Schritt: Die Seite ist bereit zur Prüfung durch die Eltern.
+ * Last step: the page is ready for review by the parents.
  */
 class FinishLesson extends LessonStep
 {
@@ -20,7 +20,7 @@ class FinishLesson extends LessonStep
             'status' => LessonStatus::Review,
             'step' => null,
             'error' => null,
-            // Neuer Inhalt von der KI: die Eltern prüfen und geben wieder frei
+            // New content from the AI: the parents review and publish again
             'published_at' => null,
         ]);
     }

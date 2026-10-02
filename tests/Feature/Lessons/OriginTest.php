@@ -70,7 +70,7 @@ it('keeps the origin when the content is edited', function () {
 
     $content = $this->lesson->content;
     $content['meta']['title'] = 'Zucker aus Licht';
-    // Der Lückentext kommt als Markup zurück, ohne Herkunft im Objekt
+    // The cloze comes back as markup, without origin in the object
     unset($content['modules']['cloze']['origin']);
 
     $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), [

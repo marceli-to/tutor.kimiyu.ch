@@ -42,7 +42,7 @@ class ChildController extends Controller
     }
 
     /**
-     * Löscht das Kind mit allen Lernseiten und dem Lernstand.
+     * Deletes the child with all lessons and progress.
      */
     public function destroy(Child $child, DeleteChild $deleteChild): RedirectResponse
     {
@@ -56,7 +56,7 @@ class ChildController extends Controller
     }
 
     /**
-     * Lernstand: pro Lernseite, was sitzt und was noch geübt werden muss.
+     * Progress: per lesson, what is mastered and what still needs practice.
      */
     public function progress(Child $child): Response
     {
@@ -66,7 +66,7 @@ class ChildController extends Controller
     }
 
     /**
-     * Neuer Link, z. B. wenn der alte an die falsche Person ging. Der alte Link funktioniert danach nicht mehr.
+     * New link, e.g. when the old one went to the wrong person. The old link stops working.
      */
     public function renewLink(Child $child, RenewShareLink $renewShareLink): RedirectResponse
     {
