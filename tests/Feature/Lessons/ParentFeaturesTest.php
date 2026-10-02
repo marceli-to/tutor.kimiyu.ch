@@ -4,6 +4,7 @@ use App\Enums\LessonStatus;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Models\Child;
+use App\Models\Generation;
 use App\Models\Lesson;
 use App\Models\User;
 use Database\Factories\LessonFactory;
@@ -57,8 +58,34 @@ describe('children', function () {
         $this->actingAs($this->user)->delete(route('children.destroy', $this->child))->assertRedirect();
 
         expect(Child::count())->toBe(0)
-            ->and(Lesson::count())->toBe(0)
+            ->and(Lesson::withTrashed()->count())->toBe(0)
             ->and(Storage::disk('lesson-images')->allFiles())->toBe([]);
+    });
+
+    it('keeps the costs when a child is deleted', function () {
+        $this->lesson->generations()->createMany([
+            ['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4],
+            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2],
+        ]);
+
+        $this->actingAs($this->user)->delete(route('children.destroy', $this->child))->assertRedirect();
+
+        expect(Generation::count())->toBe(2)
+            ->and(Generation::whereNotNull('lesson_id')->count())->toBe(0)
+            ->and(Generation::where('user_id', $this->user->id)->count())->toBe(2);
+
+        $this->actingAs($this->user)->get(route('costs'))
+            ->assertInertia(fn (Assert $page) => $page->where('total', 0.6));
+    });
+
+    it('does not count deleted lessons per child', function () {
+        Lesson::factory()->for($this->child)->fromFixture('fotosynthese')->create(['status' => LessonStatus::Published])->delete();
+
+        $this->actingAs($this->user)->get(route('children.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('children.0.lessons', 1)
+                ->where('children.0.published', 0)
+            );
     });
 
     it('creates a new link and the old one stops working', function () {
@@ -308,10 +335,27 @@ describe('regenerating', function () {
 });
 
 it('deletes a lesson', function () {
+    $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
+    Storage::disk('lesson-images')->put("{$this->lesson->id}/a.jpg", 'x');
+    $this->lesson->images()->create(['path' => "{$this->lesson->id}/a.jpg", 'mime_type' => 'image/jpeg', 'size' => 1]);
+    $this->lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4]);
+
     $this->actingAs($this->user)->delete(route('lessons.destroy', $this->lesson))
         ->assertRedirect(route('dashboard'));
 
-    expect(Lesson::count())->toBe(0);
+    // Weich gelöscht: die Kosten bleiben, die Fotos sind weg
+    expect(Lesson::count())->toBe(0)
+        ->and($this->lesson->fresh()->trashed())->toBeTrue()
+        ->and($this->lesson->images()->count())->toBe(0)
+        ->and(Storage::disk('lesson-images')->allFiles())->toBe([])
+        ->and(Generation::where('lesson_id', $this->lesson->id)->count())->toBe(1);
+
+    $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))->assertNotFound();
+    $this->actingAs($this->user)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->has('children.0.subjects', 0));
+    $this->get(route('shared.index', $this->child->share_token))
+        ->assertInertia(fn (Assert $page) => $page->has('subjects', 0));
+    $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))->assertNotFound();
 
     $other = Lesson::factory()->fromFixture()->create();
     $this->actingAs($this->user)->delete(route('lessons.destroy', $other))->assertForbidden();

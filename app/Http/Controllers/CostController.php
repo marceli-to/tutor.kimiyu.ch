@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Generation;
+use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -17,8 +18,8 @@ class CostController extends Controller
     {
         /** @var Collection<int, Generation> $generations */
         $generations = Generation::query()
-            ->whereHas('lesson.child', fn ($q) => $q->where('user_id', $request->user()->id))
-            ->with('lesson:id,title,topic,subject,child_id', 'lesson.child:id,name')
+            ->where('user_id', $request->user()->id)
+            ->with('lesson:id,title,topic,subject,child_id,deleted_at', 'lesson.child:id,name')
             ->latest()
             ->get();
 
@@ -26,18 +27,19 @@ class CostController extends Controller
             ->groupBy(fn (Generation $g) => $g->created_at?->format('Y-m') ?? 'unbekannt')
             ->map(fn (Collection $items, string $month) => [
                 'month' => $items->first()->created_at?->translatedFormat('F Y'),
-                'lessons' => $items->pluck('lesson_id')->unique()->count(),
+                // Ohne Lernseite (samt Kind gelöscht) ist nicht mehr bekannt, wie viele es waren
+                'lessons' => $items->pluck('lesson_id')->filter()->unique()->count(),
                 'calls' => $items->count(),
                 'costUsd' => round((float) $items->sum('cost_usd'), 2),
             ])
             ->values();
 
+        // Weich gelöschte Lernseiten behalten ihre Zeile; Aufrufe ohne Lernseite (samt Kind gelöscht)
+        // landen gemeinsam in «Gelöschte Lernseiten».
         $lessons = $generations
-            ->groupBy('lesson_id')
+            ->groupBy(fn (Generation $g) => $g->lesson_id ?? 'geloescht')
             ->map(fn (Collection $items) => [
-                'id' => $items->first()->lesson->id,
-                'title' => $items->first()->lesson->title ?? $items->first()->lesson->topic ?? 'Ohne Titel',
-                'child' => $items->first()->lesson->child->name,
+                ...$this->lesson($items->first()->lesson),
                 'date' => $items->last()->created_at?->translatedFormat('j. F Y'),
                 'calls' => $items->count(),
                 'failed' => $items->where('status', 'error')->count(),
@@ -75,5 +77,22 @@ class CostController extends Controller
             'steps' => $steps,
             'lessons' => $lessons,
         ]);
+    }
+
+    /**
+     * @return array{id: int|null, title: string, child: string|null, deleted: bool}
+     */
+    private function lesson(?Lesson $lesson): array
+    {
+        if ($lesson === null) {
+            return ['id' => null, 'title' => 'Gelöschte Lernseiten', 'child' => null, 'deleted' => true];
+        }
+
+        return [
+            'id' => $lesson->id,
+            'title' => $lesson->title ?? $lesson->topic ?? 'Ohne Titel',
+            'child' => $lesson->child->name,
+            'deleted' => $lesson->trashed(),
+        ];
     }
 }

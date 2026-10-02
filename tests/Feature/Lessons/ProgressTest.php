@@ -4,6 +4,7 @@ use App\Enums\LessonStatus;
 use App\Lessons\Progress;
 use App\Models\Attempt;
 use App\Models\Child;
+use App\Models\Generation;
 use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
@@ -139,6 +140,17 @@ describe('pages', function () {
             );
     });
 
+    it('leaves deleted lessons out of the progress', function () {
+        attempts($this->child, $this->eco, 'quiz', 'q1', [true]);
+        $this->eco->delete();
+
+        $this->actingAs($this->user)->get(route('children.progress', $this->child))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lessons', 1)
+                ->where('lessons.0.id', $this->lesson->id)
+            );
+    });
+
     it('keeps the progress private to the parent', function () {
         $this->actingAs(User::factory()->create())->get(route('children.progress', $this->child))->assertForbidden();
     });
@@ -154,11 +166,12 @@ describe('pages', function () {
 
     it('sums up the costs per month and lesson', function () {
         $this->lesson->generations()->createMany([
-            ['step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'output_tokens' => 1000, 'cost_usd' => 0.1, 'duration_ms' => 30_000],
-            ['step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'error', 'output_tokens' => 0, 'cost_usd' => 0.05, 'duration_ms' => 1_000],
+            ['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'output_tokens' => 1000, 'cost_usd' => 0.1, 'duration_ms' => 30_000],
+            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'error', 'output_tokens' => 0, 'cost_usd' => 0.05, 'duration_ms' => 1_000],
         ]);
-        Lesson::factory()->fromFixture()->create()->generations()->create(
-            ['step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99],
+        $foreign = Lesson::factory()->fromFixture()->create();
+        $foreign->generations()->create(
+            ['user_id' => $foreign->child->user_id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99],
         );
 
         $this->actingAs($this->user)->get(route('costs'))
@@ -171,15 +184,47 @@ describe('pages', function () {
                 ->where('lessons.0.failed', 1)
                 ->where('lessons.0.outputTokens', 1000)
                 ->where('lessons.0.costUsd', 0.15)
+                ->where('lessons.0.deleted', false)
+            );
+    });
+
+    it('shows deleted lessons and orphaned costs on the costs page', function () {
+        $this->eco->generations()->forceCreate(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.3, 'created_at' => now()->subMinute()]);
+        $this->eco->delete();
+        // Lernseite samt Kind gelöscht: nur noch das Konto ist bekannt
+        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2, 'created_at' => now()->subMinutes(2)]);
+        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'error', 'cost_usd' => 0.1, 'created_at' => now()->subMinutes(3)]);
+        // Fremde Kosten ohne Lernseite zählen nicht
+        Generation::create(['user_id' => User::factory()->create()->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99]);
+
+        $this->actingAs($this->user)->get(route('costs'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('total', 0.6)
+                ->where('months.0.calls', 3)
+                ->has('steps', 2)
+                ->has('lessons', 2)
+                ->where('lessons.0.id', $this->eco->id)
+                ->where('lessons.0.title', 'Biotop + Biozönose = Ökosystem')
+                ->where('lessons.0.child', 'Mia')
+                ->where('lessons.0.deleted', true)
+                ->where('lessons.0.costUsd', 0.3)
+                ->where('lessons.1.id', null)
+                ->where('lessons.1.title', 'Gelöschte Lernseiten')
+                ->where('lessons.1.child', null)
+                ->where('lessons.1.deleted', true)
+                ->where('lessons.1.calls', 2)
+                ->where('lessons.1.failed', 1)
+                ->where('lessons.1.costUsd', 0.3)
             );
     });
 
     it('shows the average cost per step and model', function () {
         $this->lesson->generations()->createMany([
-            ['step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
-            ['step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
-            ['step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'error', 'input_tokens' => 0, 'output_tokens' => 0, 'cost_usd' => 0.05],
-            ['step' => 'module', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
+            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
+            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
+            ['user_id' => $this->user->id, 'step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'error', 'input_tokens' => 0, 'output_tokens' => 0, 'cost_usd' => 0.05],
+            ['user_id' => $this->user->id, 'step' => 'module', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
         ]);
 
         // Der Durchschnitt zählt nur erfolgreiche Aufrufe, die Summe alle

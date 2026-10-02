@@ -233,7 +233,10 @@ class LessonGenerator
     private function call(Lesson $lesson, ModelRequest $request): ModelResponse
     {
         $started = hrtime(true);
+        // Kind nur einmal laden, nicht bei jedem Aufruf neu
+        $lesson->loadMissing('child');
         $log = fn (string $status, ?ModelResponse $response, ?string $error = null) => $lesson->generations()->create([
+            'user_id' => $lesson->child->user_id,
             'step' => $request->step,
             'model' => $response->model ?? $request->model(),
             'status' => $status,

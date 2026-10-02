@@ -78,7 +78,8 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->schema_version)->toBe(1);
 
     expect($lesson->generations()->pluck('step')->all())->toBe(['analyse', 'module', 'pruefung', 'grafik'])
-        ->and($lesson->generations()->where('status', 'ok')->count())->toBe(4);
+        ->and($lesson->generations()->where('status', 'ok')->count())->toBe(4)
+        ->and($lesson->generations()->pluck('user_id')->unique()->all())->toBe([$this->user->id]);
 
     $this->actingAs($this->user)->get(route('lessons.show', $lesson))
         ->assertInertia(fn (Assert $page) => $page
