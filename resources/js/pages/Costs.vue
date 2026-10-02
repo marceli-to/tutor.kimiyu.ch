@@ -12,12 +12,20 @@ defineOptions({
 
 defineProps<{
     total: number;
-    model: string;
     months: {
         month: string;
         lessons: number;
         calls: number;
         costUsd: number;
+    }[];
+    steps: {
+        step: string;
+        model: string;
+        calls: number;
+        inputTokens: number;
+        outputTokens: number;
+        avgUsd: number;
+        totalUsd: number;
     }[];
     lessons: {
         id: number;
@@ -49,7 +57,7 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
     <div class="mx-auto w-full max-w-4xl space-y-8 p-4 md:p-6">
         <Heading
             title="Kosten"
-            :description="`Was die Lernseiten bei der Claude API gekostet haben (Modell ${model}). Enthält auch fehlgeschlagene Aufrufe.`"
+            description="Was die Lernseiten bei der Claude API gekostet haben. Enthält auch fehlgeschlagene Aufrufe."
         />
 
         <p class="text-3xl font-semibold tabular-nums">
@@ -99,6 +107,83 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
                             </td>
                             <td class="px-4 py-2 text-right tabular-nums">
                                 {{ usd(m.costUsd) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section v-if="steps.length" class="space-y-2">
+            <h2 class="font-medium">Pro Schritt</h2>
+            <p class="text-sm text-muted-foreground">
+                Durchschnitt pro Aufruf.
+            </p>
+            <div class="overflow-x-auto rounded-xl border">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50 text-left text-muted-foreground">
+                        <tr>
+                            <th scope="col" class="px-4 py-2 font-medium">
+                                Schritt
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-4 py-2 text-right font-medium"
+                            >
+                                Aufrufe
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-4 py-2 text-right font-medium"
+                            >
+                                Ø Input
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-4 py-2 text-right font-medium"
+                            >
+                                Ø Output
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-4 py-2 text-right font-medium"
+                            >
+                                Ø Kosten
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-4 py-2 text-right font-medium"
+                            >
+                                Total
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="s in steps"
+                            :key="`${s.step}|${s.model}`"
+                            class="border-t"
+                        >
+                            <td class="px-4 py-2">
+                                {{ s.step }}
+                                <span class="block text-muted-foreground">{{
+                                    s.model
+                                }}</span>
+                            </td>
+                            <td class="px-4 py-2 text-right tabular-nums">
+                                {{ s.calls }}
+                            </td>
+                            <td class="px-4 py-2 text-right tabular-nums">
+                                {{ number(s.inputTokens) }}
+                            </td>
+                            <td class="px-4 py-2 text-right tabular-nums">
+                                {{ number(s.outputTokens) }}
+                            </td>
+                            <td class="px-4 py-2 text-right tabular-nums">
+                                {{ usd(s.avgUsd, 3) }}
+                            </td>
+                            <td class="px-4 py-2 text-right tabular-nums">
+                                {{ usd(s.totalUsd) }}
                             </td>
                         </tr>
                     </tbody>

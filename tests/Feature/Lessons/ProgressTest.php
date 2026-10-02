@@ -173,4 +173,26 @@ describe('pages', function () {
                 ->where('lessons.0.costUsd', 0.15)
             );
     });
+
+    it('shows the average cost per step and model', function () {
+        $this->lesson->generations()->createMany([
+            ['step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
+            ['step' => 'grafik', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
+            ['step' => 'module', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
+        ]);
+
+        $this->actingAs($this->user)->get(route('costs'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('steps.0', [
+                    'step' => 'grafik',
+                    'model' => 'claude-opus-5-5',
+                    'calls' => 2,
+                    'inputTokens' => 11_000,
+                    'outputTokens' => 15_000,
+                    'avgUsd' => 0.5,
+                    'totalUsd' => 1, // JSON macht aus 1.0 eine 1
+                ])
+                ->where('steps.1.step', 'module')
+            );
+    });
 });
