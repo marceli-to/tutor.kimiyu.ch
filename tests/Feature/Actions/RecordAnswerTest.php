@@ -34,3 +34,12 @@ it('stores an almost right cloze answer as not correct', function () {
 	expect(app(RecordAnswer::class)->handle($this->child, $lesson, 'cloze', 'g5', 'ete'))->toBe(AnswerResult::Almost)
 		->and($this->child->attempts()->sole()->correct)->toBeFalse();
 });
+
+it('checks and stores an exercise answer', function () {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create();
+
+	expect(app(RecordAnswer::class)->handle($this->child, $lesson, 'exercises', 'a2', '375 km'))->toBe(AnswerResult::Correct)
+		->and(app(RecordAnswer::class)->handle($this->child, $lesson, 'exercises', 'a2', 375))->toBe(AnswerResult::Correct)
+		->and(app(RecordAnswer::class)->handle($this->child, $lesson, 'exercises', 'a2', true))->toBe(AnswerResult::Wrong)
+		->and($this->child->attempts()->pluck('correct')->all())->toBe([true, true, false]);
+});

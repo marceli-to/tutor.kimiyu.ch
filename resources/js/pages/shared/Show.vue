@@ -19,6 +19,8 @@ const props = defineProps<{
 		subject: string;
 		profile: LessonProfile;
 		speechLang: string | null;
+		// TeX between $…$ is rendered as a formula
+		math: boolean;
 		level: string;
 		content: LessonContent;
 		palette: Palette;
@@ -43,6 +45,7 @@ function onAnswer(answer: ModuleAnswer) {
 		:subject="lesson.subject"
 		:profile="lesson.profile"
 		:speech-lang="lesson.speechLang"
+		:math="lesson.math"
 		:level="lesson.level"
 		@answer="onAnswer"
 	>

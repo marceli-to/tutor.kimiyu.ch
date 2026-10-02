@@ -136,7 +136,9 @@ describe('per profile', function () {
 	it('keeps the schemas of every profile small and supported', function (Profile $profile) {
 		foreach ([Schemas::part('page', $profile), Schemas::part('modules', $profile), Schemas::modulesResult($profile)] as $schema) {
 			expect(JsonSchema::unsupportedKeywords($schema))->toBe([])
-				->and(strlen(json_encode($schema)))->toBeLessThan(4500);
+				// Only a rough guard: the API limit depends on the grammar, not the bytes (a 3647-byte
+				// modules schema with five modules was rejected). The probe against the API has the last word.
+				->and(strlen(json_encode($schema)))->toBeLessThanOrEqual(4300);
 		}
 	})->with(Profile::cases());
 
@@ -165,14 +167,20 @@ describe('per profile', function () {
 			->and(str_contains($json, '"conjugation"'))->toBe($profile === Profile::Languages);
 	})->with(Profile::cases());
 
+	it('has worked solutions and exercises only in the math schemas', function (Profile $profile) {
+		expect(str_contains(json_encode(Schemas::part('page', $profile)), '"worked_solution"'))->toBe($profile === Profile::Math)
+			->and(array_key_exists('exercises', Schemas::modules($profile)['properties']))->toBe($profile === Profile::Math);
+	})->with(Profile::cases());
+
 	it('accepts the profile fixtures as content and as the text part of their profile', function (string $fixture) {
 		$content = LessonFactory::fixture($fixture);
 		$profile = collect(Profile::cases())->first(fn (Profile $profile) => $profile->fixture() === $fixture);
 		$page = $content;
 		unset($page['modules'], $page['try_it']);
+		$modules = array_intersect_key($content['modules'], array_flip($profile->modules()));
 
 		expect(JsonSchema::errors($content, Schemas::content()))->toBe([])
 			->and(JsonSchema::errors(['page' => $page], Schemas::part('page', $profile)))->toBe([])
-			->and(JsonSchema::errors(['modules' => $content['modules']], Schemas::modulesResult($profile)))->toBe([]);
+			->and(JsonSchema::errors(['modules' => $modules], Schemas::modulesResult($profile)))->toBe([]);
 	})->with(LessonFactory::PROFILE_FIXTURES);
 });

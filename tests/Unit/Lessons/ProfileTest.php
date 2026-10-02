@@ -30,16 +30,27 @@ it('has a german label, a prompt file and an example for every profile', functio
 it('allows the base blocks and modules where the profile needs no room for its own', function (Profile $profile) {
 	expect($profile->blocks())->toBe(['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic'])
 		->and($profile->modules())->toBe(['quiz', 'sorting', 'flashcards', 'cloze']);
-})->with([Profile::Science, Profile::General, Profile::German]);
+})->with([Profile::Science, Profile::General, Profile::Geometry, Profile::German]);
 
 it('gives languages word lists and verb tables instead of formulas', function () {
 	expect(Profile::Languages->blocks())->toBe(['paragraph', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation'])
 		->and(Profile::Languages->modules())->toBe(['quiz', 'sorting', 'flashcards', 'cloze']);
 });
 
-it('uses its own fixture as the example for languages', function () {
+it('gives math worked solutions and exercises instead of columns and sorting', function () {
+	expect(Profile::Math->blocks())->toBe(['paragraph', 'formula', 'facts', 'box', 'graphic', 'worked_solution'])
+		->and(Profile::Math->modules())->toBe(['quiz', 'flashcards', 'cloze', 'exercises']);
+});
+
+it('renders formulas only where they belong', function () {
+	expect(array_values(array_filter(Profile::cases(), fn (Profile $profile) => $profile->rendersMath())))
+		->toBe([Profile::Science, Profile::Math, Profile::Geometry]);
+});
+
+it('uses its own fixture as the example for languages and math', function () {
 	expect(Profile::Languages->fixture())->toBe('passe-compose')
-		->and(LessonFactory::PROFILE_FIXTURES)->toContain('passe-compose');
+		->and(Profile::Math->fixture())->toBe('dreisatz')
+		->and(LessonFactory::PROFILE_FIXTURES)->toBe(['passe-compose', 'dreisatz']);
 });
 
 it('knows the speech language of a foreign language lesson', function (Profile $profile, ?string $subject, ?string $lang) {

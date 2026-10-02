@@ -96,6 +96,34 @@ describe('answers', function () {
 	});
 });
 
+describe('exercises', function () {
+	beforeEach(function () {
+		$this->math = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => 'Mathematik']);
+	});
+
+	it('checks exercises on the server and stores the attempts', function () {
+		// a1: Fr. 10.50; a5: 3/8
+		answer(['module' => 'exercises', 'item_id' => 'a1', 'answer' => 'Fr. 10,50'], $this->math)->assertOk()->assertExactJson(['correct' => true, 'almost' => false]);
+		answer(['module' => 'exercises', 'item_id' => 'a1', 'answer' => '10.50 kg'], $this->math)->assertExactJson(['correct' => false, 'almost' => false]);
+		answer(['module' => 'exercises', 'item_id' => 'a5', 'answer' => '6/16'], $this->math)->assertExactJson(['correct' => true, 'almost' => false]);
+		answer(['module' => 'exercises', 'item_id' => 'nope', 'answer' => '1'], $this->math)->assertStatus(422);
+
+		expect(Attempt::orderBy('id')->get(['module', 'item_id', 'correct'])->toArray())->toBe([
+			['module' => 'exercises', 'item_id' => 'a1', 'correct' => true],
+			['module' => 'exercises', 'item_id' => 'a1', 'correct' => false],
+			['module' => 'exercises', 'item_id' => 'a5', 'correct' => true],
+		]);
+	});
+
+	it('tracks the exercises in the progress', function () {
+		attempts($this->child, $this->math, 'exercises', 'a2', [true, true]);
+
+		$status = collect(Progress::forLesson($this->child, $this->math))->where('module', 'exercises')->pluck('status', 'id')->all();
+
+		expect($status)->toBe(['a1' => 'open', 'a2' => 'mastered', 'a3' => 'open', 'a4' => 'open', 'a5' => 'open']);
+	});
+});
+
 describe('status', function () {
 	it('derives the status from the last two answers', function () {
 		attempts($this->child, $this->lesson, 'quiz', 'q1', [true, true]);

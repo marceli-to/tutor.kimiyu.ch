@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
+import MathText from '@/components/lesson/MathText.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import SpeakButton from '@/components/lesson/SpeakButton.vue';
 import { categoryClasses } from '@/lib/lesson';
@@ -24,19 +25,19 @@ defineProps<{
 	</div>
 
 	<p v-if="block.type === 'paragraph'" class="mb-4 max-w-[66ch]">
-		{{ block.text }}
+		<MathText :text="block.text" />
 	</p>
 
 	<div
 		v-else-if="block.type === 'formula'"
 		class="mt-4 overflow-x-auto rounded-[14px] border border-ls-line bg-ls-card px-5 py-4 font-display text-[clamp(1.1rem,3.6vw,1.45rem)] font-medium"
 	>
-		{{ block.text }}
+		<MathText :text="block.text" />
 		<small
 			v-if="block.addendum"
 			class="mt-1.5 block font-reading text-base text-ls-muted"
 		>
-			{{ block.addendum }}
+			<MathText :text="block.addendum" />
 		</small>
 	</div>
 
@@ -46,8 +47,10 @@ defineProps<{
 			:key="k"
 			class="border-l-4 border-ls-accent pl-4"
 		>
-			<h3 class="mb-1.5 text-[1.15rem] font-medium">{{ fact.title }}</h3>
-			<p class="m-0 max-w-[66ch]">{{ fact.text }}</p>
+			<h3 class="mb-1.5 text-[1.15rem] font-medium">
+				<MathText :text="fact.title" />
+			</h3>
+			<p class="m-0 max-w-[66ch]"><MathText :text="fact.text" /></p>
 		</div>
 	</div>
 
@@ -65,14 +68,14 @@ defineProps<{
 				class="mb-1.5 text-[1.15rem] font-medium"
 				:class="categoryClasses[column.category].text"
 			>
-				{{ column.title }}
+				<MathText :text="column.title" />
 			</h3>
 			<p
 				v-for="(paragraph, n) in column.paragraphs"
 				:key="n"
 				class="mb-2 last:mb-0"
 			>
-				{{ paragraph }}
+				<MathText :text="paragraph" />
 			</p>
 		</div>
 	</div>
@@ -94,13 +97,15 @@ defineProps<{
 		v-else-if="block.type === 'box'"
 		class="mt-4 rounded-2xl border border-ls-line bg-ls-card px-5 py-4"
 	>
-		<h3 class="mb-1.5 text-[1.15rem] font-medium">{{ block.title }}</h3>
+		<h3 class="mb-1.5 text-[1.15rem] font-medium">
+			<MathText :text="block.title" />
+		</h3>
 		<p
 			v-for="(paragraph, n) in block.paragraphs"
 			:key="n"
 			class="mb-4 max-w-[66ch] last:mb-0"
 		>
-			{{ paragraph }}
+			<MathText :text="paragraph" />
 		</p>
 	</div>
 
@@ -109,7 +114,7 @@ defineProps<{
 		class="mt-4 overflow-hidden rounded-2xl border border-ls-line bg-ls-card"
 	>
 		<h3 v-if="block.title" class="px-5 pt-4 text-[1.15rem] font-medium">
-			{{ block.title }}
+			<MathText :text="block.title" />
 		</h3>
 		<table class="w-full border-collapse text-left">
 			<thead class="sr-only">
@@ -149,6 +154,43 @@ defineProps<{
 				</tr>
 			</tbody>
 		</table>
+	</div>
+
+	<div
+		v-else-if="block.type === 'worked_solution'"
+		class="mt-4 rounded-2xl border border-ls-line bg-ls-card px-5 py-4"
+	>
+		<h3 class="mb-3 text-[1.15rem] font-medium">
+			<span class="text-ls-muted">Beispiel:</span>
+			<MathText :text="block.task" />
+		</h3>
+		<ol class="m-0 grid list-none gap-3 p-0">
+			<li
+				v-for="(step, k) in block.steps"
+				:key="k"
+				class="grid grid-cols-[1.75rem_1fr] gap-x-2"
+			>
+				<span
+					class="flex size-7 items-center justify-center rounded-full bg-ls-accent-bg text-sm font-bold text-ls-accent"
+					aria-hidden="true"
+					>{{ k + 1 }}</span
+				>
+				<div class="max-w-[66ch] pt-0.5">
+					<MathText :text="step.text" />
+					<small
+						v-if="step.reason"
+						class="mt-0.5 block text-[0.95rem] text-ls-muted"
+					>
+						<MathText :text="step.reason" />
+					</small>
+				</div>
+			</li>
+		</ol>
+		<p
+			class="mt-4 mb-0 border-t border-ls-line pt-3 font-medium text-ls-accent"
+		>
+			<MathText :text="block.result" />
+		</p>
 	</div>
 
 	<div

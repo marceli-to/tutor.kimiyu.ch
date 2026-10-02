@@ -36,6 +36,8 @@ const props = defineProps<{
 		subject: string;
 		profile: LessonProfile;
 		speechLang: string | null;
+		// TeX between $…$ is rendered as a formula
+		math: boolean;
 		level: string;
 		content: LessonContent | null;
 		palette: Palette | null;
@@ -104,6 +106,7 @@ watch(generating, (active) => (active ? start() : stop()));
 			:subject="lesson.subject"
 			:profile="lesson.profile"
 			:speech-lang="lesson.speechLang"
+			:math="lesson.math"
 			:level="lesson.level"
 		>
 			<template v-if="lesson.status === 'review' || lesson.error" #before>

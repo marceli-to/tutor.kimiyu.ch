@@ -312,3 +312,101 @@ describe('profiles', function () {
 		'no tense' => fn (array $block) => [...$block, 'tense' => ''],
 	]);
 });
+
+describe('math', function () {
+	it('accepts the math fixture strictly with its profile', function () {
+		expect(ContentValidator::errors(lessonFixture('dreisatz'), strict: true, profile: Profile::Math))->toBe([]);
+	});
+
+	it('rejects worked solutions and exercises on a fresh page of another profile', function () {
+		$content = lessonFixture('dreisatz');
+
+		expect(ContentValidator::errors($content, strict: true, profile: Profile::General))
+			->toContain('Das Fachprofil «Allgemein» hat keine Bausteine vom Typ «worked_solution».')
+			->toContain('Das Fachprofil «Allgemein» hat kein Lernmodul «exercises».')
+			->and(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('accepts old pages without exercises', function () {
+		$content = lessonFixture();
+		unset($content['modules']['exercises']);
+
+		expect(ContentValidator::errors($content, strict: true))->toBe([]);
+	});
+
+	it('counts exercises as a learning module', function () {
+		$content = lessonFixture('dreisatz');
+		$content['modules'] = [...$content['modules'], 'quiz' => null, 'cloze' => null];
+
+		expect(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('checks the worked solution block', function (Closure $change) {
+		$content = lessonFixture('dreisatz');
+		$content['sections'][1]['blocks'][0] = $change($content['sections'][1]['blocks'][0]);
+
+		expect(ContentValidator::make($content)->errors()->has('sections.1.blocks.0'))->toBeTrue();
+	})->with([
+		'one step' => fn (array $block) => [...$block, 'steps' => array_slice($block['steps'], 0, 1)],
+		'nine steps' => fn (array $block) => [...$block, 'steps' => array_fill(0, 9, $block['steps'][0])],
+		'empty step' => fn (array $block) => [...$block, 'steps' => [['text' => ' ', 'reason' => null], ...array_slice($block['steps'], 1)]],
+		'reason not text' => fn (array $block) => [...$block, 'steps' => [['text' => 'So', 'reason' => 1], ...array_slice($block['steps'], 1)]],
+		'no task' => fn (array $block) => array_diff_key($block, ['task' => true]),
+		'empty result' => fn (array $block) => [...$block, 'result' => ''],
+	]);
+
+	it('checks the exercises', function (Closure $change, string $key) {
+		$content = lessonFixture('dreisatz');
+		$content['modules']['exercises'] = $change($content['modules']['exercises']);
+
+		expect(ContentValidator::make($content)->errors()->keys())->toContain($key);
+	})->with([
+		'too few' => [fn (array $module) => [...$module, 'entries' => array_slice($module['entries'], 0, 2)], 'modules.exercises.entries'],
+		'unknown kind' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['kind' => 'percent']]]), 'modules.exercises.entries.0.kind'],
+		'answer no number' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['answer' => 'zehn']]]), 'modules.exercises.entries.0.answer'],
+		'answer no fraction' => [fn (array $module) => array_replace_recursive($module, ['entries' => [4 => ['answer' => '3/0']]]), 'modules.exercises.entries.4.answer'],
+		'negative tolerance' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['tolerance' => -1]]]), 'modules.exercises.entries.0.tolerance'],
+		'no solution path' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['solution_path' => '']]]), 'modules.exercises.entries.0.solution_path'],
+		'duplicate id' => [fn (array $module) => array_replace_recursive($module, ['entries' => [1 => ['id' => 'q1']]]), 'modules'],
+	]);
+});
+
+describe('tex', function () {
+	function withText(string $text): array
+	{
+		$content = lessonFixture('dreisatz');
+		$content['sections'][0]['blocks'][0]['text'] = $text;
+
+		return $content;
+	}
+
+	it('rejects broken tex on a fresh page of a math profile', function (string $text, string $message) {
+		expect(ContentValidator::errors(withText($text), strict: true, profile: Profile::Math))->toContain($message)
+			->and(ContentValidator::errors(withText($text)))->toBe([])
+			->and(ContentValidator::errors(withText($text), strict: true, profile: Profile::General))->not->toContain($message);
+	})->with([
+		'odd dollar' => ['Es kostet $3 : 4 = 0{,}75.', 'Im Feld sections.0.blocks.0.text ist ein «$» nicht geschlossen.'],
+		'open brace' => ['Also $\frac{3}{4$.', 'Im Feld sections.0.blocks.0.text sind die geschweiften Klammern in einer Formel nicht ausgeglichen.'],
+		'closing brace first' => ['Also $}3{$.', 'Im Feld sections.0.blocks.0.text sind die geschweiften Klammern in einer Formel nicht ausgeglichen.'],
+		'paren delimiter' => ['Also \(x = 2\).', 'Im Feld sections.0.blocks.0.text steht eine Formel mit \( oder \[. Formeln gehören zwischen $…$ oder $$…$$.'],
+		'bracket delimiter' => ['Also \[x = 2\]', 'Im Feld sections.0.blocks.0.text steht eine Formel mit \( oder \[. Formeln gehören zwischen $…$ oder $$…$$.'],
+	]);
+
+	it('accepts valid tex', function (string $text) {
+		expect(ContentValidator::errors(withText($text), strict: true, profile: Profile::Math))->toBe([]);
+	})->with([
+		'inline' => ['Also $\frac{3}{4}$ und $x^{2}$.'],
+		'display' => ['Rechne: $$\dfrac{7.50}{3} = 2.50$$'],
+		'escaped dollar' => ['Ein \$ ist kein Franken.'],
+		'escaped brace' => ['Die Menge $\{1, 2\}$.'],
+		'no tex' => ['Einfach Text.'],
+	]);
+
+	it('checks tex in the modules too', function () {
+		$content = lessonFixture('dreisatz');
+		$content['modules']['exercises']['entries'][0]['solution_path'] = '$6 : 4';
+
+		expect(ContentValidator::errorsByPart($content, strict: true, profile: Profile::Math)['modules'])
+			->toContain('Im Feld modules.exercises.entries.0.solution_path ist ein «$» nicht geschlossen.');
+	});
+});

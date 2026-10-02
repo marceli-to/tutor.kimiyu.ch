@@ -7,6 +7,7 @@ use App\Enums\LessonStatus;
 use App\Http\PageData\SharedLessonIndex;
 use App\Lessons\AnswerResult;
 use App\Lessons\LessonView;
+use App\Lessons\Progress;
 use App\Models\Child;
 use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
@@ -49,7 +50,7 @@ class SharedLessonController extends Controller
 		abort_unless($lesson->child_id === $child->id && $lesson->status === LessonStatus::Published, 404);
 
 		$data = $request->validate([
-			'module' => ['required', Rule::in(['quiz', 'sorting', 'cloze'])],
+			'module' => ['required', Rule::in(Progress::MODULES)],
 			'item_id' => ['required', 'string', 'max:20'],
 			'answer' => ['present', 'nullable'],
 		]);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useId } from 'vue';
+import MathText from '@/components/lesson/MathText.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { resultMessage } from '@/lib/lesson';
 import type { ModuleAnswer, QuizQuestion } from '@/types';
@@ -108,7 +109,7 @@ function optionClass(k: number): string {
 				tabindex="-1"
 				class="mb-4 font-display text-[1.3rem] font-medium outline-none"
 			>
-				{{ question.question }}
+				<MathText :text="question.question" />
 				<OriginBadge :origin="question.origin" class="ml-1" />
 			</p>
 
@@ -132,7 +133,7 @@ function optionClass(k: number): string {
 						:disabled="checked"
 						@change="error = ''"
 					/>
-					<span>{{ option }}</span>
+					<span><MathText :text="option" /></span>
 				</label>
 			</div>
 
@@ -170,7 +171,7 @@ function optionClass(k: number): string {
 				v-if="hintShown && question.hint"
 				class="mt-3 mb-0 text-base text-ls-muted italic"
 			>
-				Tipp: {{ question.hint }}
+				Tipp: <MathText :text="question.hint" />
 			</p>
 
 			<div
@@ -179,7 +180,7 @@ function optionClass(k: number): string {
 				:class="isCorrect ? 'ls-feedback-ok' : 'ls-feedback-no'"
 			>
 				<strong>{{ isCorrect ? 'Richtig!' : 'Nicht ganz.' }}</strong>
-				{{ question.explanation }}
+				<MathText :text="question.explanation" />
 			</div>
 		</template>
 	</div>

@@ -220,9 +220,7 @@ class AnalyzeLesson
 	 */
 	private static function onlyAllowed(Lesson $lesson, array $modules): array
 	{
-		$allowed = array_intersect($lesson->allowedModules(), $lesson->resolvedProfile()->modules());
-
-		foreach (array_diff(Lesson::MODULES, $allowed) as $module) {
+		foreach (array_diff(ContentValidator::MODULES, $lesson->generatedModules()) as $module) {
 			$modules[$module] = null;
 		}
 

@@ -5,6 +5,7 @@ use App\Jobs\RegenerateGraphic;
 use App\Jobs\RegenerateQuiz;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
+use App\Lessons\ClozeParser;
 use App\Models\Attempt;
 use App\Models\Child;
 use App\Models\Generation;
@@ -269,6 +270,35 @@ describe('editing', function () {
 			->assertSessionHasErrors(['content.modules.quiz.1.options.0' => 'Im Feld modules.quiz.1.options.0 steht ein «ß». In der Schweiz schreibt man «ss».']);
 
 		expect($this->lesson->fresh()->title)->toBe('Biotop + Biozönose = Ökosystem');
+	});
+
+	it('saves worked solutions and exercises of a math lesson', function () {
+		$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => 'Mathematik']);
+		$content = $lesson->content;
+		$content['sections'][1]['blocks'][0]['steps'][] = ['text' => 'Prüfe mit einem Überschlag.', 'reason' => null];
+		$content['modules']['exercises']['entries'][0]['answer'] = '10,5';
+		$content['modules']['exercises']['entries'][3]['tolerance'] = 0.1;
+
+		$this->actingAs($this->user)->put(route('lessons.update', $lesson), [
+			'content' => $content,
+			'clozeMarkup' => ClozeParser::toMarkup($content['modules']['cloze']['segments']),
+		])->assertSessionHasNoErrors();
+
+		$saved = $lesson->fresh()->content;
+		expect($saved['sections'][1]['blocks'][0]['steps'])->toHaveCount(4)
+			->and($saved['modules']['exercises']['entries'][0]['answer'])->toBe('10,5')
+			->and($saved['modules']['exercises']['entries'][3]['tolerance'])->toBe(0.1);
+	});
+
+	it('rejects an exercise solution the app cannot check', function () {
+		$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => 'Mathematik']);
+		$content = $lesson->content;
+		$content['modules']['exercises']['entries'][0]['answer'] = 'Fr. 10.50';
+
+		$this->actingAs($this->user)->put(route('lessons.update', $lesson), [
+			'content' => $content,
+			'clozeMarkup' => ClozeParser::toMarkup($content['modules']['cloze']['segments']),
+		])->assertSessionHasErrors(['content.modules.exercises.entries.0.answer' => 'Aufgabe a1: Die Lösung «Fr. 10.50» ist keine Zahl.']);
 	});
 
 	it('rejects broken cloze markup', function () {

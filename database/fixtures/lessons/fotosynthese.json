@@ -189,7 +189,8 @@
                 "explanation": "Die knappste Zutat bestimmt das Tempo (begrenzender Faktor). Mehr Licht oder Wasser hilft nichts, solange CO₂ fehlt.",
                 "origin": "photo"
             }
-        ]
+        ],
+        "exercises": null
     },
     "reflect": {
         "question": "Warum bringt es nichts, eine Zimmerpflanze im dunklen Keller fleissig zu giessen, damit sie wächst?"

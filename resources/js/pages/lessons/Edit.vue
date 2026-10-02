@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, setLayoutProps, useForm } from '@inertiajs/vue3';
 import { Plus, Trash2 } from '@lucide/vue';
-import { computed, toRaw } from 'vue';
+import { computed, reactive, toRaw } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import EditField from '@/components/lesson/EditField.vue';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes';
 import { edit, show, update } from '@/routes/lessons';
-import type { CategoryId, LessonContent } from '@/types';
+import type { CategoryId, Exercise, LessonContent } from '@/types';
 
 const props = defineProps<{
 	lesson: {
@@ -110,6 +110,46 @@ function addTerm() {
 		category: sort.categories[0]?.id ?? 'cat1',
 		explanation: '',
 	});
+}
+
+const exerciseKinds: { value: Exercise['kind']; label: string }[] = [
+	{ value: 'number', label: 'Zahl' },
+	{ value: 'fraction', label: 'Bruch' },
+	{ value: 'text', label: 'Wort' },
+];
+
+const texHint = 'Formeln in TeX zwischen $…$, z. B. $\\frac{3}{4}$.';
+
+function addExercise() {
+	c.value.modules.exercises?.entries.push({
+		id: newId('a'),
+		question: '',
+		kind: 'number',
+		answer: '',
+		tolerance: null,
+		unit: null,
+		hint: null,
+		solution_path: '',
+	});
+}
+
+// The tolerance as typed («0,»), so a half-typed number isn't overwritten while typing
+const toleranceInputs = reactive<Record<string, string>>(
+	Object.fromEntries(
+		(c.value.modules.exercises?.entries ?? []).map((exercise) => [
+			exercise.id,
+			exercise.tolerance?.toString() ?? '',
+		]),
+	),
+);
+
+// Empty field: no tolerance; a decimal comma is fine
+function setTolerance(exercise: Exercise, value: string | null | undefined) {
+	const input = (value ?? '').trim();
+	const number = Number(input.replace(',', '.'));
+
+	toleranceInputs[exercise.id] = value ?? '';
+	exercise.tolerance = input === '' || Number.isNaN(number) ? null : number;
 }
 
 function addCard() {
@@ -367,6 +407,64 @@ function save() {
 								/>
 							</div>
 						</div>
+					</template>
+
+					<template v-else-if="block.type === 'worked_solution'">
+						<EditField
+							v-model="block.task"
+							label="Beispiel: Aufgabe"
+							:hint="texHint"
+						/>
+						<div class="space-y-2">
+							<div
+								v-for="(step, k) in block.steps"
+								:key="k"
+								class="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-start"
+							>
+								<EditField
+									v-model="step.text"
+									:label="`Schritt ${k + 1}`"
+									multiline
+									:rows="2"
+								/>
+								<EditField
+									:model-value="step.reason"
+									label="Warum (optional)"
+									multiline
+									:rows="2"
+									@update:model-value="
+										step.reason = $event || null
+									"
+								/>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									class="text-destructive sm:mt-6"
+									:aria-label="`Schritt ${k + 1} entfernen`"
+									:disabled="block.steps.length <= 2"
+									@click="block.steps.splice(k, 1)"
+								>
+									<Trash2 class="size-4" aria-hidden="true" />
+								</Button>
+							</div>
+						</div>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							:disabled="block.steps.length >= 8"
+							@click="
+								block.steps.push({ text: '', reason: null })
+							"
+						>
+							<Plus class="size-4" aria-hidden="true" />
+							Schritt hinzufügen
+						</Button>
+						<EditField
+							v-model="block.result"
+							label="Beispiel: Ergebnis"
+						/>
 					</template>
 
 					<div v-else-if="block.type === 'graphic'" class="space-y-1">
@@ -635,6 +733,102 @@ function save() {
 			<Button type="button" variant="outline" size="sm" @click="addCard">
 				<Plus class="size-4" aria-hidden="true" />
 				Karte hinzufügen
+			</Button>
+		</section>
+
+		<section v-if="c.modules.exercises" class="space-y-4">
+			<h2 class="text-lg font-semibold">Aufgaben</h2>
+			<p class="text-sm text-muted-foreground">
+				{{ texHint }} Die Lösung ohne Einheit; das Kind darf die Einheit
+				weglassen. Toleranz für gerundete Ergebnisse, z. B. 0,05.
+			</p>
+			<EditField
+				v-model="c.modules.exercises.instructions"
+				label="Anleitung (optional)"
+				:error="err('modules.exercises.instructions')"
+			/>
+			<InputError :message="err('modules.exercises.entries')" />
+			<div
+				v-for="(exercise, k) in c.modules.exercises.entries"
+				:key="exercise.id"
+				class="space-y-3 rounded-xl border p-3"
+			>
+				<EditField
+					v-model="exercise.question"
+					:label="`Aufgabe ${k + 1}`"
+					multiline
+					:rows="2"
+					:error="err(`modules.exercises.entries.${k}.question`)"
+				/>
+				<div class="grid gap-2 sm:grid-cols-4">
+					<div class="grid gap-1.5">
+						<Label :for="`kind-${exercise.id}`">Lösung ist</Label>
+						<select
+							:id="`kind-${exercise.id}`"
+							v-model="exercise.kind"
+							class="h-9 w-full rounded-md border border-input bg-transparent pr-9 pl-3 text-sm shadow-xs"
+						>
+							<option
+								v-for="kind in exerciseKinds"
+								:key="kind.value"
+								:value="kind.value"
+							>
+								{{ kind.label }}
+							</option>
+						</select>
+					</div>
+					<EditField
+						v-model="exercise.answer"
+						label="Lösung"
+						:error="err(`modules.exercises.entries.${k}.answer`)"
+					/>
+					<EditField
+						:model-value="exercise.unit"
+						label="Einheit (optional)"
+						:error="err(`modules.exercises.entries.${k}.unit`)"
+						@update:model-value="exercise.unit = $event || null"
+					/>
+					<EditField
+						:model-value="toleranceInputs[exercise.id] ?? ''"
+						label="Toleranz (optional)"
+						:error="err(`modules.exercises.entries.${k}.tolerance`)"
+						@update:model-value="setTolerance(exercise, $event)"
+					/>
+				</div>
+				<EditField
+					:model-value="exercise.hint"
+					label="Tipp (optional)"
+					:error="err(`modules.exercises.entries.${k}.hint`)"
+					@update:model-value="exercise.hint = $event || null"
+				/>
+				<EditField
+					v-model="exercise.solution_path"
+					label="Lösungsweg"
+					multiline
+					:rows="2"
+					:error="err(`modules.exercises.entries.${k}.solution_path`)"
+				/>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					class="text-destructive"
+					:disabled="c.modules.exercises.entries.length <= 3"
+					@click="c.modules.exercises.entries.splice(k, 1)"
+				>
+					<Trash2 class="size-4" aria-hidden="true" />
+					Aufgabe entfernen
+				</Button>
+			</div>
+			<Button
+				type="button"
+				variant="outline"
+				size="sm"
+				:disabled="c.modules.exercises.entries.length >= 8"
+				@click="addExercise"
+			>
+				<Plus class="size-4" aria-hidden="true" />
+				Aufgabe hinzufügen
 			</Button>
 		</section>
 

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Moon, Sun } from '@lucide/vue';
-import { computed } from 'vue';
+import 'katex/dist/katex.min.css';
+import { computed, provide } from 'vue';
 import ClozeModule from '@/components/lesson/ClozeModule.vue';
+import ExerciseModule from '@/components/lesson/ExerciseModule.vue';
 import FlashcardModule from '@/components/lesson/FlashcardModule.vue';
 import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import LessonBlock from '@/components/lesson/LessonBlock.vue';
@@ -10,6 +12,7 @@ import QuizModule from '@/components/lesson/QuizModule.vue';
 import SortModule from '@/components/lesson/SortModule.vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { useIsDark } from '@/composables/useIsDark';
+import { rendersMathKey } from '@/lib/math';
 import type {
 	LessonContent,
 	LessonGraphics,
@@ -26,6 +29,8 @@ const props = defineProps<{
 	profile: LessonProfile;
 	// Languages lesson with a known language: foreign words can be read aloud
 	speechLang: string | null;
+	// Math, geometry and science: TeX between $…$ becomes a formula
+	math: boolean;
 	level: string;
 }>();
 
@@ -50,6 +55,11 @@ const paletteStyle = computed(() => {
 });
 
 const modules = computed(() => props.content.modules);
+
+provide(
+	rendersMathKey,
+	computed(() => props.math),
+);
 
 function toggleTheme() {
 	updateAppearance(isDark.value ? 'light' : 'dark');
@@ -150,6 +160,19 @@ function toggleTheme() {
 				</p>
 				<ClozeModule
 					:data="modules.cloze"
+					@answer="emit('answer', $event)"
+				/>
+			</section>
+
+			<section v-if="modules.exercises">
+				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
+					Selbst rechnen
+				</h2>
+				<p v-if="modules.exercises.instructions" class="mb-4">
+					{{ modules.exercises.instructions }}
+				</p>
+				<ExerciseModule
+					:data="modules.exercises"
 					@answer="emit('answer', $event)"
 				/>
 			</section>

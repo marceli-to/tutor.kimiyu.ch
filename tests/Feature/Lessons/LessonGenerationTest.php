@@ -13,6 +13,7 @@ use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\ModelRequest;
 use App\Lessons\Ai\Prompts;
 use App\Lessons\Ai\Schemas;
+use App\Lessons\ContentValidator;
 use App\Lessons\GenerationFailed;
 use App\Lessons\GenerationPipeline;
 use App\Lessons\Profile;
@@ -1622,7 +1623,8 @@ describe('subject profiles', function () {
 		expect($lesson->status)->toBe(LessonStatus::Review)
 			->and($lesson->content)->toHaveKey('try_it')
 			->and($lesson->content['try_it'])->toBeNull()
-			->and($lesson->content['modules'])->toHaveKeys(Lesson::MODULES);
+			->and($lesson->content['modules'])->toHaveKeys(ContentValidator::MODULES)
+			->and($lesson->content['modules']['exercises'])->toBeNull();
 	});
 
 	it('gives the graphic only the label of the profile', function () {
@@ -1669,6 +1671,44 @@ describe('subject profiles', function () {
 			->and($page->system)->toContain('"conjugation"')->not->toContain('Chloroplasten')
 			->and(json_encode($page->schema))->toContain('"vocabulary"')
 			->and($this->fake->requestsFor('modules')[0]->system)->toContain('nous avons fini');
+	});
+
+	it('builds a math page with a worked solution and exercises from its own example', function () {
+		$math = LessonFactory::fixture('dreisatz');
+		$this->fake->push('analysis', analysis(['subject' => 'Mathematik', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => Arr::except(Prompts::page($math), 'try_it')]);
+		$this->fake->push('modules', ['modules' => $math['modules']]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto', 'modules' => ['quiz']]);
+
+		$lesson = Lesson::sole();
+		$page = $this->fake->requestsFor('page')[0];
+		$modules = $this->fake->requestsFor('modules')[0];
+		expect($lesson->status)->toBe(LessonStatus::Review)
+			->and($lesson->resolvedProfile())->toBe(Profile::Math)
+			->and($lesson->content['sections'][1]['blocks'][0]['type'])->toBe('worked_solution')
+			// The parents can't choose exercises: they come with the math profile
+			->and($lesson->content['modules']['exercises']['entries'])->toHaveCount(5)
+			->and($lesson->content['modules']['cloze'])->toBeNull()
+			->and($page->prompt)->toContain('Fachprofil: Mathematik')
+			->and(json_encode($page->schema))->toContain('"worked_solution"')->not->toContain('"columns"')
+			->and($modules->prompt)->toContain('Aufgaben (')
+			->and($modules->system)->toContain('solution_path');
+	});
+
+	it('rejects broken tex in a fresh math page and repairs it', function () {
+		$math = LessonFactory::fixture('dreisatz');
+		$broken = Arr::except(Prompts::page($math), 'try_it');
+		$broken['sections'][0]['blocks'][0]['text'] = 'Es kostet $3 : 4.';
+		$this->fake->push('analysis', analysis(['subject' => 'Mathematik', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => $broken]);
+		$this->fake->push('modules', ['modules' => $math['modules']]);
+		$this->fake->push('repair-page', ['page' => Arr::except(Prompts::page($math), 'try_it')]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto']);
+
+		expect($this->fake->requestsFor('repair-page')[0]->prompt)->toContain('ist ein «$» nicht geschlossen')
+			->and(Lesson::sole()->content['sections'][0]['blocks'][0]['text'])->not->toContain('$3 : 4.');
 	});
 
 	it('treats old lessons without a profile like an automatic one', function () {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import MathText from '@/components/lesson/MathText.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import SpeakButton from '@/components/lesson/SpeakButton.vue';
 import { shuffle } from '@/lib/lesson';
@@ -77,8 +78,8 @@ function toggleGermanFirst() {
 							? 'font-display text-2xl font-bold'
 							: 'text-[1.1rem]'
 					"
-					>{{ showsFront ? card.front : card.back }}</span
-				>
+					><MathText :text="showsFront ? card.front : card.back"
+				/></span>
 				<template v-if="!back">
 					<OriginBadge :origin="card.origin" class="ml-1" />
 					<br />

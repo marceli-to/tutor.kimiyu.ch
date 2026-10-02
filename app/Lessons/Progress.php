@@ -8,7 +8,7 @@ use App\Models\Lesson;
 use Illuminate\Support\Collection;
 
 /**
- * Progress: per item (quiz question, sorting term, gap) a status from the latest answers.
+ * Progress: per item (quiz question, sorting term, gap, exercise) a status from the latest answers.
  *
  * - mastered: the last two answers were correct
  * - almost: the last answer was correct, the one before wrong or only one attempt (in the quiz it may have been a guess)
@@ -18,6 +18,9 @@ use Illuminate\Support\Collection;
 class Progress
 {
 	public const STATUSES = ['mastered', 'almost', 'practice', 'open'];
+
+	// Modules whose answers are checked and counted; flashcards are only flipped
+	public const MODULES = ['quiz', 'sorting', 'cloze', 'exercises'];
 
 	/**
 	 * All items of a lesson that the progress tracks.
@@ -43,6 +46,10 @@ class Progress
 			}
 		}
 
+		foreach ($module['exercises']['entries'] ?? [] as $entry) {
+			$items[] = ['module' => 'exercises', 'id' => $entry['id'], 'text' => $entry['question']];
+		}
+
 		return $items;
 	}
 
@@ -60,11 +67,16 @@ class Progress
 			'quiz' => self::find($content['quiz'] ?? [], $itemId),
 			'sorting' => self::find($content['sorting']['terms'] ?? [], $itemId),
 			'cloze' => self::find($content['cloze']['segments'] ?? [], $itemId),
+			'exercises' => self::find($content['exercises']['entries'] ?? [], $itemId),
 			default => null,
 		};
 
 		if ($item === null) {
 			return null;
+		}
+
+		if ($module === 'exercises') {
+			return is_string($answer) || is_int($answer) || is_float($answer) ? ExerciseAnswer::check($item, (string) $answer) : AnswerResult::Wrong;
 		}
 
 		if ($module === 'cloze') {

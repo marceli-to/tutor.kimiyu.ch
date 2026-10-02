@@ -108,6 +108,20 @@ class Lesson extends Model
 	}
 
 	/**
+	 * Modules a generation fills: the profile's, within the parents' choice. The parents only choose
+	 * among MODULES; a module of the profile beyond that (exercises in math) always comes with it.
+	 *
+	 * @return list<string>
+	 */
+	public function generatedModules(): array
+	{
+		return array_values(array_filter(
+			$this->resolvedProfile()->modules(),
+			fn (string $module) => ! in_array($module, self::MODULES, true) || in_array($module, $this->allowedModules(), true),
+		));
+	}
+
+	/**
 	 * The parents' profile, otherwise the one of the subject. Not stored: a subject the AI
 	 * detects again on a retry brings its own profile, and old lessons have none.
 	 */

@@ -52,6 +52,8 @@ enum Profile: string
 		return match ($this) {
 			// No formulas in a language lesson: the room in the schema goes to the word list and verb table
 			self::Languages => ['paragraph', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation'],
+			// No columns: math compares procedures in a box or facts; the room goes to the worked solution
+			self::Math => ['paragraph', 'formula', 'facts', 'box', 'graphic', 'worked_solution'],
 			default => self::BASE_BLOCKS,
 		};
 	}
@@ -63,7 +65,11 @@ enum Profile: string
 	 */
 	public function modules(): array
 	{
-		return self::BASE_MODULES;
+		return match ($this) {
+			// Exercises instead of the sorting game: with all five modules the API rejects the grammar as too large
+			self::Math => ['quiz', 'flashcards', 'cloze', 'exercises'],
+			default => self::BASE_MODULES,
+		};
 	}
 
 	/**
@@ -81,6 +87,7 @@ enum Profile: string
 	{
 		return match ($this) {
 			self::Languages => 'passe-compose',
+			self::Math => 'dreisatz',
 			default => 'fotosynthese',
 		};
 	}
@@ -97,6 +104,14 @@ enum Profile: string
 		$lang = config('lessons.speech_langs')[mb_strtolower(trim((string) $subject))] ?? null;
 
 		return is_string($lang) ? $lang : null;
+	}
+
+	/**
+	 * TeX between $…$ is rendered as a formula (KaTeX) and checked on fresh pages. Elsewhere a «$» stays a dollar sign.
+	 */
+	public function rendersMath(): bool
+	{
+		return in_array($this, [self::Science, self::Math, self::Geometry], true);
 	}
 
 	/**

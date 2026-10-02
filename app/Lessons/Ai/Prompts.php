@@ -459,15 +459,14 @@ class Prompts
 			'sorting' => "Sortierspiel ({$counts['terms']} Begriffe)",
 			'flashcards' => "Karteikarten ({$counts['flashcards']} Karten)",
 			'cloze' => "Lückentext ({$counts['gaps']} Lücken)",
+			'exercises' => "Aufgaben ({$counts['exercises']} Aufgaben)",
 		];
 
-		$allowed = array_intersect($lesson->allowedModules(), $lesson->resolvedProfile()->modules());
-
-		return 'Erlaubte Lernmodule: '.implode(', ', array_intersect_key($labels, array_flip($allowed)));
+		return 'Erlaubte Lernmodule: '.implode(', ', array_intersect_key($labels, array_flip($lesson->generatedModules())));
 	}
 
 	/**
-	 * @return array{sections: string, quiz: int, flashcards: string, terms: string, gaps: string}
+	 * @return array{sections: string, quiz: int, flashcards: string, terms: string, gaps: string, exercises: string}
 	 */
 	private static function scopeCounts(Lesson $lesson): array
 	{

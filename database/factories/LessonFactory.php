@@ -16,8 +16,8 @@ class LessonFactory extends Factory
 {
 	public const FIXTURES = ['fotosynthese', 'oekosystem'];
 
-	// Hand-written examples of the subject profiles, without graphics
-	public const PROFILE_FIXTURES = ['passe-compose'];
+	// Hand-written examples of the subject profiles (a graphic only where it helps)
+	public const PROFILE_FIXTURES = ['passe-compose', 'dreisatz'];
 
 	/**
 	 * @return array<string, mixed>

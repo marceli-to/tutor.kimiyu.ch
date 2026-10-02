@@ -19,7 +19,10 @@ class ContentValidator
 
 	// «graphic» places graphic 2 or 3 in a section; graphic 1 is always at the top.
 	// The blocks after it belong to subject profiles (see Profile::blocks()).
-	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation'];
+	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation', 'worked_solution'];
+
+	// «exercises» belongs to the math profile and is missing on older pages
+	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'];
 
 	public const CATEGORIES = ['cat1', 'cat2', 'cat3'];
 
@@ -136,6 +139,18 @@ class ContentValidator
 			'modules.cloze.segments' => ['required_with:modules.cloze', 'array', 'min:1', 'max:60'],
 			'modules.cloze.origin' => ['sometimes', Rule::in(self::ORIGINS)],
 
+			'modules.exercises' => ['sometimes', 'nullable', 'array'],
+			'modules.exercises.instructions' => ['nullable', 'string', 'max:200'],
+			'modules.exercises.entries' => ['required_with:modules.exercises', 'array', 'min:3', 'max:8'],
+			'modules.exercises.entries.*.id' => ['required', 'string', 'max:20'],
+			'modules.exercises.entries.*.question' => ['required', 'string', 'max:400'],
+			'modules.exercises.entries.*.kind' => ['required', Rule::in(ExerciseAnswer::KINDS)],
+			'modules.exercises.entries.*.answer' => ['required', 'string', 'max:60'],
+			'modules.exercises.entries.*.tolerance' => ['nullable', 'numeric', 'min:0'],
+			'modules.exercises.entries.*.unit' => ['nullable', 'string', 'max:20'],
+			'modules.exercises.entries.*.hint' => ['nullable', 'string', 'max:300'],
+			'modules.exercises.entries.*.solution_path' => ['required', 'string', 'max:600'],
+
 			'reflect' => ['required', 'array'],
 			'reflect.question' => ['required', 'string', 'max:400'],
 		];
@@ -199,6 +214,17 @@ class ContentValidator
 			'modules.cloze.instructions' => 'Anleitung zum Lückentext',
 			'modules.cloze.segments' => 'Lückentext',
 			'modules.cloze.origin' => 'Herkunft des Lückentexts',
+			'modules.exercises' => 'Aufgaben',
+			'modules.exercises.instructions' => 'Anleitung zu den Aufgaben',
+			'modules.exercises.entries' => 'Aufgaben',
+			'modules.exercises.entries.*.id' => 'ID von Aufgabe :position',
+			'modules.exercises.entries.*.question' => 'Aufgabe :position',
+			'modules.exercises.entries.*.kind' => 'Art der Lösung von Aufgabe :position',
+			'modules.exercises.entries.*.answer' => 'Lösung von Aufgabe :position',
+			'modules.exercises.entries.*.tolerance' => 'Toleranz von Aufgabe :position',
+			'modules.exercises.entries.*.unit' => 'Einheit von Aufgabe :position',
+			'modules.exercises.entries.*.hint' => 'Tipp zu Aufgabe :position',
+			'modules.exercises.entries.*.solution_path' => 'Lösungsweg von Aufgabe :position',
 			'reflect' => 'Nachdenken',
 			'reflect.question' => 'Frage zum Nachdenken',
 		];
@@ -221,6 +247,7 @@ class ContentValidator
 		$this->checkQuiz();
 		$this->checkSort();
 		$this->checkCloze();
+		$this->checkExercises();
 		$this->checkUniqueIds();
 		$this->checkSwissSpelling($this->content, '');
 
@@ -230,6 +257,10 @@ class ContentValidator
 
 		if ($this->strict && $this->profile !== null) {
 			$this->checkProfile($this->profile);
+		}
+
+		if ($this->strict && $this->profile?->rendersMath()) {
+			$this->checkTex($this->content, '');
 		}
 	}
 
@@ -262,6 +293,9 @@ class ContentValidator
 					'conjugation' => $this->isText($block['verb'] ?? null)
 						&& $this->isText($block['tense'] ?? null)
 						&& $this->isList($block['forms'] ?? null, 6, 6, fn ($f) => $this->isText($f['person'] ?? null) && $this->isText($f['form'] ?? null)),
+					'worked_solution' => $this->isText($block['task'] ?? null)
+						&& $this->isText($block['result'] ?? null)
+						&& $this->isList($block['steps'] ?? null, 2, 8, fn ($s) => $this->isText($s['text'] ?? null) && $this->isOptionalText($s['reason'] ?? null)),
 					default => false,
 				};
 
@@ -274,7 +308,7 @@ class ContentValidator
 
 	private function checkModules(): void
 	{
-		if (array_filter(array_intersect_key($this->content['modules'], array_flip(['quiz', 'sorting', 'flashcards', 'cloze']))) === []) {
+		if (array_filter(array_intersect_key($this->content['modules'], array_flip(self::MODULES))) === []) {
 			$this->fail('modules', 'Die Seite braucht mindestens ein Lernmodul.');
 		}
 	}
@@ -355,6 +389,19 @@ class ContentValidator
 		}
 	}
 
+	/**
+	 * Every solution must be comparable, otherwise the child can never get the task right.
+	 */
+	private function checkExercises(): void
+	{
+		foreach ($this->content['modules']['exercises']['entries'] ?? [] as $i => $entry) {
+			if (! ExerciseAnswer::isCheckable($entry['kind'], $entry['answer'])) {
+				$expected = $entry['kind'] === 'fraction' ? 'kein Bruch wie 3/4 und keine Zahl' : 'keine Zahl';
+				$this->fail("modules.exercises.entries.$i.answer", "Aufgabe {$entry['id']}: Die Lösung «{$entry['answer']}» ist {$expected}.");
+			}
+		}
+	}
+
 	private function checkUniqueIds(): void
 	{
 		$module = $this->content['modules'];
@@ -364,6 +411,7 @@ class ContentValidator
 			...array_column($module['sorting']['terms'] ?? [], 'id'),
 			...array_column($module['flashcards']['entries'] ?? [], 'id'),
 			...array_column(array_filter($module['cloze']['segments'] ?? [], fn ($s) => isset($s['id'])), 'id'),
+			...array_column($module['exercises']['entries'] ?? [], 'id'),
 		];
 
 		$duplicates = array_keys(array_filter(array_count_values($ids), fn ($n) => $n > 1));
@@ -429,6 +477,67 @@ class ContentValidator
 		if ($this->content['try_it'] !== null && ! $profile->allowsExperiments()) {
 			$this->fail('try_it', "Das Fachprofil «{$profile->label()}» hat keine Experimente («Ausprobieren»).");
 		}
+	}
+
+	/**
+	 * TeX the browser can render: every «$» closed, braces balanced within a formula, only $…$ and $$…$$ as delimiters.
+	 * There is no KaTeX in PHP; this catches what breaks a formula as a whole.
+	 */
+	private function checkTex(mixed $value, string $path): void
+	{
+		if (is_array($value)) {
+			foreach ($value as $key => $item) {
+				$this->checkTex($item, $path === '' ? (string) $key : "$path.$key");
+			}
+
+			return;
+		}
+
+		if (! is_string($value)) {
+			return;
+		}
+
+		if (str_contains($value, '\(') || str_contains($value, '\[')) {
+			$this->fail($path, "Im Feld {$path} steht eine Formel mit \\( oder \\[. Formeln gehören zwischen \$…\$ oder \$\$…\$\$.");
+		}
+
+		// «\$» is a literal dollar sign
+		$text = str_replace('\\$', '', $value);
+
+		if (substr_count($text, '$') % 2 !== 0) {
+			$this->fail($path, "Im Feld {$path} ist ein «\$» nicht geschlossen.");
+
+			return;
+		}
+
+		preg_match_all('/\$\$(.+?)\$\$|\$(.+?)\$/s', $text, $matches);
+
+		foreach (array_map(null, $matches[1], $matches[2]) as [$display, $inline]) {
+			if (! $this->hasBalancedBraces($display !== '' ? $display : $inline)) {
+				$this->fail($path, "Im Feld {$path} sind die geschweiften Klammern in einer Formel nicht ausgeglichen.");
+
+				return;
+			}
+		}
+	}
+
+	private function hasBalancedBraces(string $tex): bool
+	{
+		$depth = 0;
+
+		foreach (str_split(str_replace(['\\{', '\\}'], '', $tex)) as $char) {
+			$depth += match ($char) {
+				'{' => 1,
+				'}' => -1,
+				default => 0,
+			};
+
+			if ($depth < 0) {
+				return false;
+			}
+		}
+
+		return $depth === 0;
 	}
 
 	private function isText(mixed $value): bool

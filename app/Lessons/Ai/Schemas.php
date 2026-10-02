@@ -3,6 +3,7 @@
 namespace App\Lessons\Ai;
 
 use App\Lessons\ContentValidator;
+use App\Lessons\ExerciseAnswer;
 use App\Lessons\GraphicPattern;
 use App\Lessons\Palettes;
 use App\Lessons\Profile;
@@ -40,7 +41,7 @@ class Schemas
 	}
 
 	/**
-	 * Second step: quiz, sorting game, flashcards, cloze (as far as the profile offers them).
+	 * Second step: quiz, sorting game, flashcards, cloze, exercises (as far as the profile offers them).
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -166,6 +167,11 @@ class Schemas
 				'tense' => $text,
 				'forms' => ['type' => 'array', 'items' => self::object(['person' => $text, 'form' => $text])],
 			]),
+			'worked_solution' => $block('worked_solution', [
+				'task' => $text,
+				'steps' => ['type' => 'array', 'items' => self::object(['text' => $text, 'reason' => self::nullable($text)])],
+				'result' => $text,
+			]),
 		];
 
 		if ($profile !== null) {
@@ -276,6 +282,19 @@ class Schemas
 					self::object(['id' => $text, 'answers' => $texts]),
 				]]],
 				'origin' => $origin,
+			])),
+			'exercises' => self::nullable(self::object([
+				'instructions' => self::nullable($text),
+				'entries' => ['type' => 'array', 'items' => self::object([
+					'id' => $text,
+					'question' => $text,
+					'kind' => ['type' => 'string', 'enum' => ExerciseAnswer::KINDS],
+					'answer' => $text,
+					'tolerance' => self::nullable(['type' => 'number']),
+					'unit' => self::nullable($text),
+					'hint' => self::nullable($text),
+					'solution_path' => $text,
+				])],
 			])),
 		];
 

@@ -105,6 +105,19 @@ it('passes the speech language and the profile only for a foreign language lesso
 	['Biologie', null, 'science'],
 ]);
 
+it('renders formulas only for math, geometry and science lessons', function (string $subject, bool $math) {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => $subject]);
+
+	$this->get(route('shared.show', [$this->child->share_token, $lesson]))
+		->assertInertia(fn (Assert $page) => $page->where('lesson.math', $math));
+})->with([
+	['Mathematik', true],
+	['Geometrie', true],
+	['Biologie', true],
+	['Geschichte', false],
+	['Französisch', false],
+]);
+
 it('shows a lesson without a graphic fixture', function () {
 	$lesson = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create(['subject' => 'Französisch']);
 

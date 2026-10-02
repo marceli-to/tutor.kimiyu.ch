@@ -37,6 +37,13 @@ export type LessonBlock = Origin &
 				tense: string;
 				forms: { person: string; form: string }[];
 		  }
+		// Math profile: a task calculated step by step
+		| {
+				type: 'worked_solution';
+				task: string;
+				steps: { text: string; reason?: string | null }[];
+				result: string;
+		  }
 	);
 
 export type QuizQuestion = Origin & {
@@ -71,6 +78,23 @@ export type ClozeModuleData = Origin & {
 	segments: ClozeSegment[];
 };
 
+// Math profile: a task the child calculates; the server checks the answer (App\Lessons\ExerciseAnswer)
+export type Exercise = {
+	id: string;
+	question: string;
+	kind: 'number' | 'fraction' | 'text';
+	answer: string;
+	tolerance?: number | null;
+	unit?: string | null;
+	hint?: string | null;
+	solution_path: string;
+};
+
+export type ExerciseModuleData = {
+	instructions?: string | null;
+	entries: Exercise[];
+};
+
 export type LessonContent = {
 	meta: {
 		title: string;
@@ -91,6 +115,8 @@ export type LessonContent = {
 		sorting: SortModuleData | null;
 		flashcards: FlashcardModuleData | null;
 		cloze: ClozeModuleData | null;
+		// Only in the math profile; missing on older pages
+		exercises?: ExerciseModuleData | null;
 	};
 	reflect: { question: string };
 };
@@ -132,9 +158,9 @@ export type GraphicState = {
 
 // Result of a single answer, for the progress (phase 4)
 export type ModuleAnswer = {
-	module: 'quiz' | 'sorting' | 'cloze';
+	module: 'quiz' | 'sorting' | 'cloze' | 'exercises';
 	itemId: string;
-	// Chosen option (quiz), chosen basket (sorting) or input (cloze);
+	// Chosen option (quiz), chosen basket (sorting) or input (cloze, exercises);
 	// the server checks itself whether it is right
 	answer: number | string;
 	correct: boolean;

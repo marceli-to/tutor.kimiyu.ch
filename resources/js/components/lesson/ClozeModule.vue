@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
+import MathText from '@/components/lesson/MathText.vue';
 import { checkAnswer } from '@/lib/lesson';
 import type { ClozeModuleData, ModuleAnswer } from '@/types';
 
@@ -124,7 +125,7 @@ function inputClass(id: string): string {
 					@input="edited(segment.id)"
 					@keydown.enter.prevent="check"
 				/>
-				<template v-else>{{ segment.text }}</template>
+				<MathText v-else :text="segment.text" />
 			</template>
 		</p>
 
