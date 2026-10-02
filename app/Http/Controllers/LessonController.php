@@ -62,8 +62,8 @@ class LessonController extends Controller
                 'status' => LessonStatus::Draft,
                 'subject' => $request->string('subject')->trim()->value(),
                 'level' => $request->string('level')->trim()->value(),
-                'topic' => $request->input('source') === 'thema' ? $request->string('topic')->trim()->value() : null,
-                'notes' => $request->string('notes')->trim()->value() ?: null,
+                'prompt' => $request->string('prompt')->trim()->value() ?: null,
+                'photo_count' => count($images),
                 'with_hero' => $request->boolean('with_hero', true),
             ]);
 

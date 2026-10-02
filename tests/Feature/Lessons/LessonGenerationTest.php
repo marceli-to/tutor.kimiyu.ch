@@ -52,11 +52,10 @@ beforeEach(function () {
 function upload(array $data = []): TestResponse
 {
     return test()->actingAs(test()->user)->post(route('lessons.store'), [
-        'source' => 'fotos',
         'child_id' => test()->child->id,
         'subject' => 'Biologie',
         'level' => '2. Sek',
-        'notes' => 'Prüfung am Freitag',
+        'prompt' => 'Prüfung am Freitag',
         'images' => [photo()],
         ...$data,
     ]);
@@ -90,15 +89,14 @@ it('turns uploaded photos into a lesson ready for review', function () {
         );
 });
 
-it('sends the photos, subject, level and notes, but never the child name', function () {
+it('sends the photos, subject and level, but never the child name', function () {
     upload();
 
     $request = $this->fake->requestsFor('analyse')[0];
 
     expect($request->images)->toHaveCount(1)
         ->and($request->prompt)->toContain('Fach: Biologie')
-        ->toContain('Stufe: 2. Sek')
-        ->toContain('Hinweise der Eltern: Prüfung am Freitag');
+        ->toContain('Stufe: 2. Sek');
 
     foreach ($this->fake->requests as $sent) {
         expect($sent->system.$sent->prompt)->not->toContain('Mia');
@@ -337,9 +335,9 @@ it('creates the first child from the name', function () {
 });
 
 it('validates the upload', function () {
-    upload(['images' => [], 'subject' => ''])
+    upload(['images' => [], 'prompt' => '', 'subject' => ''])
         ->assertSessionHasErrors([
-            'images' => 'Lade mindestens ein Foto hoch.',
+            'images' => 'Lade mindestens ein Foto hoch oder schreib einen Auftrag.',
             'subject' => 'Gib das Fach an.',
         ]);
 
@@ -439,45 +437,55 @@ it('shows the upload form with the parent’s children', function () {
         );
 });
 
-describe('from a topic', function () {
-    function uploadTopic(array $data = []): TestResponse
+describe('from a prompt', function () {
+    function uploadPrompt(array $data = []): TestResponse
     {
-        return upload(['source' => 'thema', 'topic' => 'Biodiversität', 'images' => [], ...$data]);
+        return upload(['prompt' => 'Biodiversität: Arten, Lebensräume und Gefährdung', 'images' => [], ...$data]);
     }
 
     it('creates a lesson without photos', function () {
-        uploadTopic()->assertRedirect();
+        uploadPrompt()->assertRedirect();
 
         $lesson = Lesson::sole();
         $request = $this->fake->requestsFor('analyse')[0];
 
-        expect($lesson->topic)->toBe('Biodiversität')
+        expect($lesson->prompt)->toBe('Biodiversität: Arten, Lebensräume und Gefährdung')
+            ->and($lesson->photo_count)->toBe(0)
+            ->and($lesson->topic)->toBeNull()
+            ->and($lesson->isFromTopic())->toBeTrue()
             ->and($lesson->status)->toBe(LessonStatus::Review)
             ->and($lesson->images()->count())->toBe(0)
-            ->and($request->images)->toBe([])
-            ->and($request->prompt)->toContain('zum Thema «Biodiversität»')
-            ->toContain('Fach: Biologie')
-            ->and($request->system)->toContain('Nur ein Thema, keine Fotos');
+            ->and($request->images)->toBe([]);
 
         $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page->where('lesson.fromTopic', true));
     });
 
-    it('marks photo lessons as not from a topic', function () {
-        upload(['topic' => 'wird ignoriert']);
+    it('stores photos and prompt together', function () {
+        upload(['prompt' => '  Prüfung am Freitag  ', 'images' => [photo('a.jpg'), photo('b.jpg')]]);
 
-        expect(Lesson::sole()->topic)->toBeNull();
+        $lesson = Lesson::sole();
+        expect($lesson->prompt)->toBe('Prüfung am Freitag')
+            ->and($lesson->photo_count)->toBe(2)
+            ->and($lesson->isFromTopic())->toBeFalse();
 
-        $this->actingAs($this->user)->get(route('lessons.show', Lesson::sole()))
+        $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page->where('lesson.fromTopic', false));
     });
 
-    it('requires a topic but no photos', function () {
-        uploadTopic(['topic' => ''])
-            ->assertSessionHasErrors(['topic' => 'Gib ein Thema ein.'])
-            ->assertSessionDoesntHaveErrors('images');
+    it('stores photos without a prompt', function () {
+        upload(['prompt' => '']);
 
-        upload(['source' => 'irgendwas'])->assertSessionHasErrors('source');
+        expect(Lesson::sole()->prompt)->toBeNull()
+            ->and(Lesson::sole()->photo_count)->toBe(1);
+    });
+
+    it('requires photos or a prompt', function () {
+        upload(['prompt' => null, 'images' => []])
+            ->assertSessionHasErrors(['images' => 'Lade mindestens ein Foto hoch oder schreib einen Auftrag.']);
+
+        uploadPrompt(['prompt' => str_repeat('a', 1001)])
+            ->assertSessionHasErrors(['prompt' => 'Der Auftrag darf höchstens 1000 Zeichen lang sein.']);
 
         expect(Lesson::count())->toBe(0);
     });
@@ -488,7 +496,7 @@ describe('from a topic', function () {
             'seite' => null,
         ]));
 
-        uploadTopic(['topic' => 'Fussballresultate vom Wochenende']);
+        uploadPrompt(['prompt' => 'Fussballresultate vom Wochenende']);
 
         $lesson = Lesson::sole();
         expect($lesson->status)->toBe(LessonStatus::Failed)

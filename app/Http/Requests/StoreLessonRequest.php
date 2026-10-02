@@ -21,12 +21,11 @@ class StoreLessonRequest extends FormRequest
             'child_name' => ['required_without:child_id', 'nullable', 'string', 'max:60'],
             'subject' => ['required', 'string', 'max:60'],
             'level' => ['required', 'string', 'max:60'],
-            'notes' => ['nullable', 'string', 'max:500'],
             'with_hero' => ['boolean'],
-            'source' => ['required', Rule::in(['fotos', 'thema'])],
-            'topic' => ['exclude_unless:source,thema', 'required', 'string', 'max:120'],
-            'images' => ['exclude_unless:source,fotos', 'required', 'array', 'min:1', 'max:'.config('lessons.images.max_count')],
-            'images.*' => ['exclude_unless:source,fotos', 'required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.config('lessons.images.max_upload_kb')],
+            // Fotos sind der verbindliche Rahmen, der Auftrag sagt, was daraus werden soll; eines von beiden genügt
+            'prompt' => ['nullable', 'string', 'max:1000'],
+            'images' => ['required_without:prompt', 'array', 'max:'.config('lessons.images.max_count')],
+            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:'.config('lessons.images.max_upload_kb')],
         ];
     }
 
@@ -40,11 +39,8 @@ class StoreLessonRequest extends FormRequest
             'child_name.required_without' => 'Gib den Namen des Kindes ein.',
             'subject.required' => 'Gib das Fach an.',
             'level.required' => 'Gib die Stufe an.',
-            'notes.max' => 'Die Hinweise dürfen höchstens 500 Zeichen lang sein.',
-            'topic.required' => 'Gib ein Thema ein.',
-            'topic.max' => 'Das Thema darf höchstens 120 Zeichen lang sein.',
-            'images.required' => 'Lade mindestens ein Foto hoch.',
-            'images.min' => 'Lade mindestens ein Foto hoch.',
+            'prompt.max' => 'Der Auftrag darf höchstens 1000 Zeichen lang sein.',
+            'images.required_without' => 'Lade mindestens ein Foto hoch oder schreib einen Auftrag.',
             'images.max' => 'Höchstens :max Fotos pro Lernseite.',
             'images.*.mimes' => 'Nur Fotos im Format JPEG, PNG oder WebP.',
             'images.*.max' => 'Ein Foto ist zu gross (höchstens 12 MB).',
