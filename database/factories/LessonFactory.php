@@ -30,7 +30,7 @@ class LessonFactory extends Factory
     }
 
     /**
-     * Freigegebene Seite mit Inhalt und Hero aus database/fixtures/lessons.
+     * Freigegebene Seite mit Inhalt und Grafik 1 aus database/fixtures/lessons.
      */
     public function fromFixture(string $name = 'fotosynthese'): static
     {
@@ -43,7 +43,15 @@ class LessonFactory extends Factory
             'content' => $content,
             'hero' => self::fixture("$name.hero"),
             'published_at' => now(),
-        ]);
+        ])->afterCreating(function (Lesson $lesson) use ($name) {
+            $hero = self::fixture("$name.hero");
+
+            $lesson->graphics()->create([
+                'position' => 1,
+                'plan' => ['muster' => $hero['muster'], 'idee' => $hero['beschreibung']],
+                'graphic' => $hero,
+            ]);
+        });
     }
 
     /**

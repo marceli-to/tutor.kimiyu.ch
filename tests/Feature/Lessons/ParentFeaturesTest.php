@@ -7,6 +7,7 @@ use App\Models\Attempt;
 use App\Models\Child;
 use App\Models\Generation;
 use App\Models\Lesson;
+use App\Models\LessonGraphic;
 use App\Models\User;
 use Database\Factories\LessonFactory;
 use Illuminate\Support\Facades\Storage;
@@ -394,7 +395,9 @@ it('removes the content and the progress of a deleted lesson but keeps its costs
         ->and($deleted->subject)->toBe($this->lesson->subject)
         ->and($deleted->child_id)->toBe($this->child->id)
         ->and(Attempt::where('lesson_id', $this->lesson->id)->count())->toBe(0)
-        ->and(Attempt::where('lesson_id', $other->id)->count())->toBe(1);
+        ->and(Attempt::where('lesson_id', $other->id)->count())->toBe(1)
+        ->and(LessonGraphic::where('lesson_id', $this->lesson->id)->count())->toBe(0)
+        ->and(LessonGraphic::where('lesson_id', $other->id)->count())->toBe(1);
 
     $this->actingAs($this->user)->get(route('costs'))
         ->assertInertia(fn (Assert $page) => $page

@@ -105,6 +105,8 @@ class LessonController extends Controller
         // mehr gibt: so lässt sie sich weder freigeben noch neu erstellen.
         DB::transaction(function () use ($lesson) {
             $lesson->attempts()->delete();
+            // Die Grafiken sind Inhalt der Lernseite
+            $lesson->graphics()->delete();
 
             $lesson->updateQuietly([
                 'status' => LessonStatus::Failed,
