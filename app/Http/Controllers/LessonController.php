@@ -194,9 +194,10 @@ class LessonController extends Controller
                     'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
                     'grafik' => GenerationPipeline::canRegenerate($lesson, 'grafik'),
                 ],
+                'additions' => $lesson->isFromTopic() ? [] : ($lesson->additions ?? []),
             ] : null,
             'lesson' => [
-                ...LessonView::page($lesson),
+                ...LessonView::page($lesson, showOrigin: $parent),
                 'status' => $lesson->status->value,
                 'step' => $lesson->step,
                 'error' => $lesson->error,

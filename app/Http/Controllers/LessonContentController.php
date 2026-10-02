@@ -35,6 +35,7 @@ class LessonContentController extends Controller
                 'childName' => $lesson->child->name,
                 'content' => $lesson->content,
             ],
+            'showOrigin' => ! $lesson->isFromTopic(),
             'clozeMarkup' => $cloze ? ClozeParser::toMarkup($cloze['segmente']) : null,
             'palettes' => collect(Palettes::all())
                 ->map(fn (array $palette, string $key) => ['value' => $key, 'label' => $palette['label'], 'accent' => $palette['light']['accent']])
@@ -59,6 +60,12 @@ class LessonContentController extends Controller
         if (is_array($content['module']['lueckentext'] ?? null)) {
             try {
                 $content['module']['lueckentext']['segmente'] = ClozeParser::parse((string) $request->input('clozeMarkup'));
+
+                // Die Herkunft wird nicht im Markup bearbeitet, also vom gespeicherten Lückentext übernehmen
+                $origin = $lesson->content['module']['lueckentext']['herkunft'] ?? null;
+                if ($origin !== null) {
+                    $content['module']['lueckentext']['herkunft'] = $origin;
+                }
             } catch (InvalidArgumentException $e) {
                 throw ValidationException::withMessages(['clozeMarkup' => $e->getMessage()]);
             }
