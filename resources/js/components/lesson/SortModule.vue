@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { categoryClasses, shuffle } from '@/lib/lesson';
 import type { CategoryId, ModuleAnswer, SortModuleData } from '@/types';
 
@@ -16,7 +17,12 @@ const emit = defineEmits<{
 const order = ref<Term[]>([]);
 const position = ref(0);
 const right = ref(0);
-const bins = ref<Record<string, { text: string; correct: boolean }[]>>({});
+const bins = ref<
+    Record<
+        string,
+        { text: string; correct: boolean; herkunft?: Term['herkunft'] }[]
+    >
+>({});
 const last = ref<{ term: Term; correct: boolean } | null>(null);
 
 const finished = computed(() => position.value >= order.value.length);
@@ -43,7 +49,11 @@ function choose(category: CategoryId) {
         right.value++;
     }
 
-    bins.value[category].push({ text: term.text, correct });
+    bins.value[category].push({
+        text: term.text,
+        correct,
+        herkunft: term.herkunft,
+    });
     last.value = { term, correct };
     position.value++;
 
@@ -80,6 +90,7 @@ start();
                 class="mt-2 mb-4 rounded-2xl border-2 border-dashed border-ls-line px-2 py-5 text-center font-display text-[clamp(1.5rem,6vw,2.2rem)] font-bold"
             >
                 {{ current.text }}
+                <OriginBadge :origin="current.herkunft" class="ml-1" />
             </div>
             <div
                 class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3"
@@ -137,6 +148,7 @@ start();
                     :class="{ 'text-ls-bad line-through': !tag.correct }"
                 >
                     {{ tag.text }}
+                    <OriginBadge :origin="tag.herkunft" class="ml-0.5" />
                     <span v-if="!tag.correct" class="sr-only">(falsch)</span>
                 </span>
             </div>

@@ -5,6 +5,7 @@ import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import EditField from '@/components/lesson/EditField.vue';
+import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -20,6 +21,8 @@ const props = defineProps<{
         content: LessonContent;
     };
     clozeMarkup: string | null;
+    // Nur bei Lernseiten mit Fotos: was die KI ergänzt hat, ist markiert
+    showOrigin: boolean;
     palettes: { value: string; label: string; accent: string }[];
 }>();
 
@@ -171,6 +174,12 @@ function save() {
                     :key="b"
                     class="space-y-3 border-l-2 pl-4"
                 >
+                    <div
+                        v-if="showOrigin && block.herkunft === 'ergaenzt'"
+                        class="flex justify-end"
+                    >
+                        <OriginBadge :origin="block.herkunft" variant="app" />
+                    </div>
                     <InputError
                         :message="err(`abschnitte.${s}.bloecke.${b}`)"
                     />
@@ -250,7 +259,20 @@ function save() {
                             "
                         />
                     </template>
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="text-destructive"
+                        :disabled="section.bloecke.length <= 1"
+                        @click="section.bloecke.splice(b, 1)"
+                    >
+                        <Trash2 class="size-4" aria-hidden="true" />
+                        Baustein entfernen
+                    </Button>
                 </div>
+                <InputError :message="err(`abschnitte.${s}.bloecke`)" />
             </div>
         </section>
 
@@ -281,6 +303,12 @@ function save() {
             >
                 <legend class="px-1 text-sm font-medium">
                     Frage {{ q + 1 }}
+                    <OriginBadge
+                        v-if="showOrigin"
+                        :origin="question.herkunft"
+                        variant="app"
+                        class="ml-1"
+                    />
                 </legend>
                 <EditField
                     v-model="question.frage"
@@ -389,14 +417,19 @@ function save() {
                 :key="term.id"
                 class="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_12rem_auto] sm:items-start"
             >
-                <EditField
-                    v-model="term.text"
-                    :label="`Begriff ${t + 1}`"
-                    :error="
-                        err(`module.sortieren.begriffe.${t}.text`) ??
-                        err(`module.sortieren.begriffe.${t}.kategorie`)
-                    "
-                />
+                <div class="grid gap-1">
+                    <EditField
+                        v-model="term.text"
+                        :label="`Begriff ${t + 1}`"
+                        :error="
+                            err(`module.sortieren.begriffe.${t}.text`) ??
+                            err(`module.sortieren.begriffe.${t}.kategorie`)
+                        "
+                    />
+                    <div v-if="showOrigin && term.herkunft === 'ergaenzt'">
+                        <OriginBadge :origin="term.herkunft" variant="app" />
+                    </div>
+                </div>
                 <div class="grid gap-1.5">
                     <Label :for="`korb-${term.id}`">Gehört in</Label>
                     <select
@@ -448,11 +481,16 @@ function save() {
                 :key="card.id"
                 class="grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_2fr_auto] sm:items-start"
             >
-                <EditField
-                    v-model="card.vorne"
-                    label="Vorderseite"
-                    :error="err(`module.karten.eintraege.${k}.vorne`)"
-                />
+                <div class="grid gap-1">
+                    <EditField
+                        v-model="card.vorne"
+                        label="Vorderseite"
+                        :error="err(`module.karten.eintraege.${k}.vorne`)"
+                    />
+                    <div v-if="showOrigin && card.herkunft === 'ergaenzt'">
+                        <OriginBadge :origin="card.herkunft" variant="app" />
+                    </div>
+                </div>
                 <EditField
                     v-model="card.hinten"
                     label="Rückseite"
@@ -478,7 +516,15 @@ function save() {
         </section>
 
         <section v-if="c.module.lueckentext" class="space-y-4">
-            <h2 class="text-lg font-semibold">Lückentext</h2>
+            <h2 class="text-lg font-semibold">
+                Lückentext
+                <OriginBadge
+                    v-if="showOrigin"
+                    :origin="c.module.lueckentext.herkunft"
+                    variant="app"
+                    class="ml-1"
+                />
+            </h2>
             <EditField
                 v-model="form.clozeMarkup"
                 label="Text mit Lücken"

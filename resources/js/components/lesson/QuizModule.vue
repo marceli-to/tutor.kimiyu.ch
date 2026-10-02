@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useId } from 'vue';
+import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { resultMessage } from '@/lib/lesson';
 import type { ModuleAnswer, QuizQuestion } from '@/types';
 
@@ -108,6 +109,7 @@ function optionClass(k: number): string {
                 class="mb-4 font-display text-[1.3rem] font-medium outline-none"
             >
                 {{ question.frage }}
+                <OriginBadge :origin="question.herkunft" class="ml-1" />
             </p>
 
             <div

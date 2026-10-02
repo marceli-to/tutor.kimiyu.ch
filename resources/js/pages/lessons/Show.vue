@@ -14,6 +14,7 @@ const props = defineProps<{
         shareUrl: string | null;
         canPublish: boolean;
         canRegenerate: { quiz: boolean; grafik: boolean };
+        additions: string[];
     } | null;
     lesson: {
         id: number;
@@ -90,6 +91,7 @@ watch(generating, (active) => (active ? start() : stop()));
                     :check-notes="lesson.checkNotes"
                     :hero-error="lesson.heroError"
                     :from-topic="lesson.fromTopic"
+                    :additions="parent?.additions ?? []"
                 />
             </template>
         </LessonPage>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { categoryClasses } from '@/lib/lesson';
 import type { LessonBlock } from '@/types';
 
@@ -8,6 +9,15 @@ defineProps<{
 </script>
 
 <template>
+    <!-- Eigene Zeile über dem Baustein, damit das Layout ohne Marke gleich bleibt -->
+    <div
+        v-if="block.herkunft === 'ergaenzt'"
+        class="mt-4 mb-1 flex justify-end"
+        :class="{ 'max-w-[66ch]': block.typ === 'absatz' }"
+    >
+        <OriginBadge :origin="block.herkunft" />
+    </div>
+
     <p v-if="block.typ === 'absatz'" class="mb-4 max-w-[66ch]">
         {{ block.text }}
     </p>

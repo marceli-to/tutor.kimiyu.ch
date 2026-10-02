@@ -5,6 +5,7 @@ defineProps<{
     checkNotes: { bereich: string; aenderung: string }[];
     heroError: string | null;
     fromTopic: boolean;
+    additions: string[];
 }>();
 </script>
 
@@ -25,6 +26,29 @@ defineProps<{
                 Ohne Buchseite erstellt – mit dem Schulstoff vergleichen. An der
                 Prüfung zählt die Definition aus dem Buch.
             </p>
+            <template v-if="additions.length">
+                <p class="mt-3 mb-0">
+                    <strong>
+                        {{ additions.length }}
+                        {{
+                            additions.length === 1
+                                ? 'Teil stammt'
+                                : 'Teile stammen'
+                        }}
+                        nicht aus den Fotos.
+                    </strong>
+                    Die KI hat sie aus Fachwissen ergänzt, sie sind mit
+                    «ergänzt» markiert. Bitte besonders genau prüfen.
+                </p>
+                <details class="mt-3">
+                    <summary class="cursor-pointer">Was ergänzt wurde</summary>
+                    <ul class="mt-2 mb-0 list-disc pl-5">
+                        <li v-for="(addition, k) in additions" :key="k">
+                            {{ addition }}
+                        </li>
+                    </ul>
+                </details>
+            </template>
             <details v-if="checkNotes.length" class="mt-3">
                 <summary class="cursor-pointer">
                     Die Nachprüfung hat {{ checkNotes.length }}

@@ -5,6 +5,7 @@ import ClozeModule from '@/components/lesson/ClozeModule.vue';
 import FlashcardModule from '@/components/lesson/FlashcardModule.vue';
 import HeroFrame from '@/components/lesson/HeroFrame.vue';
 import LessonBlock from '@/components/lesson/LessonBlock.vue';
+import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import QuizModule from '@/components/lesson/QuizModule.vue';
 import SortModule from '@/components/lesson/SortModule.vue';
 import { useAppearance } from '@/composables/useAppearance';
@@ -125,7 +126,13 @@ function toggleTheme() {
             </section>
 
             <section v-if="module.lueckentext">
-                <h2 class="mt-12 mb-3 text-[1.6rem] font-bold">Lückentext</h2>
+                <h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
+                    Lückentext
+                    <OriginBadge
+                        :origin="module.lueckentext.herkunft"
+                        class="ml-1"
+                    />
+                </h2>
                 <p v-if="module.lueckentext.anleitung" class="mb-4">
                     {{ module.lueckentext.anleitung }}
                 </p>

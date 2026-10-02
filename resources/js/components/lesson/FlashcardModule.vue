@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { shuffle } from '@/lib/lesson';
 import type { FlashcardModuleData } from '@/types';
 
@@ -44,6 +45,7 @@ function mix() {
                 <span class="font-display text-2xl font-bold">{{
                     card.vorne
                 }}</span>
+                <OriginBadge :origin="card.herkunft" class="ml-1" />
                 <br />
                 <small class="text-ls-muted">Tippen zum Umdrehen</small>
             </template>
