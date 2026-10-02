@@ -17,163 +17,163 @@ use Illuminate\Support\Collection;
  */
 class Progress
 {
-    public const STATUSES = ['mastered', 'almost', 'practice', 'open'];
+	public const STATUSES = ['mastered', 'almost', 'practice', 'open'];
 
-    /**
-     * All items of a lesson that the progress tracks.
-     *
-     * @return list<array{module: string, id: string, text: string}>
-     */
-    public static function items(Lesson $lesson): array
-    {
-        $module = $lesson->content['modules'] ?? [];
-        $items = [];
+	/**
+	 * All items of a lesson that the progress tracks.
+	 *
+	 * @return list<array{module: string, id: string, text: string}>
+	 */
+	public static function items(Lesson $lesson): array
+	{
+		$module = $lesson->content['modules'] ?? [];
+		$items = [];
 
-        foreach ($module['quiz'] ?? [] as $question) {
-            $items[] = ['module' => 'quiz', 'id' => $question['id'], 'text' => $question['question']];
-        }
+		foreach ($module['quiz'] ?? [] as $question) {
+			$items[] = ['module' => 'quiz', 'id' => $question['id'], 'text' => $question['question']];
+		}
 
-        foreach ($module['sorting']['terms'] ?? [] as $term) {
-            $items[] = ['module' => 'sorting', 'id' => $term['id'], 'text' => $term['text']];
-        }
+		foreach ($module['sorting']['terms'] ?? [] as $term) {
+			$items[] = ['module' => 'sorting', 'id' => $term['id'], 'text' => $term['text']];
+		}
 
-        foreach ($module['cloze']['segments'] ?? [] as $segment) {
-            if (isset($segment['answers'])) {
-                $items[] = ['module' => 'cloze', 'id' => $segment['id'], 'text' => 'Lücke: '.$segment['answers'][0]];
-            }
-        }
+		foreach ($module['cloze']['segments'] ?? [] as $segment) {
+			if (isset($segment['answers'])) {
+				$items[] = ['module' => 'cloze', 'id' => $segment['id'], 'text' => 'Lücke: '.$segment['answers'][0]];
+			}
+		}
 
-        return $items;
-    }
+		return $items;
+	}
 
-    /**
-     * Checks an answer against the content. Correctness never comes from the browser.
-     *
-     * @return bool|null null if the item doesn't exist (any more)
-     */
-    public static function check(Lesson $lesson, string $module, string $itemId, mixed $answer): ?bool
-    {
-        $content = $lesson->content['modules'] ?? [];
+	/**
+	 * Checks an answer against the content. Correctness never comes from the browser.
+	 *
+	 * @return bool|null null if the item doesn't exist (any more)
+	 */
+	public static function check(Lesson $lesson, string $module, string $itemId, mixed $answer): ?bool
+	{
+		$content = $lesson->content['modules'] ?? [];
 
-        $item = match ($module) {
-            'quiz' => self::find($content['quiz'] ?? [], $itemId),
-            'sorting' => self::find($content['sorting']['terms'] ?? [], $itemId),
-            'cloze' => self::find($content['cloze']['segments'] ?? [], $itemId),
-            default => null,
-        };
+		$item = match ($module) {
+			'quiz' => self::find($content['quiz'] ?? [], $itemId),
+			'sorting' => self::find($content['sorting']['terms'] ?? [], $itemId),
+			'cloze' => self::find($content['cloze']['segments'] ?? [], $itemId),
+			default => null,
+		};
 
-        if ($item === null) {
-            return null;
-        }
+		if ($item === null) {
+			return null;
+		}
 
-        return match ($module) {
-            'quiz' => is_int($answer) && $answer === $item['answer'],
-            'sorting' => $answer === $item['category'],
-            default => is_string($answer) && ClozeParser::isCorrect($answer, $item['answers']),
-        };
-    }
+		return match ($module) {
+			'quiz' => is_int($answer) && $answer === $item['answer'],
+			'sorting' => $answer === $item['category'],
+			default => is_string($answer) && ClozeParser::isCorrect($answer, $item['answers']),
+		};
+	}
 
-    /**
-     * Status of all items of a lesson for a child.
-     *
-     * @return list<array{module: string, id: string, text: string, status: string}>
-     */
-    public static function forLesson(Child $child, Lesson $lesson): array
-    {
-        return self::withStatus(self::items($lesson), self::attempts($child, [$lesson->id])[$lesson->id] ?? []);
-    }
+	/**
+	 * Status of all items of a lesson for a child.
+	 *
+	 * @return list<array{module: string, id: string, text: string, status: string}>
+	 */
+	public static function forLesson(Child $child, Lesson $lesson): array
+	{
+		return self::withStatus(self::items($lesson), self::attempts($child, [$lesson->id])[$lesson->id] ?? []);
+	}
 
-    /**
-     * Summary per lesson: count per status and the items not yet mastered.
-     *
-     * @param  Collection<int, Lesson>  $lessons
-     * @return array<int, array{counts: array<string, int>, total: int, open: list<array{module: string, id: string, text: string, status: string}>}>
-     */
-    public static function summaries(Child $child, Collection $lessons): array
-    {
-        $attempts = self::attempts($child, array_values($lessons->map(fn (Lesson $lesson) => $lesson->id)->all()));
-        $summaries = [];
+	/**
+	 * Summary per lesson: count per status and the items not yet mastered.
+	 *
+	 * @param  Collection<int, Lesson>  $lessons
+	 * @return array<int, array{counts: array<string, int>, total: int, open: list<array{module: string, id: string, text: string, status: string}>}>
+	 */
+	public static function summaries(Child $child, Collection $lessons): array
+	{
+		$attempts = self::attempts($child, array_values($lessons->map(fn (Lesson $lesson) => $lesson->id)->all()));
+		$summaries = [];
 
-        foreach ($lessons as $lesson) {
-            $items = self::withStatus(self::items($lesson), $attempts[$lesson->id] ?? []);
-            $counts = array_fill_keys(self::STATUSES, 0);
+		foreach ($lessons as $lesson) {
+			$items = self::withStatus(self::items($lesson), $attempts[$lesson->id] ?? []);
+			$counts = array_fill_keys(self::STATUSES, 0);
 
-            foreach ($items as $item) {
-                $counts[$item['status']]++;
-            }
+			foreach ($items as $item) {
+				$counts[$item['status']]++;
+			}
 
-            // First what needs practice, then what is almost mastered
-            $open = array_values(array_filter($items, fn ($item) => in_array($item['status'], ['practice', 'almost'], true)));
-            usort($open, fn ($a, $b) => ($a['status'] === 'practice' ? 0 : 1) <=> ($b['status'] === 'practice' ? 0 : 1));
+			// First what needs practice, then what is almost mastered
+			$open = array_values(array_filter($items, fn ($item) => in_array($item['status'], ['practice', 'almost'], true)));
+			usort($open, fn ($a, $b) => ($a['status'] === 'practice' ? 0 : 1) <=> ($b['status'] === 'practice' ? 0 : 1));
 
-            $summaries[$lesson->id] = [
-                'counts' => $counts,
-                'total' => count($items),
-                'open' => $open,
-            ];
-        }
+			$summaries[$lesson->id] = [
+				'counts' => $counts,
+				'total' => count($items),
+				'open' => $open,
+			];
+		}
 
-        return $summaries;
-    }
+		return $summaries;
+	}
 
-    /**
-     * @param  list<array{module: string, id: string, text: string}>  $items
-     * @param  list<Attempt>  $attempts  answers of a lesson, newest first
-     * @return list<array{module: string, id: string, text: string, status: string}>
-     */
-    private static function withStatus(array $items, array $attempts): array
-    {
-        $byItem = [];
-        foreach ($attempts as $attempt) {
-            $byItem[$attempt->module.':'.$attempt->item_id][] = $attempt->correct;
-        }
+	/**
+	 * @param  list<array{module: string, id: string, text: string}>  $items
+	 * @param  list<Attempt>  $attempts  answers of a lesson, newest first
+	 * @return list<array{module: string, id: string, text: string, status: string}>
+	 */
+	private static function withStatus(array $items, array $attempts): array
+	{
+		$byItem = [];
+		foreach ($attempts as $attempt) {
+			$byItem[$attempt->module.':'.$attempt->item_id][] = $attempt->correct;
+		}
 
-        return array_map(function (array $item) use ($byItem) {
-            $last = array_slice($byItem[$item['module'].':'.$item['id']] ?? [], 0, 2);
+		return array_map(function (array $item) use ($byItem) {
+			$last = array_slice($byItem[$item['module'].':'.$item['id']] ?? [], 0, 2);
 
-            $status = match (true) {
-                $last === [] => 'open',
-                ! $last[0] => 'practice',
-                count($last) === 2 && $last[1] => 'mastered',
-                default => 'almost',
-            };
+			$status = match (true) {
+				$last === [] => 'open',
+				! $last[0] => 'practice',
+				count($last) === 2 && $last[1] => 'mastered',
+				default => 'almost',
+			};
 
-            return [...$item, 'status' => $status];
-        }, $items);
-    }
+			return [...$item, 'status' => $status];
+		}, $items);
+	}
 
-    /**
-     * @param  list<int>  $lessonIds
-     * @return array<int, list<Attempt>> answers per lesson, newest first
-     */
-    private static function attempts(Child $child, array $lessonIds): array
-    {
-        $grouped = [];
+	/**
+	 * @param  list<int>  $lessonIds
+	 * @return array<int, list<Attempt>> answers per lesson, newest first
+	 */
+	private static function attempts(Child $child, array $lessonIds): array
+	{
+		$grouped = [];
 
-        $query = $child->attempts()
-            ->whereIn('lesson_id', $lessonIds)
-            ->orderByDesc('created_at')
-            ->orderByDesc('id');
+		$query = $child->attempts()
+			->whereIn('lesson_id', $lessonIds)
+			->orderByDesc('created_at')
+			->orderByDesc('id');
 
-        foreach ($query->get() as $attempt) {
-            $grouped[$attempt->lesson_id][] = $attempt;
-        }
+		foreach ($query->get() as $attempt) {
+			$grouped[$attempt->lesson_id][] = $attempt;
+		}
 
-        return $grouped;
-    }
+		return $grouped;
+	}
 
-    /**
-     * @param  array<int, mixed>  $list
-     * @return array<string, mixed>|null
-     */
-    private static function find(array $list, string $id): ?array
-    {
-        foreach ($list as $entry) {
-            if (is_array($entry) && ($entry['id'] ?? null) === $id) {
-                return $entry;
-            }
-        }
+	/**
+	 * @param  array<int, mixed>  $list
+	 * @return array<string, mixed>|null
+	 */
+	private static function find(array $list, string $id): ?array
+	{
+		foreach ($list as $entry) {
+			if (is_array($entry) && ($entry['id'] ?? null) === $id) {
+				return $entry;
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 }

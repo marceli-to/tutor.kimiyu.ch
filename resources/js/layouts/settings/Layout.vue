@@ -11,61 +11,61 @@ import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profil',
-        href: editProfile(),
-    },
-    {
-        title: 'Sicherheit',
-        href: editSecurity(),
-    },
-    {
-        title: 'Darstellung',
-        href: editAppearance(),
-    },
+	{
+		title: 'Profil',
+		href: editProfile(),
+	},
+	{
+		title: 'Sicherheit',
+		href: editSecurity(),
+	},
+	{
+		title: 'Darstellung',
+		href: editAppearance(),
+	},
 ];
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
 
 <template>
-    <div class="px-4 py-6">
-        <Heading
-            title="Einstellungen"
-            description="Verwalte dein Profil und dein Konto."
-        />
+	<div class="px-4 py-6">
+		<Heading
+			title="Einstellungen"
+			description="Verwalte dein Profil und dein Konto."
+		/>
 
-        <div class="flex flex-col lg:flex-row lg:space-x-12">
-            <aside class="w-full max-w-xl lg:w-48">
-                <nav
-                    class="flex flex-col space-y-1 space-x-0"
-                    aria-label="Einstellungen"
-                >
-                    <Button
-                        v-for="item in sidebarNavItems"
-                        :key="toUrl(item.href)"
-                        variant="ghost"
-                        :class="[
-                            'w-full justify-start',
-                            { 'bg-muted': isCurrentOrParentUrl(item.href) },
-                        ]"
-                        as-child
-                    >
-                        <Link :href="item.href">
-                            <component :is="item.icon" class="h-4 w-4" />
-                            {{ item.title }}
-                        </Link>
-                    </Button>
-                </nav>
-            </aside>
+		<div class="flex flex-col lg:flex-row lg:space-x-12">
+			<aside class="w-full max-w-xl lg:w-48">
+				<nav
+					class="flex flex-col space-y-1 space-x-0"
+					aria-label="Einstellungen"
+				>
+					<Button
+						v-for="item in sidebarNavItems"
+						:key="toUrl(item.href)"
+						variant="ghost"
+						:class="[
+							'w-full justify-start',
+							{ 'bg-muted': isCurrentOrParentUrl(item.href) },
+						]"
+						as-child
+					>
+						<Link :href="item.href">
+							<component :is="item.icon" class="h-4 w-4" />
+							{{ item.title }}
+						</Link>
+					</Button>
+				</nav>
+			</aside>
 
-            <Separator class="my-6 lg:hidden" />
+			<Separator class="my-6 lg:hidden" />
 
-            <div class="flex-1 md:max-w-2xl">
-                <section class="max-w-xl space-y-12">
-                    <slot />
-                </section>
-            </div>
-        </div>
-    </div>
+			<div class="flex-1 md:max-w-2xl">
+				<section class="max-w-xl space-y-12">
+					<slot />
+				</section>
+			</div>
+		</div>
+	</div>
 </template>

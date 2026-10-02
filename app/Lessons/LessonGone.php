@@ -9,8 +9,8 @@ use RuntimeException;
  */
 class LessonGone extends RuntimeException
 {
-    public function __construct()
-    {
-        parent::__construct('The lesson was deleted during generation.');
-    }
+	public function __construct()
+	{
+		parent::__construct('The lesson was deleted during generation.');
+	}
 }

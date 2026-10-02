@@ -10,8 +10,8 @@ use App\Models\Lesson;
  */
 class RegenerateGraphic
 {
-    public function handle(Lesson $lesson, int $position): void
-    {
-        GenerationPipeline::regenerate($lesson, 'graphic', $position);
-    }
+	public function handle(Lesson $lesson, int $position): void
+	{
+		GenerationPipeline::regenerate($lesson, 'graphic', $position);
+	}
 }

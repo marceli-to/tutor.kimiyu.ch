@@ -11,254 +11,254 @@ use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
-    $this->child = Child::factory()->for($this->user)->create(['name' => 'Mia']);
-    // Photosynthesis: 5 quiz questions, 5 gaps, no sorting game
-    $this->lesson = Lesson::factory()->for($this->child)->fromFixture('fotosynthese')->create();
-    // Ecosystem: 5 quiz questions, 12 sorting terms
-    $this->eco = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create();
+	$this->user = User::factory()->create();
+	$this->child = Child::factory()->for($this->user)->create(['name' => 'Mia']);
+	// Photosynthesis: 5 quiz questions, 5 gaps, no sorting game
+	$this->lesson = Lesson::factory()->for($this->child)->fromFixture('fotosynthese')->create();
+	// Ecosystem: 5 quiz questions, 12 sorting terms
+	$this->eco = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create();
 });
 
 function answer(array $data, ?Lesson $lesson = null, ?string $token = null): TestResponse
 {
-    $lesson ??= test()->lesson;
+	$lesson ??= test()->lesson;
 
-    return test()->postJson(route('shared.answer', [$token ?? test()->child->share_token, $lesson]), $data);
+	return test()->postJson(route('shared.answer', [$token ?? test()->child->share_token, $lesson]), $data);
 }
 
 function attempts(Child $child, Lesson $lesson, string $module, string $itemId, array $results): void
 {
-    foreach ($results as $i => $correct) {
-        Attempt::create([
-            'child_id' => $child->id,
-            'lesson_id' => $lesson->id,
-            'module' => $module,
-            'item_id' => $itemId,
-            'correct' => $correct,
-            'created_at' => now()->addSeconds($i),
-        ]);
-    }
+	foreach ($results as $i => $correct) {
+		Attempt::create([
+			'child_id' => $child->id,
+			'lesson_id' => $lesson->id,
+			'module' => $module,
+			'item_id' => $itemId,
+			'correct' => $correct,
+			'created_at' => now()->addSeconds($i),
+		]);
+	}
 }
 
 describe('answers', function () {
-    it('checks quiz answers on the server', function () {
-        // q1: the correct answer is index 1
-        answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1])->assertOk()->assertJson(['correct' => true]);
-        answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 0])->assertOk()->assertJson(['correct' => false]);
+	it('checks quiz answers on the server', function () {
+		// q1: the correct answer is index 1
+		answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1])->assertOk()->assertJson(['correct' => true]);
+		answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 0])->assertOk()->assertJson(['correct' => false]);
 
-        expect(Attempt::orderBy('id')->pluck('correct')->all())->toBe([true, false]);
-    });
+		expect(Attempt::orderBy('id')->pluck('correct')->all())->toBe([true, false]);
+	});
 
-    it('ignores what the browser claims', function () {
-        answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 0, 'correct' => true]);
+	it('ignores what the browser claims', function () {
+		answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 0, 'correct' => true]);
 
-        expect(Attempt::sole()->correct)->toBeFalse();
-    });
+		expect(Attempt::sole()->correct)->toBeFalse();
+	});
 
-    it('checks sorting and cloze answers', function () {
-        answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertJson(['correct' => true]);
-        answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat2'], $this->eco)->assertJson(['correct' => false]);
-        answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => ' co2 '])->assertJson(['correct' => true]);
-        answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => 'Sauerstoff'])->assertJson(['correct' => false]);
-    });
+	it('checks sorting and cloze answers', function () {
+		answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertJson(['correct' => true]);
+		answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat2'], $this->eco)->assertJson(['correct' => false]);
+		answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => ' co2 '])->assertJson(['correct' => true]);
+		answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => 'Sauerstoff'])->assertJson(['correct' => false]);
+	});
 
-    it('rejects items that do not exist', function () {
-        answer(['module' => 'quiz', 'item_id' => 'q99', 'answer' => 0])->assertStatus(422);
-        answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'])->assertStatus(422);
-        answer(['module' => 'flashcards', 'item_id' => 'k1', 'answer' => 'x'])->assertStatus(422);
-        // Module names from before the English keys are no longer accepted
-        answer(['module' => 'sortieren', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertStatus(422);
+	it('rejects items that do not exist', function () {
+		answer(['module' => 'quiz', 'item_id' => 'q99', 'answer' => 0])->assertStatus(422);
+		answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'])->assertStatus(422);
+		answer(['module' => 'flashcards', 'item_id' => 'k1', 'answer' => 'x'])->assertStatus(422);
+		// Module names from before the English keys are no longer accepted
+		answer(['module' => 'sortieren', 'item_id' => 's1', 'answer' => 'cat1'], $this->eco)->assertStatus(422);
 
-        expect(Attempt::count())->toBe(0);
-    });
+		expect(Attempt::count())->toBe(0);
+	});
 
-    it('only accepts answers for published lessons of this child', function () {
-        $this->lesson->update(['status' => LessonStatus::Review]);
-        answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1])->assertNotFound();
+	it('only accepts answers for published lessons of this child', function () {
+		$this->lesson->update(['status' => LessonStatus::Review]);
+		answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1])->assertNotFound();
 
-        $sibling = Child::factory()->for($this->user)->create();
-        answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1], $this->eco, $sibling->share_token)->assertNotFound();
+		$sibling = Child::factory()->for($this->user)->create();
+		answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1], $this->eco, $sibling->share_token)->assertNotFound();
 
-        answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1], $this->eco, 'falsch')->assertNotFound();
+		answer(['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1], $this->eco, 'falsch')->assertNotFound();
 
-        expect(Attempt::count())->toBe(0);
-    });
+		expect(Attempt::count())->toBe(0);
+	});
 });
 
 describe('status', function () {
-    it('derives the status from the last two answers', function () {
-        attempts($this->child, $this->lesson, 'quiz', 'q1', [true, true]);
-        attempts($this->child, $this->lesson, 'quiz', 'q2', [false, true]);
-        attempts($this->child, $this->lesson, 'quiz', 'q3', [true]);
-        attempts($this->child, $this->lesson, 'quiz', 'q4', [true, true, false]);
+	it('derives the status from the last two answers', function () {
+		attempts($this->child, $this->lesson, 'quiz', 'q1', [true, true]);
+		attempts($this->child, $this->lesson, 'quiz', 'q2', [false, true]);
+		attempts($this->child, $this->lesson, 'quiz', 'q3', [true]);
+		attempts($this->child, $this->lesson, 'quiz', 'q4', [true, true, false]);
 
-        $status = collect(Progress::forLesson($this->child, $this->lesson))->pluck('status', 'id');
+		$status = collect(Progress::forLesson($this->child, $this->lesson))->pluck('status', 'id');
 
-        expect($status['q1'])->toBe('mastered')
-            ->and($status['q2'])->toBe('almost')
-            ->and($status['q3'])->toBe('almost')
-            ->and($status['q4'])->toBe('practice')
-            ->and($status['q5'])->toBe('open')
-            ->and($status['g1'])->toBe('open');
-    });
+		expect($status['q1'])->toBe('mastered')
+			->and($status['q2'])->toBe('almost')
+			->and($status['q3'])->toBe('almost')
+			->and($status['q4'])->toBe('practice')
+			->and($status['q5'])->toBe('open')
+			->and($status['g1'])->toBe('open');
+	});
 
-    it('lists what still needs practice, hardest first', function () {
-        attempts($this->child, $this->lesson, 'quiz', 'q2', [true]);
-        attempts($this->child, $this->lesson, 'cloze', 'g1', [false]);
+	it('lists what still needs practice, hardest first', function () {
+		attempts($this->child, $this->lesson, 'quiz', 'q2', [true]);
+		attempts($this->child, $this->lesson, 'cloze', 'g1', [false]);
 
-        $summary = Progress::summaries($this->child, collect([$this->lesson]))[$this->lesson->id];
+		$summary = Progress::summaries($this->child, collect([$this->lesson]))[$this->lesson->id];
 
-        expect($summary['total'])->toBe(10)
-            ->and($summary['counts'])->toBe(['mastered' => 0, 'almost' => 1, 'practice' => 1, 'open' => 8])
-            ->and(array_column($summary['open'], 'id'))->toBe(['g1', 'q2'])
-            ->and($summary['open'][0]['text'])->toBe('Lücke: Kohlenstoffdioxid');
-    });
+		expect($summary['total'])->toBe(10)
+			->and($summary['counts'])->toBe(['mastered' => 0, 'almost' => 1, 'practice' => 1, 'open' => 8])
+			->and(array_column($summary['open'], 'id'))->toBe(['g1', 'q2'])
+			->and($summary['open'][0]['text'])->toBe('Lücke: Kohlenstoffdioxid');
+	});
 
-    it('counts attempts per child only', function () {
-        $sibling = Child::factory()->for($this->user)->create();
-        attempts($sibling, $this->lesson, 'quiz', 'q1', [true, true]);
+	it('counts attempts per child only', function () {
+		$sibling = Child::factory()->for($this->user)->create();
+		attempts($sibling, $this->lesson, 'quiz', 'q1', [true, true]);
 
-        expect(collect(Progress::forLesson($this->child, $this->lesson))->firstWhere('id', 'q1')['status'])->toBe('open');
-    });
+		expect(collect(Progress::forLesson($this->child, $this->lesson))->firstWhere('id', 'q1')['status'])->toBe('open');
+	});
 });
 
 describe('pages', function () {
-    it('shows the parent what sits and what not', function () {
-        attempts($this->child, $this->eco, 'sorting', 's6', [false]);
-        attempts($this->child, $this->eco, 'quiz', 'q1', [true, true]);
+	it('shows the parent what sits and what not', function () {
+		attempts($this->child, $this->eco, 'sorting', 's6', [false]);
+		attempts($this->child, $this->eco, 'quiz', 'q1', [true, true]);
 
-        $this->actingAs($this->user)->get(route('children.progress', $this->child))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('children/Progress')
-                ->where('child.name', 'Mia')
-                ->whereNot('child.lastActivity', null)
-                ->has('lessons', 2)
-                ->where('lessons.1.title', 'Biotop + Biozönose = Ökosystem')
-                ->where('lessons.1.counts.mastered', 1)
-                ->where('lessons.1.counts.practice', 1)
-                ->where('lessons.1.total', 17)
-                ->where('lessons.1.open.0.text', 'Bakterien')
-            );
-    });
+		$this->actingAs($this->user)->get(route('children.progress', $this->child))
+			->assertOk()
+			->assertInertia(fn (Assert $page) => $page
+				->component('children/Progress')
+				->where('child.name', 'Mia')
+				->whereNot('child.lastActivity', null)
+				->has('lessons', 2)
+				->where('lessons.1.title', 'Biotop + Biozönose = Ökosystem')
+				->where('lessons.1.counts.mastered', 1)
+				->where('lessons.1.counts.practice', 1)
+				->where('lessons.1.total', 17)
+				->where('lessons.1.open.0.text', 'Bakterien')
+			);
+	});
 
-    it('leaves deleted lessons out of the progress', function () {
-        attempts($this->child, $this->eco, 'quiz', 'q1', [true]);
-        $this->eco->delete();
+	it('leaves deleted lessons out of the progress', function () {
+		attempts($this->child, $this->eco, 'quiz', 'q1', [true]);
+		$this->eco->delete();
 
-        $this->actingAs($this->user)->get(route('children.progress', $this->child))
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('lessons', 1)
-                ->where('lessons.0.id', $this->lesson->id)
-            );
-    });
+		$this->actingAs($this->user)->get(route('children.progress', $this->child))
+			->assertInertia(fn (Assert $page) => $page
+				->has('lessons', 1)
+				->where('lessons.0.id', $this->lesson->id)
+			);
+	});
 
-    it('works for a lesson without quiz', function () {
-        $content = $this->eco->content;
-        $content['modules']['quiz'] = null;
-        $this->eco->update(['content' => $content]);
-        attempts($this->child, $this->eco, 'sorting', 's6', [true, true]);
+	it('works for a lesson without quiz', function () {
+		$content = $this->eco->content;
+		$content['modules']['quiz'] = null;
+		$this->eco->update(['content' => $content]);
+		attempts($this->child, $this->eco, 'sorting', 's6', [true, true]);
 
-        expect(Progress::forLesson($this->child, $this->eco->fresh()))->toHaveCount(12);
+		expect(Progress::forLesson($this->child, $this->eco->fresh()))->toHaveCount(12);
 
-        $this->actingAs($this->user)->get(route('children.progress', $this->child))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('lessons.1.total', 12)
-                ->where('lessons.1.counts.mastered', 1)
-            );
-    });
+		$this->actingAs($this->user)->get(route('children.progress', $this->child))
+			->assertOk()
+			->assertInertia(fn (Assert $page) => $page
+				->where('lessons.1.total', 12)
+				->where('lessons.1.counts.mastered', 1)
+			);
+	});
 
-    it('keeps the progress private to the parent', function () {
-        $this->actingAs(User::factory()->create())->get(route('children.progress', $this->child))->assertForbidden();
-    });
+	it('keeps the progress private to the parent', function () {
+		$this->actingAs(User::factory()->create())->get(route('children.progress', $this->child))->assertForbidden();
+	});
 
-    it('shows the child how much sits per lesson', function () {
-        attempts($this->child, $this->lesson, 'quiz', 'q1', [true, true]);
+	it('shows the child how much sits per lesson', function () {
+		attempts($this->child, $this->lesson, 'quiz', 'q1', [true, true]);
 
-        $this->get(route('shared.index', $this->child->share_token))
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('subjects.0.lessons', fn ($lessons) => collect($lessons)->firstWhere('id', $this->lesson->id)['progress'] === ['mastered' => 1, 'total' => 10])
-            );
-    });
+		$this->get(route('shared.index', $this->child->share_token))
+			->assertInertia(fn (Assert $page) => $page
+				->where('subjects.0.lessons', fn ($lessons) => collect($lessons)->firstWhere('id', $this->lesson->id)['progress'] === ['mastered' => 1, 'total' => 10])
+			);
+	});
 
-    it('sums up the costs per month and lesson', function () {
-        $this->lesson->generations()->createMany([
-            ['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'output_tokens' => 1000, 'cost_usd' => 0.1, 'duration_ms' => 30_000],
-            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'error', 'output_tokens' => 0, 'cost_usd' => 0.05, 'duration_ms' => 1_000],
-        ]);
-        $foreign = Lesson::factory()->fromFixture()->create();
-        $foreign->generations()->create(
-            ['user_id' => $foreign->child->user_id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99],
-        );
+	it('sums up the costs per month and lesson', function () {
+		$this->lesson->generations()->createMany([
+			['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'output_tokens' => 1000, 'cost_usd' => 0.1, 'duration_ms' => 30_000],
+			['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'error', 'output_tokens' => 0, 'cost_usd' => 0.05, 'duration_ms' => 1_000],
+		]);
+		$foreign = Lesson::factory()->fromFixture()->create();
+		$foreign->generations()->create(
+			['user_id' => $foreign->child->user_id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99],
+		);
 
-        $this->actingAs($this->user)->get(route('costs'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Costs')
-                ->where('total', 0.15)
-                ->where('months.0.lessons', 1)
-                ->where('months.0.calls', 2)
-                ->where('lessons.0.title', 'Wie macht ein Blatt Zucker aus Licht?')
-                ->where('lessons.0.failed', 1)
-                ->where('lessons.0.outputTokens', 1000)
-                ->where('lessons.0.costUsd', 0.15)
-                ->where('lessons.0.deleted', false)
-            );
-    });
+		$this->actingAs($this->user)->get(route('costs'))
+			->assertInertia(fn (Assert $page) => $page
+				->component('Costs')
+				->where('total', 0.15)
+				->where('months.0.lessons', 1)
+				->where('months.0.calls', 2)
+				->where('lessons.0.title', 'Wie macht ein Blatt Zucker aus Licht?')
+				->where('lessons.0.failed', 1)
+				->where('lessons.0.outputTokens', 1000)
+				->where('lessons.0.costUsd', 0.15)
+				->where('lessons.0.deleted', false)
+			);
+	});
 
-    it('shows deleted lessons and orphaned costs on the costs page', function () {
-        $this->eco->generations()->forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.3, 'created_at' => now()->subMinute()]);
-        $this->eco->delete();
-        // Lesson deleted with the child: only the account is still known
-        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2, 'created_at' => now()->subMinutes(2)]);
-        Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'error', 'cost_usd' => 0.1, 'created_at' => now()->subMinutes(3)]);
-        // Other users' costs without a lesson don't count
-        Generation::create(['user_id' => User::factory()->create()->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99]);
+	it('shows deleted lessons and orphaned costs on the costs page', function () {
+		$this->eco->generations()->forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.3, 'created_at' => now()->subMinute()]);
+		$this->eco->delete();
+		// Lesson deleted with the child: only the account is still known
+		Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.2, 'created_at' => now()->subMinutes(2)]);
+		Generation::forceCreate(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'error', 'cost_usd' => 0.1, 'created_at' => now()->subMinutes(3)]);
+		// Other users' costs without a lesson don't count
+		Generation::create(['user_id' => User::factory()->create()->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 9.99]);
 
-        $this->actingAs($this->user)->get(route('costs'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('total', 0.6)
-                ->where('months.0.calls', 3)
-                ->has('steps', 2)
-                ->has('lessons', 2)
-                ->where('lessons.0.id', $this->eco->id)
-                ->where('lessons.0.title', 'Biotop + Biozönose = Ökosystem')
-                ->where('lessons.0.child', 'Mia')
-                ->where('lessons.0.deleted', true)
-                ->where('lessons.0.costUsd', 0.3)
-                ->where('lessons.1.id', null)
-                ->where('lessons.1.title', 'Gelöschte Lernseiten')
-                ->where('lessons.1.child', null)
-                ->where('lessons.1.deleted', true)
-                ->where('lessons.1.calls', 2)
-                ->where('lessons.1.failed', 1)
-                ->where('lessons.1.costUsd', 0.3)
-            );
-    });
+		$this->actingAs($this->user)->get(route('costs'))
+			->assertOk()
+			->assertInertia(fn (Assert $page) => $page
+				->where('total', 0.6)
+				->where('months.0.calls', 3)
+				->has('steps', 2)
+				->has('lessons', 2)
+				->where('lessons.0.id', $this->eco->id)
+				->where('lessons.0.title', 'Biotop + Biozönose = Ökosystem')
+				->where('lessons.0.child', 'Mia')
+				->where('lessons.0.deleted', true)
+				->where('lessons.0.costUsd', 0.3)
+				->where('lessons.1.id', null)
+				->where('lessons.1.title', 'Gelöschte Lernseiten')
+				->where('lessons.1.child', null)
+				->where('lessons.1.deleted', true)
+				->where('lessons.1.calls', 2)
+				->where('lessons.1.failed', 1)
+				->where('lessons.1.costUsd', 0.3)
+			);
+	});
 
-    it('shows the average cost per step and model', function () {
-        $this->lesson->generations()->createMany([
-            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
-            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
-            ['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'error', 'input_tokens' => 0, 'output_tokens' => 0, 'cost_usd' => 0.05],
-            ['user_id' => $this->user->id, 'step' => 'modules', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
-        ]);
+	it('shows the average cost per step and model', function () {
+		$this->lesson->generations()->createMany([
+			['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 10_000, 'output_tokens' => 20_000, 'cost_usd' => 0.6],
+			['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'input_tokens' => 12_000, 'output_tokens' => 10_000, 'cost_usd' => 0.4],
+			['user_id' => $this->user->id, 'step' => 'graphic', 'model' => 'claude-opus-5-5', 'status' => 'error', 'input_tokens' => 0, 'output_tokens' => 0, 'cost_usd' => 0.05],
+			['user_id' => $this->user->id, 'step' => 'modules', 'model' => 'claude-sonnet-5-5', 'status' => 'ok', 'input_tokens' => 7_000, 'output_tokens' => 4_000, 'cost_usd' => 0.05],
+		]);
 
-        // The average counts only successful calls, the sum all
-        $this->actingAs($this->user)->get(route('costs'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('steps.0', [
-                    'step' => 'graphic',
-                    'model' => 'claude-opus-5-5',
-                    'calls' => 3,
-                    'failed' => 1,
-                    'inputTokens' => 11_000,
-                    'outputTokens' => 15_000,
-                    'avgUsd' => 0.5,
-                    'totalUsd' => 1.05,
-                ])
-                ->where('steps.1.step', 'modules')
-            );
-    });
+		// The average counts only successful calls, the sum all
+		$this->actingAs($this->user)->get(route('costs'))
+			->assertInertia(fn (Assert $page) => $page
+				->where('steps.0', [
+					'step' => 'graphic',
+					'model' => 'claude-opus-5-5',
+					'calls' => 3,
+					'failed' => 1,
+					'inputTokens' => 11_000,
+					'outputTokens' => 15_000,
+					'avgUsd' => 0.5,
+					'totalUsd' => 1.05,
+				])
+				->where('steps.1.step', 'modules')
+			);
+	});
 });

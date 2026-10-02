@@ -11,91 +11,91 @@ use InvalidArgumentException;
  */
 class ClozeParser
 {
-    /**
-     * @param  list<string>  $existingIds  IDs that must not be assigned
-     * @return list<array<string, string|list<string>>>
-     */
-    public static function parse(string $markup, array $existingIds = []): array
-    {
-        $segments = [];
-        $used = array_flip($existingIds);
-        $counter = 0;
+	/**
+	 * @param  list<string>  $existingIds  IDs that must not be assigned
+	 * @return list<array<string, string|list<string>>>
+	 */
+	public static function parse(string $markup, array $existingIds = []): array
+	{
+		$segments = [];
+		$used = array_flip($existingIds);
+		$counter = 0;
 
-        $parts = preg_split('/(\[[^\[\]]*\])/u', $markup, -1, PREG_SPLIT_DELIM_CAPTURE);
+		$parts = preg_split('/(\[[^\[\]]*\])/u', $markup, -1, PREG_SPLIT_DELIM_CAPTURE);
 
-        if ($parts === false) {
-            throw new InvalidArgumentException('Der Lückentext enthält ungültige Zeichen.');
-        }
+		if ($parts === false) {
+			throw new InvalidArgumentException('Der Lückentext enthält ungültige Zeichen.');
+		}
 
-        foreach ($parts as $part) {
-            if ($part === '') {
-                continue;
-            }
+		foreach ($parts as $part) {
+			if ($part === '') {
+				continue;
+			}
 
-            if (str_starts_with($part, '[') && str_ends_with($part, ']')) {
-                $solutions = array_values(array_filter(
-                    array_map('trim', explode('|', mb_substr($part, 1, -1))),
-                    fn (string $s) => $s !== '',
-                ));
+			if (str_starts_with($part, '[') && str_ends_with($part, ']')) {
+				$solutions = array_values(array_filter(
+					array_map('trim', explode('|', mb_substr($part, 1, -1))),
+					fn (string $s) => $s !== '',
+				));
 
-                if ($solutions === []) {
-                    throw new InvalidArgumentException('Eine Lücke ist leer: '.$part);
-                }
+				if ($solutions === []) {
+					throw new InvalidArgumentException('Eine Lücke ist leer: '.$part);
+				}
 
-                do {
-                    $id = 'g'.++$counter;
-                } while (isset($used[$id]));
-                $used[$id] = true;
+				do {
+					$id = 'g'.++$counter;
+				} while (isset($used[$id]));
+				$used[$id] = true;
 
-                $segments[] = ['id' => $id, 'answers' => $solutions];
+				$segments[] = ['id' => $id, 'answers' => $solutions];
 
-                continue;
-            }
+				continue;
+			}
 
-            if (str_contains($part, '[') || str_contains($part, ']')) {
-                throw new InvalidArgumentException('Eine eckige Klammer ist nicht geschlossen.');
-            }
+			if (str_contains($part, '[') || str_contains($part, ']')) {
+				throw new InvalidArgumentException('Eine eckige Klammer ist nicht geschlossen.');
+			}
 
-            $segments[] = ['text' => $part];
-        }
+			$segments[] = ['text' => $part];
+		}
 
-        return $segments;
-    }
+		return $segments;
+	}
 
-    /**
-     * @param  list<array<string, mixed>>  $segments
-     */
-    public static function toMarkup(array $segments): string
-    {
-        return implode('', array_map(
-            fn (array $s) => isset($s['answers'])
-                ? '['.implode('|', $s['answers']).']'
-                : $s['text'],
-            $segments,
-        ));
-    }
+	/**
+	 * @param  list<array<string, mixed>>  $segments
+	 */
+	public static function toMarkup(array $segments): string
+	{
+		return implode('', array_map(
+			fn (array $s) => isset($s['answers'])
+				? '['.implode('|', $s['answers']).']'
+				: $s['text'],
+			$segments,
+		));
+	}
 
-    /**
-     * Same normalisation as in the frontend: trim, lower case, collapse whitespace.
-     */
-    public static function normalize(string $answer): string
-    {
-        return preg_replace('/\s+/u', ' ', mb_strtolower(trim($answer)));
-    }
+	/**
+	 * Same normalisation as in the frontend: trim, lower case, collapse whitespace.
+	 */
+	public static function normalize(string $answer): string
+	{
+		return preg_replace('/\s+/u', ' ', mb_strtolower(trim($answer)));
+	}
 
-    /**
-     * @param  list<string>  $solutions
-     */
-    public static function isCorrect(string $answer, array $solutions): bool
-    {
-        $normalized = self::normalize($answer);
+	/**
+	 * @param  list<string>  $solutions
+	 */
+	public static function isCorrect(string $answer, array $solutions): bool
+	{
+		$normalized = self::normalize($answer);
 
-        foreach ($solutions as $solution) {
-            if (self::normalize($solution) === $normalized) {
-                return true;
-            }
-        }
+		foreach ($solutions as $solution) {
+			if (self::normalize($solution) === $normalized) {
+				return true;
+			}
+		}
 
-        return false;
-    }
+		return false;
+	}
 }

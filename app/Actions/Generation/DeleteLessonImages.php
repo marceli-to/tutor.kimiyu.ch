@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Storage;
  */
 class DeleteLessonImages
 {
-    public function handle(Lesson $lesson): void
-    {
-        foreach ($lesson->images as $image) {
-            Storage::disk('lesson-images')->delete($image->path);
-            $image->delete();
-        }
+	public function handle(Lesson $lesson): void
+	{
+		foreach ($lesson->images as $image) {
+			Storage::disk('lesson-images')->delete($image->path);
+			$image->delete();
+		}
 
-        Storage::disk('lesson-images')->deleteDirectory((string) $lesson->id);
-        $lesson->unsetRelation('images');
-    }
+		Storage::disk('lesson-images')->deleteDirectory((string) $lesson->id);
+		$lesson->unsetRelation('images');
+	}
 }

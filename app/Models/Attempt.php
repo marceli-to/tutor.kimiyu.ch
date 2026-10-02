@@ -21,28 +21,28 @@ use Illuminate\Support\Carbon;
 #[Fillable(['child_id', 'lesson_id', 'module', 'item_id', 'correct'])]
 class Attempt extends Model
 {
-    public const UPDATED_AT = null;
+	public const UPDATED_AT = null;
 
-    protected function casts(): array
-    {
-        return [
-            'correct' => 'boolean',
-        ];
-    }
+	protected function casts(): array
+	{
+		return [
+			'correct' => 'boolean',
+		];
+	}
 
-    /**
-     * @return BelongsTo<Child, $this>
-     */
-    public function child(): BelongsTo
-    {
-        return $this->belongsTo(Child::class);
-    }
+	/**
+	 * @return BelongsTo<Child, $this>
+	 */
+	public function child(): BelongsTo
+	{
+		return $this->belongsTo(Child::class);
+	}
 
-    /**
-     * @return BelongsTo<Lesson, $this>
-     */
-    public function lesson(): BelongsTo
-    {
-        return $this->belongsTo(Lesson::class);
-    }
+	/**
+	 * @return BelongsTo<Lesson, $this>
+	 */
+	public function lesson(): BelongsTo
+	{
+		return $this->belongsTo(Lesson::class);
+	}
 }

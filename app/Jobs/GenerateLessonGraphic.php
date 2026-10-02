@@ -10,19 +10,19 @@ use App\Models\Lesson;
  */
 class GenerateLessonGraphic extends LessonStep
 {
-    public function __construct(Lesson $lesson, public int $position)
-    {
-        parent::__construct($lesson);
-    }
+	public function __construct(Lesson $lesson, public int $position)
+	{
+		parent::__construct($lesson);
+	}
 
-    // For the progress display; the API steps are still called «graphic» and «graphic-repair»
-    protected function step(): string
-    {
-        return "graphic-{$this->position}";
-    }
+	// For the progress display; the API steps are still called «graphic» and «graphic-repair»
+	protected function step(): string
+	{
+		return "graphic-{$this->position}";
+	}
 
-    protected function run(): void
-    {
-        app(GenerateGraphic::class)->handle($this->lesson, $this->position);
-    }
+	protected function run(): void
+	{
+		app(GenerateGraphic::class)->handle($this->lesson, $this->position);
+	}
 }

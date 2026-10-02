@@ -5,23 +5,23 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
  * So the value is also right when the system theme changes.
  */
 export function useIsDark() {
-    const isDark = ref(false);
-    let observer: MutationObserver | null = null;
+	const isDark = ref(false);
+	let observer: MutationObserver | null = null;
 
-    onMounted(() => {
-        const root = document.documentElement;
-        isDark.value = root.classList.contains('dark');
+	onMounted(() => {
+		const root = document.documentElement;
+		isDark.value = root.classList.contains('dark');
 
-        observer = new MutationObserver(() => {
-            isDark.value = root.classList.contains('dark');
-        });
-        observer.observe(root, {
-            attributes: true,
-            attributeFilter: ['class'],
-        });
-    });
+		observer = new MutationObserver(() => {
+			isDark.value = root.classList.contains('dark');
+		});
+		observer.observe(root, {
+			attributes: true,
+			attributeFilter: ['class'],
+		});
+	});
 
-    onBeforeUnmount(() => observer?.disconnect());
+	onBeforeUnmount(() => observer?.disconnect());
 
-    return isDark;
+	return isDark;
 }

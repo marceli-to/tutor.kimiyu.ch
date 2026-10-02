@@ -7,12 +7,12 @@ namespace App\Lessons\Ai;
  */
 class UsageAwareModelException extends ModelException
 {
-    public function __construct(
-        string $message,
-        ?string $detail,
-        public readonly ModelResponse $response,
-        bool $retryable = false,
-    ) {
-        parent::__construct($message, $detail, $retryable);
-    }
+	public function __construct(
+		string $message,
+		?string $detail,
+		public readonly ModelResponse $response,
+		bool $retryable = false,
+	) {
+		parent::__construct($message, $detail, $retryable);
+	}
 }

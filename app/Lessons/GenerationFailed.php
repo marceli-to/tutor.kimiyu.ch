@@ -9,8 +9,8 @@ use RuntimeException;
  */
 class GenerationFailed extends RuntimeException
 {
-    public function __construct(string $message, public readonly ?string $detail = null)
-    {
-        parent::__construct($message);
-    }
+	public function __construct(string $message, public readonly ?string $detail = null)
+	{
+		parent::__construct($message);
+	}
 }

@@ -5,130 +5,130 @@
 */
 
 @theme inline {
-    --font-display:
-        'Bricolage Grotesque', 'Atkinson Hyperlegible', ui-sans-serif,
-        system-ui, sans-serif;
-    --font-reading:
-        'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system,
-        'Segoe UI', sans-serif;
+	--font-display:
+		'Bricolage Grotesque', 'Atkinson Hyperlegible', ui-sans-serif,
+		system-ui, sans-serif;
+	--font-reading:
+		'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system,
+		'Segoe UI', sans-serif;
 
-    --color-ls-bg: var(--l-bg);
-    --color-ls-ink: var(--l-ink);
-    --color-ls-muted: var(--l-muted);
-    --color-ls-line: var(--l-line);
-    --color-ls-card: var(--l-card);
-    --color-ls-ok: var(--l-ok);
-    --color-ls-ok-bg: var(--l-ok-bg);
-    --color-ls-bad: var(--l-bad);
-    --color-ls-bad-bg: var(--l-bad-bg);
-    --color-ls-focus: var(--l-focus);
-    --color-ls-accent: var(--l-accent);
-    --color-ls-accent-bg: var(--l-accent-bg);
-    --color-ls-cat1: var(--l-cat1);
-    --color-ls-cat1-bg: var(--l-cat1-bg);
-    --color-ls-cat2: var(--l-cat2);
-    --color-ls-cat2-bg: var(--l-cat2-bg);
-    --color-ls-cat3: var(--l-cat3);
-    --color-ls-cat3-bg: var(--l-cat3-bg);
+	--color-ls-bg: var(--l-bg);
+	--color-ls-ink: var(--l-ink);
+	--color-ls-muted: var(--l-muted);
+	--color-ls-line: var(--l-line);
+	--color-ls-card: var(--l-card);
+	--color-ls-ok: var(--l-ok);
+	--color-ls-ok-bg: var(--l-ok-bg);
+	--color-ls-bad: var(--l-bad);
+	--color-ls-bad-bg: var(--l-bad-bg);
+	--color-ls-focus: var(--l-focus);
+	--color-ls-accent: var(--l-accent);
+	--color-ls-accent-bg: var(--l-accent-bg);
+	--color-ls-cat1: var(--l-cat1);
+	--color-ls-cat1-bg: var(--l-cat1-bg);
+	--color-ls-cat2: var(--l-cat2);
+	--color-ls-cat2-bg: var(--l-cat2-bg);
+	--color-ls-cat3: var(--l-cat3);
+	--color-ls-cat3-bg: var(--l-cat3-bg);
 }
 
 .lesson {
-    --l-bg: #f3f6f5;
-    --l-ink: #15252a;
-    --l-muted: #4b5e62;
-    --l-line: #c8d5d6;
-    --l-card: #ffffff;
-    --l-ok-bg: #ddf0da;
-    --l-ok: #1f5e2a;
-    --l-bad-bg: #f8e1da;
-    --l-bad: #8c3419;
-    --l-focus: #e3a21a;
+	--l-bg: #f3f6f5;
+	--l-ink: #15252a;
+	--l-muted: #4b5e62;
+	--l-line: #c8d5d6;
+	--l-card: #ffffff;
+	--l-ok-bg: #ddf0da;
+	--l-ok: #1f5e2a;
+	--l-bad-bg: #f8e1da;
+	--l-bad: #8c3419;
+	--l-focus: #e3a21a;
 
-    --l-accent: var(--p-accent-light);
-    --l-accent-bg: var(--p-accent-bg-light);
-    --l-cat1: var(--p-cat1-light);
-    --l-cat1-bg: var(--p-cat1-bg-light);
-    --l-cat2: var(--p-cat2-light);
-    --l-cat2-bg: var(--p-cat2-bg-light);
-    --l-cat3: var(--p-cat3-light);
-    --l-cat3-bg: var(--p-cat3-bg-light);
+	--l-accent: var(--p-accent-light);
+	--l-accent-bg: var(--p-accent-bg-light);
+	--l-cat1: var(--p-cat1-light);
+	--l-cat1-bg: var(--p-cat1-bg-light);
+	--l-cat2: var(--p-cat2-light);
+	--l-cat2-bg: var(--p-cat2-bg-light);
+	--l-cat3: var(--p-cat3-light);
+	--l-cat3-bg: var(--p-cat3-bg-light);
 
-    font-family: var(--font-reading);
-    font-size: 18px;
-    line-height: 1.6;
-    background: var(--l-bg);
-    color: var(--l-ink);
+	font-family: var(--font-reading);
+	font-size: 18px;
+	line-height: 1.6;
+	background: var(--l-bg);
+	color: var(--l-ink);
 }
 
 .dark .lesson {
-    --l-bg: #0f191c;
-    --l-ink: #e3eef0;
-    --l-muted: #a3b6ba;
-    --l-line: #2b3d42;
-    --l-card: #162429;
-    --l-ok-bg: #1e3a22;
-    --l-ok: #a9dda6;
-    --l-bad-bg: #3e2219;
-    --l-bad: #f2a98c;
+	--l-bg: #0f191c;
+	--l-ink: #e3eef0;
+	--l-muted: #a3b6ba;
+	--l-line: #2b3d42;
+	--l-card: #162429;
+	--l-ok-bg: #1e3a22;
+	--l-ok: #a9dda6;
+	--l-bad-bg: #3e2219;
+	--l-bad: #f2a98c;
 
-    --l-accent: var(--p-accent-dark);
-    --l-accent-bg: var(--p-accent-bg-dark);
-    --l-cat1: var(--p-cat1-dark);
-    --l-cat1-bg: var(--p-cat1-bg-dark);
-    --l-cat2: var(--p-cat2-dark);
-    --l-cat2-bg: var(--p-cat2-bg-dark);
-    --l-cat3: var(--p-cat3-dark);
-    --l-cat3-bg: var(--p-cat3-bg-dark);
+	--l-accent: var(--p-accent-dark);
+	--l-accent-bg: var(--p-accent-bg-dark);
+	--l-cat1: var(--p-cat1-dark);
+	--l-cat1-bg: var(--p-cat1-bg-dark);
+	--l-cat2: var(--p-cat2-dark);
+	--l-cat2-bg: var(--p-cat2-bg-dark);
+	--l-cat3: var(--p-cat3-dark);
+	--l-cat3-bg: var(--p-cat3-bg-dark);
 }
 
 @layer components {
-    .lesson :where(h1, h2, h3) {
-        font-family: var(--font-display);
-        line-height: 1.15;
-    }
+	.lesson :where(h1, h2, h3) {
+		font-family: var(--font-display);
+		line-height: 1.15;
+	}
 
-    .lesson :where(button, input, label.ls-opt):focus-visible,
-    .lesson label.ls-opt:focus-within {
-        outline: 3px solid var(--l-focus);
-        outline-offset: 2px;
-    }
+	.lesson :where(button, input, label.ls-opt):focus-visible,
+	.lesson label.ls-opt:focus-within {
+		outline: 3px solid var(--l-focus);
+		outline-offset: 2px;
+	}
 
-    /* Pill buttons as in the template (.btn / .btn.primary) */
-    .ls-btn {
-        @apply cursor-pointer rounded-full border-[1.5px] border-ls-accent bg-transparent px-5 py-2 text-base text-ls-ink;
-    }
-    .ls-btn-primary {
-        @apply bg-ls-accent text-ls-bg;
-    }
+	/* Pill buttons as in the template (.btn / .btn.primary) */
+	.ls-btn {
+		@apply cursor-pointer rounded-full border-[1.5px] border-ls-accent bg-transparent px-5 py-2 text-base text-ls-ink;
+	}
+	.ls-btn-primary {
+		@apply bg-ls-accent text-ls-bg;
+	}
 
-    .ls-panel {
-        @apply rounded-[20px] border border-ls-line bg-ls-card p-[1.4rem];
-    }
+	.ls-panel {
+		@apply rounded-[20px] border border-ls-line bg-ls-card p-[1.4rem];
+	}
 
-    .ls-feedback {
-        @apply mt-4 rounded-xl px-4 py-3.5;
-    }
-    .ls-feedback-ok {
-        @apply bg-ls-ok-bg text-ls-ok;
-    }
-    .ls-feedback-no {
-        @apply bg-ls-bad-bg text-ls-bad;
-    }
+	.ls-feedback {
+		@apply mt-4 rounded-xl px-4 py-3.5;
+	}
+	.ls-feedback-ok {
+		@apply bg-ls-ok-bg text-ls-ok;
+	}
+	.ls-feedback-no {
+		@apply bg-ls-bad-bg text-ls-bad;
+	}
 
-    .ls-progress {
-        @apply mb-2 text-[0.95rem] text-ls-muted;
-    }
+	.ls-progress {
+		@apply mb-2 text-[0.95rem] text-ls-muted;
+	}
 
-    .ls-score {
-        @apply font-display text-5xl font-bold text-ls-accent;
-    }
+	.ls-score {
+		@apply font-display text-5xl font-bold text-ls-accent;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .lesson *,
-    .lesson *::before,
-    .lesson *::after {
-        animation: none !important;
-        transition: none !important;
-    }
+	.lesson *,
+	.lesson *::before,
+	.lesson *::after {
+		animation: none !important;
+		transition: none !important;
+	}
 }

@@ -7,8 +7,8 @@ namespace App\Lessons\Ai;
  */
 interface LanguageModel
 {
-    /**
-     * @throws ModelException when the model doesn't return a usable answer
-     */
-    public function generate(ModelRequest $request): ModelResponse;
+	/**
+	 * @throws ModelException when the model doesn't return a usable answer
+	 */
+	public function generate(ModelRequest $request): ModelResponse;
 }

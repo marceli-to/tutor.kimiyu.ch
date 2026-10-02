@@ -6,100 +6,100 @@ export type CategoryId = 'cat1' | 'cat2' | 'cat3';
 export type Origin = { origin?: 'photo' | 'added' };
 
 export type LessonBlock = Origin &
-    (
-        | { type: 'paragraph'; text: string }
-        | { type: 'formula'; text: string; addendum?: string | null }
-        | { type: 'facts'; entries: { title: string; text: string }[] }
-        | {
-              type: 'columns';
-              entries: {
-                  title: string;
-                  category: CategoryId;
-                  paragraphs: string[];
-              }[];
-          }
-        | { type: 'box'; title: string; paragraphs: string[] }
-        // Graphic 2 or 3 at this place; graphic 1 is at the top
-        | { type: 'graphic'; number: number }
-    );
+	(
+		| { type: 'paragraph'; text: string }
+		| { type: 'formula'; text: string; addendum?: string | null }
+		| { type: 'facts'; entries: { title: string; text: string }[] }
+		| {
+				type: 'columns';
+				entries: {
+					title: string;
+					category: CategoryId;
+					paragraphs: string[];
+				}[];
+		  }
+		| { type: 'box'; title: string; paragraphs: string[] }
+		// Graphic 2 or 3 at this place; graphic 1 is at the top
+		| { type: 'graphic'; number: number }
+	);
 
 export type QuizQuestion = Origin & {
-    id: string;
-    question: string;
-    options: string[];
-    answer: number;
-    hint?: string | null;
-    explanation: string;
+	id: string;
+	question: string;
+	options: string[];
+	answer: number;
+	hint?: string | null;
+	explanation: string;
 };
 
 export type SortModuleData = {
-    instructions?: string | null;
-    categories: { id: CategoryId; label: string; sub?: string | null }[];
-    terms: (Origin & {
-        id: string;
-        text: string;
-        category: CategoryId;
-        explanation?: string | null;
-    })[];
+	instructions?: string | null;
+	categories: { id: CategoryId; label: string; sub?: string | null }[];
+	terms: (Origin & {
+		id: string;
+		text: string;
+		category: CategoryId;
+		explanation?: string | null;
+	})[];
 };
 
 export type FlashcardModuleData = {
-    instructions?: string | null;
-    entries: (Origin & { id: string; front: string; back: string })[];
+	instructions?: string | null;
+	entries: (Origin & { id: string; front: string; back: string })[];
 };
 
 export type ClozeSegment = { text: string } | { id: string; answers: string[] };
 
 export type ClozeModuleData = Origin & {
-    instructions?: string | null;
-    segments: ClozeSegment[];
+	instructions?: string | null;
+	segments: ClozeSegment[];
 };
 
 export type LessonContent = {
-    meta: {
-        title: string;
-        instructions: string;
-        topic: string;
-        key_idea: string;
-        emoji: string;
-        palette: string;
-    };
-    sections: { title: string; blocks: LessonBlock[] }[];
-    try_it: {
-        experiments: string[];
-        everyday_comparison?: string | null;
-    } | null;
-    modules: {
-        // null if the parents didn't want a quiz
-        quiz: QuizQuestion[] | null;
-        sorting: SortModuleData | null;
-        flashcards: FlashcardModuleData | null;
-        cloze: ClozeModuleData | null;
-    };
-    reflect: { question: string };
+	meta: {
+		title: string;
+		instructions: string;
+		topic: string;
+		key_idea: string;
+		emoji: string;
+		palette: string;
+	};
+	sections: { title: string; blocks: LessonBlock[] }[];
+	try_it: {
+		experiments: string[];
+		everyday_comparison?: string | null;
+	} | null;
+	modules: {
+		// null if the parents didn't want a quiz
+		quiz: QuizQuestion[] | null;
+		sorting: SortModuleData | null;
+		flashcards: FlashcardModuleData | null;
+		cloze: ClozeModuleData | null;
+	};
+	reflect: { question: string };
 };
 
 export type PaletteColors = Record<
-    | 'accent'
-    | 'accent-bg'
-    | 'cat1'
-    | 'cat1-bg'
-    | 'cat2'
-    | 'cat2-bg'
-    | 'cat3'
-    | 'cat3-bg',
-    string
+	| 'accent'
+	| 'accent-bg'
+	| 'cat1'
+	| 'cat1-bg'
+	| 'cat2'
+	| 'cat2-bg'
+	| 'cat3'
+	| 'cat3-bg',
+	string
 >;
 
 export type Palette = {
-    label: string;
-    light: PaletteColors;
-    dark: PaletteColors;
+	label: string;
+	light: PaletteColors;
+	dark: PaletteColors;
 };
 
 export type LessonGraphic = {
-    url: string;
-    description: string;
+	url: string;
+	description: string;
 };
 
 // Finished graphics by position (1 at the top, 2 and 3 at their block in the content)
@@ -107,19 +107,19 @@ export type LessonGraphics = Partial<Record<number, LessonGraphic>>;
 
 // Parents only: state of every graphic, including failed ones
 export type GraphicState = {
-    number: number;
-    error: string | null;
-    canRegenerate: boolean;
-    // Hidden by the parents in the edit view
-    hidden: boolean;
+	number: number;
+	error: string | null;
+	canRegenerate: boolean;
+	// Hidden by the parents in the edit view
+	hidden: boolean;
 };
 
 // Result of a single answer, for the progress (phase 4)
 export type ModuleAnswer = {
-    module: 'quiz' | 'sorting' | 'cloze';
-    itemId: string;
-    // Chosen option (quiz), chosen basket (sorting) or input (cloze);
-    // the server checks itself whether it is right
-    answer: number | string;
-    correct: boolean;
+	module: 'quiz' | 'sorting' | 'cloze';
+	itemId: string;
+	// Chosen option (quiz), chosen basket (sorting) or input (cloze);
+	// the server checks itself whether it is right
+	answer: number | string;
+	correct: boolean;
 };

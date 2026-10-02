@@ -44,159 +44,159 @@ use Illuminate\Support\Str;
 #[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
 {
-    /** @use HasFactory<LessonFactory> */
-    use HasFactory, SoftDeletes;
+	/** @use HasFactory<LessonFactory> */
+	use HasFactory, SoftDeletes;
 
-    /** Shown while the AI hasn't detected the subject yet */
-    public const SUBJECT_PENDING = 'Fach wird erkannt …';
+	/** Shown while the AI hasn't detected the subject yet */
+	public const SUBJECT_PENDING = 'Fach wird erkannt …';
 
-    /** Shown when the generation failed before the AI detected the subject */
-    public const SUBJECT_UNKNOWN = 'Fach unbekannt';
+	/** Shown when the generation failed before the AI detected the subject */
+	public const SUBJECT_UNKNOWN = 'Fach unbekannt';
 
-    public const PURPOSES = ['new', 'exam'];
+	public const PURPOSES = ['new', 'exam'];
 
-    public const SCOPES = ['short', 'normal', 'detailed'];
+	public const SCOPES = ['short', 'normal', 'detailed'];
 
-    public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze'];
+	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze'];
 
-    /**
-     * Like the database default, so unsaved lessons have it too.
-     *
-     * @var array<string, mixed>
-     */
-    protected $attributes = [
-        'photo_count' => 0,
-        'subject_detected' => false,
-        'graphics_mode' => 'auto',
-        'purpose' => 'new',
-        'scope' => 'normal',
-    ];
+	/**
+	 * Like the database default, so unsaved lessons have it too.
+	 *
+	 * @var array<string, mixed>
+	 */
+	protected $attributes = [
+		'photo_count' => 0,
+		'subject_detected' => false,
+		'graphics_mode' => 'auto',
+		'purpose' => 'new',
+		'scope' => 'normal',
+	];
 
-    protected function casts(): array
-    {
-        return [
-            'status' => LessonStatus::class,
-            'photo_count' => 'integer',
-            'subject_detected' => 'boolean',
-            'content' => 'array',
-            'check_notes' => 'array',
-            'additions' => 'array',
-            'modules' => 'array',
-            'published_at' => 'datetime',
-        ];
-    }
+	protected function casts(): array
+	{
+		return [
+			'status' => LessonStatus::class,
+			'photo_count' => 'integer',
+			'subject_detected' => 'boolean',
+			'content' => 'array',
+			'check_notes' => 'array',
+			'additions' => 'array',
+			'modules' => 'array',
+			'published_at' => 'datetime',
+		];
+	}
 
-    /**
-     * Created without photos (topic or request): the content comes from the AI's knowledge.
-     */
-    public function isFromTopic(): bool
-    {
-        return $this->photo_count === 0 && ($this->topic !== null || $this->prompt !== null);
-    }
+	/**
+	 * Created without photos (topic or request): the content comes from the AI's knowledge.
+	 */
+	public function isFromTopic(): bool
+	{
+		return $this->photo_count === 0 && ($this->topic !== null || $this->prompt !== null);
+	}
 
-    /**
-     * Allowed learning modules; old lessons without a list allow all.
-     *
-     * @return list<'quiz'|'sorting'|'flashcards'|'cloze'>
-     */
-    public function allowedModules(): array
-    {
-        return $this->modules ?? self::MODULES;
-    }
+	/**
+	 * Allowed learning modules; old lessons without a list allow all.
+	 *
+	 * @return list<'quiz'|'sorting'|'flashcards'|'cloze'>
+	 */
+	public function allowedModules(): array
+	{
+		return $this->modules ?? self::MODULES;
+	}
 
-    /**
-     * A part of a finished page is being regenerated. Status and publication stay as they are meanwhile.
-     */
-    public function isRegenerating(): bool
-    {
-        return $this->step !== null && str_starts_with($this->step, 'regenerate-');
-    }
+	/**
+	 * A part of a finished page is being regenerated. Status and publication stay as they are meanwhile.
+	 */
+	public function isRegenerating(): bool
+	{
+		return $this->step !== null && str_starts_with($this->step, 'regenerate-');
+	}
 
-    /**
-     * Whether the lesson still exists. The model in a job does not know about a deletion
-     * in the meantime, and update() would write into the deleted row anyway.
-     */
-    public function stillExists(): bool
-    {
-        return self::whereKey($this->id)->exists();
-    }
+	/**
+	 * Whether the lesson still exists. The model in a job does not know about a deletion
+	 * in the meantime, and update() would write into the deleted row anyway.
+	 */
+	public function stillExists(): bool
+	{
+		return self::whereKey($this->id)->exists();
+	}
 
-    /**
-     * Ready for the child. Not while a part is being regenerated: it would ask for a new check right after.
-     */
-    public function canBePublished(): bool
-    {
-        return $this->status === LessonStatus::Review && $this->content !== null && ! $this->isRegenerating();
-    }
+	/**
+	 * Ready for the child. Not while a part is being regenerated: it would ask for a new check right after.
+	 */
+	public function canBePublished(): bool
+	{
+		return $this->status === LessonStatus::Review && $this->content !== null && ! $this->isRegenerating();
+	}
 
-    /**
-     * The parents can correct the content. Not while a part is being regenerated: the job would overwrite the changes.
-     */
-    public function isEditable(): bool
-    {
-        return $this->content !== null
-            && ! $this->isRegenerating()
-            && in_array($this->status, [LessonStatus::Review, LessonStatus::Published], true);
-    }
+	/**
+	 * The parents can correct the content. Not while a part is being regenerated: the job would overwrite the changes.
+	 */
+	public function isEditable(): bool
+	{
+		return $this->content !== null
+			&& ! $this->isRegenerating()
+			&& in_array($this->status, [LessonStatus::Review, LessonStatus::Published], true);
+	}
 
-    /**
-     * The subject for display, also before (or without) the detection.
-     */
-    public function subjectLabel(): string
-    {
-        return $this->subject ?? ($this->status === LessonStatus::Failed ? self::SUBJECT_UNKNOWN : self::SUBJECT_PENDING);
-    }
+	/**
+	 * The subject for display, also before (or without) the detection.
+	 */
+	public function subjectLabel(): string
+	{
+		return $this->subject ?? ($this->status === LessonStatus::Failed ? self::SUBJECT_UNKNOWN : self::SUBJECT_PENDING);
+	}
 
-    /**
-     * Title for lists, also before the AI has set a title.
-     */
-    public function displayTitle(): string
-    {
-        return $this->title ?? $this->topic ?? ($this->prompt ? Str::limit($this->prompt, 60) : 'Neue Lernseite');
-    }
+	/**
+	 * Title for lists, also before the AI has set a title.
+	 */
+	public function displayTitle(): string
+	{
+		return $this->title ?? $this->topic ?? ($this->prompt ? Str::limit($this->prompt, 60) : 'Neue Lernseite');
+	}
 
-    /**
-     * @return BelongsTo<Child, $this>
-     */
-    public function child(): BelongsTo
-    {
-        return $this->belongsTo(Child::class);
-    }
+	/**
+	 * @return BelongsTo<Child, $this>
+	 */
+	public function child(): BelongsTo
+	{
+		return $this->belongsTo(Child::class);
+	}
 
-    /**
-     * @return HasMany<LessonImage, $this>
-     */
-    public function images(): HasMany
-    {
-        return $this->hasMany(LessonImage::class)->orderBy('position');
-    }
+	/**
+	 * @return HasMany<LessonImage, $this>
+	 */
+	public function images(): HasMany
+	{
+		return $this->hasMany(LessonImage::class)->orderBy('position');
+	}
 
-    /**
-     * @return HasMany<LessonGraphic, $this>
-     */
-    public function graphics(): HasMany
-    {
-        return $this->hasMany(LessonGraphic::class)->orderBy('position');
-    }
+	/**
+	 * @return HasMany<LessonGraphic, $this>
+	 */
+	public function graphics(): HasMany
+	{
+		return $this->hasMany(LessonGraphic::class)->orderBy('position');
+	}
 
-    public function graphic(int $position): ?LessonGraphic
-    {
-        return $this->graphics()->where('position', $position)->first();
-    }
+	public function graphic(int $position): ?LessonGraphic
+	{
+		return $this->graphics()->where('position', $position)->first();
+	}
 
-    /**
-     * @return HasMany<Generation, $this>
-     */
-    public function generations(): HasMany
-    {
-        return $this->hasMany(Generation::class);
-    }
+	/**
+	 * @return HasMany<Generation, $this>
+	 */
+	public function generations(): HasMany
+	{
+		return $this->hasMany(Generation::class);
+	}
 
-    /**
-     * @return HasMany<Attempt, $this>
-     */
-    public function attempts(): HasMany
-    {
-        return $this->hasMany(Attempt::class);
-    }
+	/**
+	 * @return HasMany<Attempt, $this>
+	 */
+	public function attempts(): HasMany
+	{
+		return $this->hasMany(Attempt::class);
+	}
 }

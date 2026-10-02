@@ -22,11 +22,11 @@ use Illuminate\Support\Carbon;
 #[Fillable(['path', 'mime_type', 'size', 'position'])]
 class LessonImage extends Model
 {
-    /**
-     * @return BelongsTo<Lesson, $this>
-     */
-    public function lesson(): BelongsTo
-    {
-        return $this->belongsTo(Lesson::class);
-    }
+	/**
+	 * @return BelongsTo<Lesson, $this>
+	 */
+	public function lesson(): BelongsTo
+	{
+		return $this->belongsTo(Lesson::class);
+	}
 }

@@ -7,63 +7,63 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/password/confirm';
 import {
-    index as confirmOptions,
-    store as confirmStore,
+	index as confirmOptions,
+	store as confirmStore,
 } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyConfirmationController';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 
 defineOptions({
-    layout: {
-        title: 'Passwort bestätigen',
-        description:
-            'Dies ist ein geschützter Bereich. Bitte bestätige dein Passwort, bevor du weitermachst.',
-    },
+	layout: {
+		title: 'Passwort bestätigen',
+		description:
+			'Dies ist ein geschützter Bereich. Bitte bestätige dein Passwort, bevor du weitermachst.',
+	},
 });
 </script>
 
 <template>
-    <Head title="Passwort bestätigen" />
+	<Head title="Passwort bestätigen" />
 
-    <PasskeyVerify
-        :routes="{
-            options: confirmOptions(),
-            submit: confirmStore(),
-        }"
-        label="Mit Passkey bestätigen"
-        loading-label="Wird bestätigt …"
-        separator="Oder mit Passwort bestätigen"
-    />
+	<PasskeyVerify
+		:routes="{
+			options: confirmOptions(),
+			submit: confirmStore(),
+		}"
+		label="Mit Passkey bestätigen"
+		loading-label="Wird bestätigt …"
+		separator="Oder mit Passwort bestätigen"
+	/>
 
-    <Form
-        v-bind="store.form()"
-        reset-on-success
-        v-slot="{ errors, processing }"
-    >
-        <div class="space-y-6">
-            <div class="grid gap-2">
-                <Label htmlFor="password">Passwort</Label>
-                <PasswordInput
-                    id="password"
-                    name="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="current-password"
-                    autofocus
-                />
+	<Form
+		v-bind="store.form()"
+		reset-on-success
+		v-slot="{ errors, processing }"
+	>
+		<div class="space-y-6">
+			<div class="grid gap-2">
+				<Label htmlFor="password">Passwort</Label>
+				<PasswordInput
+					id="password"
+					name="password"
+					class="mt-1 block w-full"
+					required
+					autocomplete="current-password"
+					autofocus
+				/>
 
-                <InputError :message="errors.password" />
-            </div>
+				<InputError :message="errors.password" />
+			</div>
 
-            <div class="flex items-center">
-                <Button
-                    class="w-full"
-                    :disabled="processing"
-                    data-test="confirm-password-button"
-                >
-                    <Spinner v-if="processing" />
-                    Passwort bestätigen
-                </Button>
-            </div>
-        </div>
-    </Form>
+			<div class="flex items-center">
+				<Button
+					class="w-full"
+					:disabled="processing"
+					data-test="confirm-password-button"
+				>
+					<Spinner v-if="processing" />
+					Passwort bestätigen
+				</Button>
+			</div>
+		</div>
+	</Form>
 </template>

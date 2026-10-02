@@ -16,30 +16,30 @@ use Inertia\Response;
  */
 class LessonContentController extends Controller
 {
-    public function edit(Lesson $lesson): Response
-    {
-        Gate::authorize('update', $lesson);
+	public function edit(Lesson $lesson): Response
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless($lesson->isEditable(), 404);
+		abort_unless($lesson->isEditable(), 404);
 
-        return Inertia::render('lessons/Edit', (new EditLessonPage($lesson))->props());
-    }
+		return Inertia::render('lessons/Edit', (new EditLessonPage($lesson))->props());
+	}
 
-    public function update(Request $request, Lesson $lesson, UpdateLessonContent $updateContent): RedirectResponse
-    {
-        Gate::authorize('update', $lesson);
+	public function update(Request $request, Lesson $lesson, UpdateLessonContent $updateContent): RedirectResponse
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless($lesson->isEditable(), 404);
+		abort_unless($lesson->isEditable(), 404);
 
-        $request->validate([
-            'content' => ['required', 'array'],
-            'clozeMarkup' => ['nullable', 'string', 'max:5000'],
-        ]);
+		$request->validate([
+			'content' => ['required', 'array'],
+			'clozeMarkup' => ['nullable', 'string', 'max:5000'],
+		]);
 
-        $updateContent->handle($lesson, $request->input('content'), $request->input('clozeMarkup'));
+		$updateContent->handle($lesson, $request->input('content'), $request->input('clozeMarkup'));
 
-        $this->toast('Gespeichert.');
+		$this->toast('Gespeichert.');
 
-        return back();
-    }
+		return back();
+	}
 }

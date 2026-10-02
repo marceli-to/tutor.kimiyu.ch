@@ -9,19 +9,19 @@ use App\Enums\LessonStatus;
  */
 class FinishLesson extends LessonStep
 {
-    protected function step(): ?string
-    {
-        return null;
-    }
+	protected function step(): ?string
+	{
+		return null;
+	}
 
-    protected function run(): void
-    {
-        $this->lesson->update([
-            'status' => LessonStatus::Review,
-            'step' => null,
-            'error' => null,
-            // New content from the AI: the parents review and publish again
-            'published_at' => null,
-        ]);
-    }
+	protected function run(): void
+	{
+		$this->lesson->update([
+			'status' => LessonStatus::Review,
+			'step' => null,
+			'error' => null,
+			// New content from the AI: the parents review and publish again
+			'published_at' => null,
+		]);
+	}
 }

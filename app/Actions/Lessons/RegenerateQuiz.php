@@ -10,8 +10,8 @@ use App\Models\Lesson;
  */
 class RegenerateQuiz
 {
-    public function handle(Lesson $lesson): void
-    {
-        GenerationPipeline::regenerate($lesson, 'quiz');
-    }
+	public function handle(Lesson $lesson): void
+	{
+		GenerationPipeline::regenerate($lesson, 'quiz');
+	}
 }

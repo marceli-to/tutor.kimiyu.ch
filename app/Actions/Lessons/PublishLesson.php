@@ -10,8 +10,8 @@ use App\Models\Lesson;
  */
 class PublishLesson
 {
-    public function handle(Lesson $lesson): void
-    {
-        $lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
-    }
+	public function handle(Lesson $lesson): void
+	{
+		$lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
+	}
 }

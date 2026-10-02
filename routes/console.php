@@ -8,6 +8,6 @@ use Illuminate\Support\Facades\Schedule;
 | and then exits. withoutOverlapping prevents two workers at the same time.
 */
 Schedule::command('queue:work --stop-when-empty --max-time=50')
-    ->everyMinute()
-    ->withoutOverlapping(20)
-    ->runInBackground();
+	->everyMinute()
+	->withoutOverlapping(20)
+	->runInBackground();

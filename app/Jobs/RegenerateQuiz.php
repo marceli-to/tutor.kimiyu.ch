@@ -10,21 +10,21 @@ use App\Enums\LessonStatus;
  */
 class RegenerateQuiz extends LessonStep
 {
-    protected function step(): string
-    {
-        return 'regenerate-quiz';
-    }
+	protected function step(): string
+	{
+		return 'regenerate-quiz';
+	}
 
-    protected function run(): void
-    {
-        app(RegenerateQuizQuestions::class)->handle($this->lesson);
+	protected function run(): void
+	{
+		app(RegenerateQuizQuestions::class)->handle($this->lesson);
 
-        $this->lesson->update(RegenerateGraphic::needsReview());
-    }
+		$this->lesson->update(RegenerateGraphic::needsReview());
+	}
 
-    // If it fails, the page stays as before, published too
-    protected function statusAfterFailure(): ?LessonStatus
-    {
-        return null;
-    }
+	// If it fails, the page stays as before, published too
+	protected function statusAfterFailure(): ?LessonStatus
+	{
+		return null;
+	}
 }

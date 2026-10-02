@@ -30,21 +30,21 @@ use Illuminate\Support\Carbon;
 #[Fillable(['user_id', 'step', 'model', 'status', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens', 'cost_usd', 'duration_ms', 'error'])]
 class Generation extends Model
 {
-    /**
-     * Soft-deleted lessons too, so the cost page can still name them.
-     *
-     * @return BelongsTo<Lesson, $this>
-     */
-    public function lesson(): BelongsTo
-    {
-        return $this->belongsTo(Lesson::class)->withTrashed();
-    }
+	/**
+	 * Soft-deleted lessons too, so the cost page can still name them.
+	 *
+	 * @return BelongsTo<Lesson, $this>
+	 */
+	public function lesson(): BelongsTo
+	{
+		return $this->belongsTo(Lesson::class)->withTrashed();
+	}
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+	/**
+	 * @return BelongsTo<User, $this>
+	 */
+	public function user(): BelongsTo
+	{
+		return $this->belongsTo(User::class);
+	}
 }

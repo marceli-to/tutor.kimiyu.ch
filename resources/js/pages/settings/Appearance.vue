@@ -5,28 +5,28 @@ import Heading from '@/components/Heading.vue';
 import { edit } from '@/routes/appearance';
 
 defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Darstellung',
-                href: edit(),
-            },
-        ],
-    },
+	layout: {
+		breadcrumbs: [
+			{
+				title: 'Darstellung',
+				href: edit(),
+			},
+		],
+	},
 });
 </script>
 
 <template>
-    <Head title="Darstellung" />
+	<Head title="Darstellung" />
 
-    <h1 class="sr-only">Darstellung</h1>
+	<h1 class="sr-only">Darstellung</h1>
 
-    <div class="space-y-6">
-        <Heading
-            variant="small"
-            title="Darstellung"
-            description="Wähle, wie die App für dich aussieht."
-        />
-        <AppearanceTabs />
-    </div>
+	<div class="space-y-6">
+		<Heading
+			variant="small"
+			title="Darstellung"
+			description="Wähle, wie die App für dich aussieht."
+		/>
+		<AppearanceTabs />
+	</div>
 </template>

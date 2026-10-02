@@ -9,8 +9,8 @@ use Inertia\Response;
 
 class CostController extends Controller
 {
-    public function __invoke(Request $request): Response
-    {
-        return Inertia::render('Costs', (new CostOverview($request->user()))->props());
-    }
+	public function __invoke(Request $request): Response
+	{
+		return Inertia::render('Costs', (new CostOverview($request->user()))->props());
+	}
 }

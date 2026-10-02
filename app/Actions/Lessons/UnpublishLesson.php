@@ -10,8 +10,8 @@ use App\Models\Lesson;
  */
 class UnpublishLesson
 {
-    public function handle(Lesson $lesson): void
-    {
-        $lesson->update(['status' => LessonStatus::Review, 'published_at' => null]);
-    }
+	public function handle(Lesson $lesson): void
+	{
+		$lesson->update(['status' => LessonStatus::Review, 'published_at' => null]);
+	}
 }

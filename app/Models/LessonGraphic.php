@@ -25,25 +25,25 @@ use Illuminate\Support\Carbon;
 #[Fillable(['position', 'request', 'pattern', 'plan', 'graphic', 'error', 'hidden'])]
 class LessonGraphic extends Model
 {
-    /** @var array<string, mixed> */
-    protected $attributes = ['hidden' => false];
+	/** @var array<string, mixed> */
+	protected $attributes = ['hidden' => false];
 
-    protected function casts(): array
-    {
-        return [
-            'position' => 'integer',
-            'plan' => 'array',
-            'graphic' => 'array',
-            'hidden' => 'boolean',
-        ];
-    }
+	protected function casts(): array
+	{
+		return [
+			'position' => 'integer',
+			'plan' => 'array',
+			'graphic' => 'array',
+			'hidden' => 'boolean',
+		];
+	}
 
-    /**
-     * @return BelongsTo<Lesson, $this>
-     */
-    public function lesson(): BelongsTo
-    {
-        // Also for deleted lessons, e.g. in a job still waiting in the queue
-        return $this->belongsTo(Lesson::class)->withTrashed();
-    }
+	/**
+	 * @return BelongsTo<Lesson, $this>
+	 */
+	public function lesson(): BelongsTo
+	{
+		// Also for deleted lessons, e.g. in a job still waiting in the queue
+		return $this->belongsTo(Lesson::class)->withTrashed();
+	}
 }

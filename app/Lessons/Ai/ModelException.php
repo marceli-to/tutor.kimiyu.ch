@@ -11,12 +11,12 @@ use Throwable;
  */
 class ModelException extends RuntimeException
 {
-    public function __construct(
-        string $message,
-        public readonly ?string $detail = null,
-        public readonly bool $retryable = false,
-        ?Throwable $previous = null,
-    ) {
-        parent::__construct($message, previous: $previous);
-    }
+	public function __construct(
+		string $message,
+		public readonly ?string $detail = null,
+		public readonly bool $retryable = false,
+		?Throwable $previous = null,
+	) {
+		parent::__construct($message, previous: $previous);
+	}
 }

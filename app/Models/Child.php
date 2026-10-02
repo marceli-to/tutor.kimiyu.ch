@@ -29,42 +29,42 @@ use Illuminate\Support\Str;
 #[Hidden(['share_token'])]
 class Child extends Model
 {
-    /** @use HasFactory<ChildFactory> */
-    use HasFactory;
+	/** @use HasFactory<ChildFactory> */
+	use HasFactory;
 
-    protected static function booted(): void
-    {
-        static::creating(function (Child $child) {
-            $child->share_token ??= self::newShareToken();
-        });
-    }
+	protected static function booted(): void
+	{
+		static::creating(function (Child $child) {
+			$child->share_token ??= self::newShareToken();
+		});
+	}
 
-    public static function newShareToken(): string
-    {
-        return Str::random(40);
-    }
+	public static function newShareToken(): string
+	{
+		return Str::random(40);
+	}
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+	/**
+	 * @return BelongsTo<User, $this>
+	 */
+	public function user(): BelongsTo
+	{
+		return $this->belongsTo(User::class);
+	}
 
-    /**
-     * @return HasMany<Lesson, $this>
-     */
-    public function lessons(): HasMany
-    {
-        return $this->hasMany(Lesson::class);
-    }
+	/**
+	 * @return HasMany<Lesson, $this>
+	 */
+	public function lessons(): HasMany
+	{
+		return $this->hasMany(Lesson::class);
+	}
 
-    /**
-     * @return HasMany<Attempt, $this>
-     */
-    public function attempts(): HasMany
-    {
-        return $this->hasMany(Attempt::class);
-    }
+	/**
+	 * @return HasMany<Attempt, $this>
+	 */
+	public function attempts(): HasMany
+	{
+		return $this->hasMany(Attempt::class);
+	}
 }

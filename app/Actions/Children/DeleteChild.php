@@ -10,14 +10,14 @@ use App\Models\Child;
  */
 class DeleteChild
 {
-    public function __construct(private DeleteLessonImages $deleteImages) {}
+	public function __construct(private DeleteLessonImages $deleteImages) {}
 
-    public function handle(Child $child): void
-    {
-        foreach ($child->lessons as $lesson) {
-            $this->deleteImages->handle($lesson);
-        }
+	public function handle(Child $child): void
+	{
+		foreach ($child->lessons as $lesson) {
+			$this->deleteImages->handle($lesson);
+		}
 
-        $child->delete();
-    }
+		$child->delete();
+	}
 }

@@ -10,8 +10,8 @@ use App\Models\Lesson;
  */
 class RetryLesson
 {
-    public function handle(Lesson $lesson): void
-    {
-        GenerationPipeline::start($lesson);
-    }
+	public function handle(Lesson $lesson): void
+	{
+		GenerationPipeline::start($lesson);
+	}
 }

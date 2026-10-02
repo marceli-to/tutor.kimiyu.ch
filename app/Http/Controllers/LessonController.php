@@ -25,125 +25,125 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class LessonController extends Controller
 {
-    public function create(Request $request): Response
-    {
-        return Inertia::render('lessons/Create', (new CreateLessonPage($request->user()))->props());
-    }
+	public function create(Request $request): Response
+	{
+		return Inertia::render('lessons/Create', (new CreateLessonPage($request->user()))->props());
+	}
 
-    public function store(StoreLessonRequest $request, CreateLesson $createLesson): RedirectResponse
-    {
-        $lesson = $createLesson->handle($request->user(), $request->validated(), $request->childLevel());
+	public function store(StoreLessonRequest $request, CreateLesson $createLesson): RedirectResponse
+	{
+		$lesson = $createLesson->handle($request->user(), $request->validated(), $request->childLevel());
 
-        return to_route('lessons.show', $lesson);
-    }
+		return to_route('lessons.show', $lesson);
+	}
 
-    public function show(Lesson $lesson): Response
-    {
-        Gate::authorize('view', $lesson);
+	public function show(Lesson $lesson): Response
+	{
+		Gate::authorize('view', $lesson);
 
-        return Inertia::render('lessons/Show', (new LessonPage($lesson, parent: true))->props());
-    }
+		return Inertia::render('lessons/Show', (new LessonPage($lesson, parent: true))->props());
+	}
 
-    public function destroy(Lesson $lesson, DeleteLesson $deleteLesson): RedirectResponse
-    {
-        Gate::authorize('delete', $lesson);
+	public function destroy(Lesson $lesson, DeleteLesson $deleteLesson): RedirectResponse
+	{
+		Gate::authorize('delete', $lesson);
 
-        $deleteLesson->handle($lesson);
+		$deleteLesson->handle($lesson);
 
-        $this->toast('Lernseite gelöscht.');
+		$this->toast('Lernseite gelöscht.');
 
-        return to_route('dashboard');
-    }
+		return to_route('dashboard');
+	}
 
-    /**
-     * Publish: the child sees the page through its link.
-     */
-    public function publish(Lesson $lesson, PublishLesson $publishLesson): RedirectResponse
-    {
-        Gate::authorize('update', $lesson);
+	/**
+	 * Publish: the child sees the page through its link.
+	 */
+	public function publish(Lesson $lesson, PublishLesson $publishLesson): RedirectResponse
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless($lesson->canBePublished(), 422, 'Diese Lernseite kann nicht freigegeben werden.');
+		abort_unless($lesson->canBePublished(), 422, 'Diese Lernseite kann nicht freigegeben werden.');
 
-        $publishLesson->handle($lesson);
+		$publishLesson->handle($lesson);
 
-        $this->toast("Freigegeben. {$lesson->child->name} sieht die Seite jetzt über den Link.");
+		$this->toast("Freigegeben. {$lesson->child->name} sieht die Seite jetzt über den Link.");
 
-        return back();
-    }
+		return back();
+	}
 
-    public function unpublish(Lesson $lesson, UnpublishLesson $unpublishLesson): RedirectResponse
-    {
-        Gate::authorize('update', $lesson);
+	public function unpublish(Lesson $lesson, UnpublishLesson $unpublishLesson): RedirectResponse
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless($lesson->status === LessonStatus::Published, 422);
+		abort_unless($lesson->status === LessonStatus::Published, 422);
 
-        $unpublishLesson->handle($lesson);
+		$unpublishLesson->handle($lesson);
 
-        $this->toast('Die Seite ist für das Kind nicht mehr sichtbar.');
+		$this->toast('Die Seite ist für das Kind nicht mehr sichtbar.');
 
-        return back();
-    }
+		return back();
+	}
 
-    /**
-     * Regenerates only the quiz.
-     */
-    public function regenerate(Lesson $lesson, string $part, RegenerateQuiz $regenerateQuiz): RedirectResponse
-    {
-        Gate::authorize('update', $lesson);
+	/**
+	 * Regenerates only the quiz.
+	 */
+	public function regenerate(Lesson $lesson, string $part, RegenerateQuiz $regenerateQuiz): RedirectResponse
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless(GenerationPipeline::canRegenerate($lesson, $part), 422, 'Das geht bei dieser Lernseite gerade nicht.');
+		abort_unless(GenerationPipeline::canRegenerate($lesson, $part), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
-        $regenerateQuiz->handle($lesson);
+		$regenerateQuiz->handle($lesson);
 
-        return to_route('lessons.show', $lesson);
-    }
+		return to_route('lessons.show', $lesson);
+	}
 
-    /**
-     * Regenerates only one graphic; the others stay.
-     */
-    public function regenerateGraphic(Lesson $lesson, int $number, RegenerateGraphic $regenerateGraphic): RedirectResponse
-    {
-        Gate::authorize('update', $lesson);
+	/**
+	 * Regenerates only one graphic; the others stay.
+	 */
+	public function regenerateGraphic(Lesson $lesson, int $number, RegenerateGraphic $regenerateGraphic): RedirectResponse
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless(GenerationPipeline::canRegenerate($lesson, 'graphic', $number), 422, 'Das geht bei dieser Lernseite gerade nicht.');
+		abort_unless(GenerationPipeline::canRegenerate($lesson, 'graphic', $number), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
-        $regenerateGraphic->handle($lesson, $number);
+		$regenerateGraphic->handle($lesson, $number);
 
-        return to_route('lessons.show', $lesson);
-    }
+		return to_route('lessons.show', $lesson);
+	}
 
-    public function retry(Lesson $lesson, RetryLesson $retryLesson): RedirectResponse
-    {
-        Gate::authorize('update', $lesson);
+	public function retry(Lesson $lesson, RetryLesson $retryLesson): RedirectResponse
+	{
+		Gate::authorize('update', $lesson);
 
-        abort_unless(GenerationPipeline::canRetry($lesson), 422, 'Diese Lernseite kann nicht nochmals erstellt werden.');
+		abort_unless(GenerationPipeline::canRetry($lesson), 422, 'Diese Lernseite kann nicht nochmals erstellt werden.');
 
-        $retryLesson->handle($lesson);
+		$retryLesson->handle($lesson);
 
-        return to_route('lessons.show', $lesson);
-    }
+		return to_route('lessons.show', $lesson);
+	}
 
-    /**
-     * Local only: view a lesson without login, for reviewing layout and modules.
-     */
-    public function preview(Lesson $lesson): Response
-    {
-        abort_unless(app()->isLocal(), 404);
+	/**
+	 * Local only: view a lesson without login, for reviewing layout and modules.
+	 */
+	public function preview(Lesson $lesson): Response
+	{
+		abort_unless(app()->isLocal(), 404);
 
-        return Inertia::render('lessons/Show', (new LessonPage($lesson, parent: false))->props());
-    }
+		return Inertia::render('lessons/Show', (new LessonPage($lesson, parent: false))->props());
+	}
 
-    /**
-     * A graphic as a standalone document for the sandboxed iframe.
-     * Signed URL instead of a session, because the iframe has no origin of its own.
-     */
-    public function graphic(Lesson $lesson, int $number): HttpResponse
-    {
-        $graphic = $lesson->graphic($number);
+	/**
+	 * A graphic as a standalone document for the sandboxed iframe.
+	 * Signed URL instead of a session, because the iframe has no origin of its own.
+	 */
+	public function graphic(Lesson $lesson, int $number): HttpResponse
+	{
+		$graphic = $lesson->graphic($number);
 
-        // Hidden graphics can't be reached through the signed URL either
-        abort_unless($graphic?->graphic !== null && ! $graphic->hidden, 404);
+		// Hidden graphics can't be reached through the signed URL either
+		abort_unless($graphic?->graphic !== null && ! $graphic->hidden, 404);
 
-        return GraphicDocument::response($lesson, $graphic->graphic);
-    }
+		return GraphicDocument::response($lesson, $graphic->graphic);
+	}
 }

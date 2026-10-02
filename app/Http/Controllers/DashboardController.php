@@ -9,8 +9,8 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
-    {
-        return Inertia::render('Dashboard', (new Dashboard($request->user()))->props());
-    }
+	public function __invoke(Request $request): Response
+	{
+		return Inertia::render('Dashboard', (new Dashboard($request->user()))->props());
+	}
 }

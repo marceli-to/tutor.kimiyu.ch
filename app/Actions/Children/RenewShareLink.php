@@ -9,8 +9,8 @@ use App\Models\Child;
  */
 class RenewShareLink
 {
-    public function handle(Child $child): void
-    {
-        $child->forceFill(['share_token' => Child::newShareToken()])->save();
-    }
+	public function handle(Child $child): void
+	{
+		$child->forceFill(['share_token' => Child::newShareToken()])->save();
+	}
 }

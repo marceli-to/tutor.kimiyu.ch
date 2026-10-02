@@ -14,54 +14,54 @@ use Illuminate\Support\Facades\File;
  */
 class LessonFactory extends Factory
 {
-    public const FIXTURES = ['fotosynthese', 'oekosystem'];
+	public const FIXTURES = ['fotosynthese', 'oekosystem'];
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function definition(): array
-    {
-        return [
-            'child_id' => Child::factory(),
-            'status' => LessonStatus::Draft,
-            'subject' => 'Biologie',
-            'level' => '2. Sek',
-        ];
-    }
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function definition(): array
+	{
+		return [
+			'child_id' => Child::factory(),
+			'status' => LessonStatus::Draft,
+			'subject' => 'Biologie',
+			'level' => '2. Sek',
+		];
+	}
 
-    /**
-     * Published page with content and graphic 1 from database/fixtures/lessons.
-     */
-    public function fromFixture(string $name = 'fotosynthese'): static
-    {
-        $content = self::fixture($name);
+	/**
+	 * Published page with content and graphic 1 from database/fixtures/lessons.
+	 */
+	public function fromFixture(string $name = 'fotosynthese'): static
+	{
+		$content = self::fixture($name);
 
-        return $this->state(fn () => [
-            'status' => LessonStatus::Published,
-            'title' => $content['meta']['title'],
-            'schema_version' => ContentValidator::SCHEMA_VERSION,
-            'content' => $content,
-            'published_at' => now(),
-        ])->afterCreating(function (Lesson $lesson) use ($name) {
-            $graphic = self::fixture("$name.graphic");
+		return $this->state(fn () => [
+			'status' => LessonStatus::Published,
+			'title' => $content['meta']['title'],
+			'schema_version' => ContentValidator::SCHEMA_VERSION,
+			'content' => $content,
+			'published_at' => now(),
+		])->afterCreating(function (Lesson $lesson) use ($name) {
+			$graphic = self::fixture("$name.graphic");
 
-            $lesson->graphics()->create([
-                'position' => 1,
-                'plan' => ['pattern' => $graphic['pattern'], 'idea' => $graphic['description']],
-                'graphic' => $graphic,
-            ]);
-        });
-    }
+			$lesson->graphics()->create([
+				'position' => 1,
+				'plan' => ['pattern' => $graphic['pattern'], 'idea' => $graphic['description']],
+				'graphic' => $graphic,
+			]);
+		});
+	}
 
-    /**
-     * @return array<string, mixed>
-     */
-    public static function fixture(string $name): array
-    {
-        return json_decode(
-            File::get(database_path("fixtures/lessons/$name.json")),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
-    }
+	/**
+	 * @return array<string, mixed>
+	 */
+	public static function fixture(string $name): array
+	{
+		return json_decode(
+			File::get(database_path("fixtures/lessons/$name.json")),
+			true,
+			flags: JSON_THROW_ON_ERROR,
+		);
+	}
 }

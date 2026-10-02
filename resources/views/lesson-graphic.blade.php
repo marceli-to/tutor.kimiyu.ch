@@ -21,7 +21,7 @@
   setTheme(location.hash.slice(1));
   var post=function(msg){msg.source='lesson-graphic';parent.postMessage(msg,'*');};
   window.addEventListener('message',function(e){
-    if(e.source===parent&&e.data&&e.data.type==='theme')setTheme(e.data.theme);
+	if(e.source===parent&&e.data&&e.data.type==='theme')setTheme(e.data.theme);
   });
   window.addEventListener('error',function(e){post({type:'error',message:String(e.message||'Fehler')});});
   var last=0;

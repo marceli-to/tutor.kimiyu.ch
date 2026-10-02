@@ -8,15 +8,15 @@ use Laravel\Fortify\InteractsWithTwoFactorState;
 
 class TwoFactorAuthenticationRequest extends FormRequest
 {
-    use InteractsWithTwoFactorState;
+	use InteractsWithTwoFactorState;
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        return [];
-    }
+	/**
+	 * Get the validation rules that apply to the request.
+	 *
+	 * @return array<string, ValidationRule|array<mixed>|string>
+	 */
+	public function rules(): array
+	{
+		return [];
+	}
 }
