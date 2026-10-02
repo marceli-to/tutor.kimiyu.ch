@@ -98,6 +98,54 @@ it('rejects the German sharp s anywhere', function () {
         ->toContain('Im Feld abschnitte.1.bloecke.0.eintraege.2.text steht ein «ß». In der Schweiz schreibt man «ss».');
 });
 
+it('accepts content without any origin markers', function () {
+    // Alte Seiten haben kein Feld «herkunft»
+    $strip = function (array $value) use (&$strip): array {
+        unset($value['herkunft']);
+
+        return array_map(fn ($item) => is_array($item) ? $strip($item) : $item, $value);
+    };
+
+    $content = $strip(lessonFixture());
+
+    expect(json_encode($content))->not->toContain('herkunft')
+        ->and(ContentValidator::errors($content, strict: true))->toBe([]);
+});
+
+it('rejects an unknown origin', function (string $key, Closure $set) {
+    $content = $set(lessonFixture());
+
+    expect(ContentValidator::make($content)->errors()->has($key))->toBeTrue();
+})->with([
+    'block' => ['abschnitte.0.bloecke.0.herkunft', function (array $c) {
+        $c['abschnitte'][0]['bloecke'][0]['herkunft'] = 'buch';
+
+        return $c;
+    }],
+    'quiz question' => ['module.quiz.0.herkunft', function (array $c) {
+        $c['module']['quiz'][0]['herkunft'] = 'buch';
+
+        return $c;
+    }],
+    'flashcard' => ['module.karten.eintraege.0.herkunft', function (array $c) {
+        $c['module']['karten']['eintraege'][0]['herkunft'] = 'buch';
+
+        return $c;
+    }],
+    'cloze' => ['module.lueckentext.herkunft', function (array $c) {
+        $c['module']['lueckentext']['herkunft'] = 'buch';
+
+        return $c;
+    }],
+]);
+
+it('rejects an unknown origin on a sorting term', function () {
+    $content = lessonFixture('oekosystem');
+    $content['module']['sortieren']['begriffe'][0]['herkunft'] = 'buch';
+
+    expect(ContentValidator::make($content)->errors()->has('module.sortieren.begriffe.0.herkunft'))->toBeTrue();
+});
+
 describe('strict mode', function () {
     it('requires exactly five quiz questions', function () {
         $content = lessonFixture();

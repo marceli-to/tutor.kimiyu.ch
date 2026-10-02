@@ -79,6 +79,7 @@ class FakeLanguageModel implements LanguageModel
             'analyse' => [
                 'quelle' => ['lesbar' => true, 'problem' => null],
                 'zusammenfassung' => 'Zusammenfassung der Buchseite zum Thema '.$content['meta']['thema'].'.',
+                'ergaenzungen' => [],
                 'hero_plan' => ['muster' => $hero['muster'], 'idee' => $hero['beschreibung']],
                 'seite' => $page,
             ],

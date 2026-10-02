@@ -2,21 +2,26 @@
 
 export type CategoryId = 'cat1' | 'cat2' | 'cat3';
 
-export type LessonBlock =
-    | { typ: 'absatz'; text: string }
-    | { typ: 'formel'; text: string; zusatz?: string | null }
-    | { typ: 'fakten'; eintraege: { titel: string; text: string }[] }
-    | {
-          typ: 'spalten';
-          eintraege: {
-              titel: string;
-              kategorie: CategoryId;
-              absaetze: string[];
-          }[];
-      }
-    | { typ: 'box'; titel: string; absaetze: string[] };
+// Herkunft eines Bausteins: von den Fotos oder aus Fachwissen ergänzt (fehlt bei alten Seiten)
+export type Origin = { herkunft?: 'foto' | 'ergaenzt' };
 
-export type QuizQuestion = {
+export type LessonBlock = Origin &
+    (
+        | { typ: 'absatz'; text: string }
+        | { typ: 'formel'; text: string; zusatz?: string | null }
+        | { typ: 'fakten'; eintraege: { titel: string; text: string }[] }
+        | {
+              typ: 'spalten';
+              eintraege: {
+                  titel: string;
+                  kategorie: CategoryId;
+                  absaetze: string[];
+              }[];
+          }
+        | { typ: 'box'; titel: string; absaetze: string[] }
+    );
+
+export type QuizQuestion = Origin & {
     id: string;
     frage: string;
     optionen: string[];
@@ -28,24 +33,24 @@ export type QuizQuestion = {
 export type SortModuleData = {
     anleitung?: string | null;
     kategorien: { id: CategoryId; label: string; sub?: string | null }[];
-    begriffe: {
+    begriffe: (Origin & {
         id: string;
         text: string;
         kategorie: CategoryId;
         erklaerung?: string | null;
-    }[];
+    })[];
 };
 
 export type FlashcardModuleData = {
     anleitung?: string | null;
-    eintraege: { id: string; vorne: string; hinten: string }[];
+    eintraege: (Origin & { id: string; vorne: string; hinten: string })[];
 };
 
 export type ClozeSegment =
     | { text: string }
     | { id: string; loesungen: string[] };
 
-export type ClozeModuleData = {
+export type ClozeModuleData = Origin & {
     anleitung?: string | null;
     segmente: ClozeSegment[];
 };

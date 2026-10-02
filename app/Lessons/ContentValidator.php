@@ -20,6 +20,9 @@ class ContentValidator
 
     public const CATEGORIES = ['cat1', 'cat2', 'cat3'];
 
+    // Herkunft eines Bausteins; fehlt bei alten Seiten
+    public const ORIGINS = ['foto', 'ergaenzt'];
+
     /**
      * @param  array<string, mixed>  $content
      */
@@ -83,6 +86,7 @@ class ContentValidator
             'abschnitte.*.titel' => ['required', 'string', 'max:80'],
             'abschnitte.*.bloecke' => ['required', 'array', 'min:1', 'max:4'],
             'abschnitte.*.bloecke.*.typ' => ['required', Rule::in(self::BLOCK_TYPES)],
+            'abschnitte.*.bloecke.*.herkunft' => ['sometimes', Rule::in(self::ORIGINS)],
 
             'probieren' => ['present', 'nullable', 'array'],
             'probieren.experimente' => ['required_with:probieren', 'array', 'min:1', 'max:3'],
@@ -99,6 +103,7 @@ class ContentValidator
             'module.quiz.*.loesung' => ['required', 'integer', 'min:0', 'max:3'],
             'module.quiz.*.tipp' => ['nullable', 'string', 'max:300'],
             'module.quiz.*.erklaerung' => ['required', 'string', 'max:500'],
+            'module.quiz.*.herkunft' => ['sometimes', Rule::in(self::ORIGINS)],
 
             'module.sortieren' => ['present', 'nullable', 'array'],
             'module.sortieren.anleitung' => ['nullable', 'string', 'max:200'],
@@ -111,6 +116,7 @@ class ContentValidator
             'module.sortieren.begriffe.*.text' => ['required', 'string', 'max:60'],
             'module.sortieren.begriffe.*.kategorie' => ['required', Rule::in(self::CATEGORIES)],
             'module.sortieren.begriffe.*.erklaerung' => ['nullable', 'string', 'max:300'],
+            'module.sortieren.begriffe.*.herkunft' => ['sometimes', Rule::in(self::ORIGINS)],
 
             'module.karten' => ['present', 'nullable', 'array'],
             'module.karten.anleitung' => ['nullable', 'string', 'max:200'],
@@ -118,10 +124,12 @@ class ContentValidator
             'module.karten.eintraege.*.id' => ['required', 'string', 'max:20'],
             'module.karten.eintraege.*.vorne' => ['required', 'string', 'max:80'],
             'module.karten.eintraege.*.hinten' => ['required', 'string', 'max:400'],
+            'module.karten.eintraege.*.herkunft' => ['sometimes', Rule::in(self::ORIGINS)],
 
             'module.lueckentext' => ['present', 'nullable', 'array'],
             'module.lueckentext.anleitung' => ['nullable', 'string', 'max:200'],
             'module.lueckentext.segmente' => ['required_with:module.lueckentext', 'array', 'min:1', 'max:60'],
+            'module.lueckentext.herkunft' => ['sometimes', Rule::in(self::ORIGINS)],
 
             'nachdenken' => ['required', 'array'],
             'nachdenken.frage' => ['required', 'string', 'max:400'],

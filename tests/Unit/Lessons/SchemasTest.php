@@ -22,6 +22,25 @@ it('never sends the whole page as one schema', function () {
         ->and(Schemas::part('seite')['properties']['seite']['properties'])->not->toHaveKey('module');
 });
 
+it('has a list of additions in the analysis and an origin on every item', function () {
+    $analysis = Schemas::analysis()['properties'];
+    $page = $analysis['seite']['anyOf'][0]['properties'];
+    $modules = Schemas::modules()['properties'];
+    $origin = ['type' => 'string', 'enum' => ['foto', 'ergaenzt']];
+
+    expect($analysis)->toHaveKey('ergaenzungen')
+        ->and($analysis['ergaenzungen']['items'])->toBe(['type' => 'string'])
+        ->and($modules['quiz']['items']['properties']['herkunft'])->toMatchArray($origin)
+        ->and($modules['sortieren']['anyOf'][0]['properties']['begriffe']['items']['properties']['herkunft'])->toMatchArray($origin)
+        ->and($modules['karten']['anyOf'][0]['properties']['eintraege']['items']['properties']['herkunft'])->toMatchArray($origin)
+        ->and($modules['lueckentext']['anyOf'][0]['properties']['herkunft'])->toMatchArray($origin);
+
+    foreach ($page['abschnitte']['items']['properties']['bloecke']['items']['anyOf'] as $block) {
+        expect($block['properties']['herkunft'])->toMatchArray($origin)
+            ->and($block['required'])->toContain('herkunft');
+    }
+});
+
 it('accepts both fixtures as page content', function (string $fixture) {
     expect(JsonSchema::errors(LessonFactory::fixture($fixture), Schemas::content()))->toBe([]);
 })->with(LessonFactory::FIXTURES);
@@ -52,6 +71,7 @@ it('lets the analysis report unreadable photos without content', function () {
     $response = [
         'quelle' => ['lesbar' => false, 'problem' => 'Das Foto ist unscharf.'],
         'zusammenfassung' => '',
+        'ergaenzungen' => [],
         'hero_plan' => null,
         'seite' => null,
     ];

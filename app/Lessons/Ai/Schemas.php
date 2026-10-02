@@ -27,6 +27,7 @@ class Schemas
                 'problem' => self::nullable(['type' => 'string', 'description' => 'Kurze Erklärung für die Eltern, was mit den Fotos oder dem Thema nicht stimmt']),
             ]),
             'zusammenfassung' => ['type' => 'string', 'description' => 'Neutrale, vollständige Zusammenfassung des Stoffs in eigenen Worten'],
+            'ergaenzungen' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Pro Ergänzung ein Satz: was auf den Fotos fehlte und was aus Fachwissen ergänzt wurde. Leer, wenn nichts ergänzt wurde oder es keine Fotos gibt.'],
             'hero_plan' => self::nullable(self::heroPlan()),
             'seite' => self::nullable(self::page()),
         ]);
@@ -133,8 +134,9 @@ class Schemas
         $text = ['type' => 'string'];
         $texts = ['type' => 'array', 'items' => $text];
         $category = ['type' => 'string', 'enum' => ContentValidator::CATEGORIES];
+        $origin = self::origin();
 
-        $block = fn (string $type, array $properties) => self::object(['typ' => ['type' => 'string', 'const' => $type], ...$properties]);
+        $block = fn (string $type, array $properties) => self::object(['typ' => ['type' => 'string', 'const' => $type], ...$properties, 'herkunft' => $origin]);
 
         return self::object([
             'meta' => self::object([
@@ -181,6 +183,7 @@ class Schemas
         $text = ['type' => 'string'];
         $texts = ['type' => 'array', 'items' => $text];
         $category = ['type' => 'string', 'enum' => ContentValidator::CATEGORIES];
+        $origin = self::origin();
 
         return self::object([
             'quiz' => [
@@ -192,6 +195,7 @@ class Schemas
                     'loesung' => ['type' => 'integer', 'description' => 'Index der richtigen Option, 0-basiert'],
                     'tipp' => self::nullable($text),
                     'erklaerung' => $text,
+                    'herkunft' => $origin,
                 ]),
             ],
             'sortieren' => self::nullable(self::object([
@@ -206,6 +210,7 @@ class Schemas
                     'text' => $text,
                     'kategorie' => $category,
                     'erklaerung' => self::nullable($text),
+                    'herkunft' => $origin,
                 ])],
             ])),
             'karten' => self::nullable(self::object([
@@ -214,6 +219,7 @@ class Schemas
                     'id' => $text,
                     'vorne' => $text,
                     'hinten' => $text,
+                    'herkunft' => $origin,
                 ])],
             ])),
             'lueckentext' => self::nullable(self::object([
@@ -222,8 +228,19 @@ class Schemas
                     self::object(['text' => $text]),
                     self::object(['id' => $text, 'loesungen' => $texts]),
                 ]]],
+                'herkunft' => $origin,
             ])),
         ]);
+    }
+
+    /**
+     * Herkunft eines Bausteins: von den Fotos oder aus Fachwissen ergänzt.
+     *
+     * @return array<string, mixed>
+     */
+    private static function origin(): array
+    {
+        return ['type' => 'string', 'enum' => ContentValidator::ORIGINS, 'description' => 'ergaenzt: nicht auf den Fotos, aus Fachwissen ergänzt'];
     }
 
     /**
