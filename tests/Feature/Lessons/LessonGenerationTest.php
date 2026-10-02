@@ -688,6 +688,44 @@ describe('remembered settings', function () {
             );
     });
 
+    it('passes the settings of the latest lesson per child', function () {
+        $leo = Child::factory()->for($this->user)->create(['name' => 'Leo']);
+
+        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'kurz', 'created_at' => now()->subDays(2)]);
+        lessonFor($this->child, ['subject' => null, 'purpose' => 'pruefung', 'scope' => 'ausfuehrlich', 'modules' => ['quiz'], 'graphics_mode' => 'none', 'created_at' => now()->subDay()]);
+        lessonFor($leo, ['subject' => 'Mathematik', 'purpose' => 'neu', 'scope' => 'normal', 'modules' => null, 'graphics_mode' => 'custom']);
+
+        $this->actingAs($this->user)->get(route('lessons.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lastByChild', 2)
+                ->where("lastByChild.{$this->child->id}", [
+                    'purpose' => 'pruefung',
+                    'scope' => 'ausfuehrlich',
+                    'modules' => ['quiz'],
+                    'graphics_mode' => 'none',
+                ])
+                // Eigene Grafikwünsche gelten nur für die eine Seite: daraus wird «KI entscheidet»
+                ->where("lastByChild.{$leo->id}", [
+                    'purpose' => 'neu',
+                    'scope' => 'normal',
+                    'modules' => ['quiz', 'sortieren', 'karten', 'lueckentext'],
+                    'graphics_mode' => 'auto',
+                ])
+            );
+    });
+
+    it('ignores deleted lessons and other parents for the settings per child', function () {
+        lessonFor($this->child, ['scope' => 'kurz', 'created_at' => now()->subDays(2)]);
+        lessonFor($this->child, ['scope' => 'ausfuehrlich', 'created_at' => now()->subDay()])->delete();
+        lessonFor(Child::factory()->create(), ['scope' => 'ausfuehrlich']);
+
+        $this->actingAs($this->user)->get(route('lessons.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lastByChild', 1)
+                ->where("lastByChild.{$this->child->id}.scope", 'kurz')
+            );
+    });
+
     it('passes the counts per scope for the labels', function () {
         $this->actingAs($this->user)->get(route('lessons.create'))
             ->assertInertia(fn (Assert $page) => $page

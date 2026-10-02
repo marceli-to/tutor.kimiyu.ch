@@ -13,6 +13,7 @@ use App\Lessons\LessonView;
 use App\Models\Child;
 use App\Models\Lesson;
 use App\Models\LessonGraphic;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,13 @@ class LessonController extends Controller
 {
     public function create(Request $request): Response
     {
+        // Eine Abfrage für beide Vorgaben: neueste zuerst, gelöschte nicht
+        $recent = Lesson::query()
+            ->whereIn('child_id', $request->user()->children()->select('id'))
+            ->latest()
+            ->latest('id')
+            ->get(['id', 'child_id', 'subject', 'purpose', 'scope', 'modules', 'graphics_mode', 'created_at']);
+
         return Inertia::render('lessons/Create', [
             'children' => $request->user()->children()->orderBy('name')->get(['id', 'name', 'level']),
             'maxImages' => config('lessons.images.max_count'),
@@ -38,7 +46,8 @@ class LessonController extends Controller
                 fn (HeroPattern $pattern) => ['value' => $pattern->value, 'label' => $pattern->label()],
                 HeroPattern::cases(),
             ),
-            'lastSettings' => $this->lastSettings($request),
+            'lastSettings' => $this->lastSettings($recent),
+            'lastByChild' => $this->lastByChild($recent),
             'scopeInfo' => config('lessons.scope'),
         ]);
     }
@@ -47,15 +56,12 @@ class LessonController extends Controller
      * Einstellungen der jüngsten Lernseite pro Kind und Fach, Schlüssel «{childId}|{fach}».
      * Das Fach ist frei eingegeben, darum klein geschrieben und ohne Leerzeichen am Rand.
      *
+     * @param  Collection<int, Lesson>  $recent
      * @return array<string, array{purpose: string, scope: string, modules: list<string>, graphics_mode: string}>
      */
-    private function lastSettings(Request $request): array
+    private function lastSettings(Collection $recent): array
     {
-        return Lesson::query()
-            ->whereIn('child_id', $request->user()->children()->select('id'))
-            ->latest()
-            ->latest('id')
-            ->get(['id', 'child_id', 'subject', 'purpose', 'scope', 'modules', 'graphics_mode', 'created_at'])
+        return $recent
             // Noch nicht erkanntes Fach: gehört zu keinem Fach
             ->whereNotNull('subject')
             ->unique(fn (Lesson $lesson) => self::settingsKey($lesson->child_id, $lesson->subject))
@@ -65,6 +71,28 @@ class LessonController extends Controller
                     'scope' => $lesson->scope,
                     'modules' => $lesson->allowedModules(),
                     'graphics_mode' => $lesson->graphics_mode,
+                ],
+            ])
+            ->all();
+    }
+
+    /**
+     * Einstellungen der jüngsten Lernseite pro Kind, egal welches Fach, für «Wie letztes Mal».
+     * Eigene Grafikwünsche gelten nur für die eine Seite, daraus wird «KI entscheidet».
+     *
+     * @param  Collection<int, Lesson>  $recent
+     * @return array<int, array{purpose: string, scope: string, modules: list<string>, graphics_mode: string}>
+     */
+    private function lastByChild(Collection $recent): array
+    {
+        return $recent
+            ->unique('child_id')
+            ->mapWithKeys(fn (Lesson $lesson) => [
+                $lesson->child_id => [
+                    'purpose' => $lesson->purpose,
+                    'scope' => $lesson->scope,
+                    'modules' => $lesson->allowedModules(),
+                    'graphics_mode' => $lesson->graphics_mode === 'custom' ? 'auto' : $lesson->graphics_mode,
                 ],
             ])
             ->all();
