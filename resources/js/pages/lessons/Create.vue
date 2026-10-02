@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ChevronRight } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import GraphicsField from '@/components/GraphicsField.vue';
 import type { GraphicsMode, GraphicWish } from '@/components/GraphicsField.vue';
@@ -14,10 +13,14 @@ import type {
     ScopeInfo,
 } from '@/components/LessonOptions.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
+import PresetPicker from '@/components/PresetPicker.vue';
+import type { PresetChoice } from '@/components/PresetPicker.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { matchPreset, presetSettings, sameSettings } from '@/lib/presets';
+import type { LessonSettings } from '@/lib/presets';
 import { create, store } from '@/routes/lessons';
 
 defineOptions({
@@ -32,15 +35,11 @@ const props = defineProps<{
     maxEdge: number;
     patterns: { value: string; label: string }[];
     lastSettings: Record<string, RememberedSettings>;
+    lastByChild: Record<string, LessonSettings>;
     scopeInfo: ScopeInfo;
 }>();
 
-type RememberedSettings = {
-    purpose: Purpose;
-    scope: Scope;
-    modules: LessonModule[];
-    graphics_mode: GraphicsMode;
-};
+type RememberedSettings = LessonSettings;
 
 const subjects = [
     'Natur und Technik',
@@ -148,6 +147,33 @@ async function addChip(text: string) {
     }
 }
 
+type FormMode = 'einfach' | 'erweitert';
+
+const MODE_KEY = 'lernseite.formMode';
+
+// Gemerkter Modus; ohne Speicher (privates Fenster, blockiert) gilt «einfach»
+function storedMode(): FormMode {
+    try {
+        return localStorage.getItem(MODE_KEY) === 'erweitert'
+            ? 'erweitert'
+            : 'einfach';
+    } catch {
+        return 'einfach';
+    }
+}
+
+const mode = ref<FormMode>(storedMode());
+const advanced = computed(() => mode.value === 'erweitert');
+
+const selectedChild = computed(() =>
+    props.children.find((c) => c.id === form.child_id),
+);
+
+// Im einfachen Modus kommt die Stufe vom Kind; das Feld braucht es nur ohne Stufe oder beim ersten Kind
+const needsLevel = computed(
+    () => !props.children.length || !selectedChild.value?.level,
+);
+
 // Stufe vom gewählten Kind übernehmen, solange nichts anderes eingetragen ist
 watch(
     () => form.child_id,
@@ -185,10 +211,137 @@ for (const field of rememberedFields) {
     );
 }
 
+function currentSettings(): LessonSettings {
+    return {
+        purpose: form.purpose,
+        scope: form.scope,
+        modules: [...form.modules],
+        graphics_mode: form.graphics_mode,
+    };
+}
+
+// Werte einer Karte ins Formular schreiben. Von Hand gewählt zählt als geändert,
+// dann überschreibt das Merken pro Fach diese Felder nicht mehr.
+function applySettings(values: LessonSettings, byHand: boolean) {
+    applying = !byHand;
+    form.purpose = values.purpose;
+    form.scope = values.scope;
+    form.modules = [...values.modules];
+    form.graphics_mode = values.graphics_mode;
+    applying = false;
+}
+
+// Letzte Lernseite des gewählten Kindes, egal in welchem Fach
+const lastForChild = computed<LessonSettings | null>(() =>
+    form.child_id !== null ? (props.lastByChild[form.child_id] ?? null) : null,
+);
+
+// «Wie letztes Mal» nur, wenn die letzte Lernseite zu keiner Voreinstellung passt
+const lastCard = computed(() =>
+    lastForChild.value && !matchPreset(lastForChild.value)
+        ? lastForChild.value
+        : null,
+);
+
+// Was im erweiterten Modus eingestellt wurde und zu keiner Karte passt, samt eigenen Grafikwünschen
+const customSettings = ref<
+    (LessonSettings & { graphics: GraphicWish[] }) | null
+>(null);
+
+const preset = ref<PresetChoice>('normal');
+let presetByHand = false;
+
+function defaultChoice(): PresetChoice {
+    const last = lastForChild.value;
+
+    if (!last) {
+        return 'normal';
+    }
+
+    return matchPreset(last) ?? 'letztes';
+}
+
+function selectPreset(choice: PresetChoice, byHand: boolean) {
+    preset.value = choice;
+
+    if (choice === 'eigene') {
+        if (customSettings.value) {
+            applySettings(customSettings.value, byHand);
+            form.graphics = customSettings.value.graphics.map((g) => ({
+                ...g,
+            }));
+        }
+
+        return;
+    }
+
+    const values =
+        choice === 'letztes' ? lastForChild.value : presetSettings(choice);
+
+    if (values) {
+        applySettings(values, byHand);
+        form.graphics = [];
+    }
+}
+
+function pickPreset(choice: PresetChoice) {
+    presetByHand = true;
+    selectPreset(choice, true);
+}
+
+selectPreset(defaultChoice(), false);
+
+// Anderes Kind: Vorgabe neu bestimmen, ausser die Eltern haben schon eine Karte gewählt
+watch(
+    () => form.child_id,
+    () => {
+        if (!advanced.value && !presetByHand) {
+            selectPreset(defaultChoice(), false);
+        }
+    },
+);
+
+function setMode(next: FormMode, remember = true) {
+    if (next === 'einfach') {
+        // Passende Karte wählen; sonst «Eigene Einstellungen», damit nichts stillschweigend überschrieben wird
+        const current = currentSettings();
+        const match =
+            matchPreset(current) ??
+            (lastCard.value && sameSettings(current, lastCard.value)
+                ? 'letztes'
+                : null);
+
+        if (match) {
+            preset.value = match;
+        } else {
+            customSettings.value = {
+                ...current,
+                graphics: form.graphics.map((g) => ({ ...g })),
+            };
+            preset.value = 'eigene';
+        }
+    }
+
+    mode.value = next;
+
+    if (remember) {
+        try {
+            localStorage.setItem(MODE_KEY, next);
+        } catch {
+            // Ohne Speicher gilt der Modus nur für diesen Besuch
+        }
+    }
+}
+
 const appliedFrom = ref<{ child: string; subject: string } | null>(null);
 
-// Einstellungen der letzten Lernseite für dieses Kind in diesem Fach übernehmen
+// Einstellungen der letzten Lernseite für dieses Kind in diesem Fach übernehmen.
+// Nur im erweiterten Modus, im einfachen ist das Fach meist leer.
 function applyRemembered() {
+    if (!advanced.value) {
+        return;
+    }
+
     const child = props.children.find((c) => c.id === form.child_id);
     const subject = form.subject.trim();
     const remembered = child
@@ -227,43 +380,25 @@ watch(
     applyRemembered,
 );
 
-const optionsOpen = ref(false);
+// Felder, die es nur im erweiterten Modus gibt
+const advancedFields = ['subject', 'purpose', 'scope', 'modules', 'graphics'];
 
-const optionFields = ['purpose', 'scope', 'modules', 'graphics'];
-
-// Fehler in den Optionen sollen sichtbar sein
+// Fehler in diesen Feldern sollen sichtbar sein
 watch(
     () => Object.keys(form.errors),
     (keys) => {
         if (
-            keys.some((key) =>
-                optionFields.some((field) => key.startsWith(field)),
+            !advanced.value &&
+            keys.some(
+                (key) =>
+                    advancedFields.some((field) => key.startsWith(field)) ||
+                    (key === 'level' && !needsLevel.value),
             )
         ) {
-            optionsOpen.value = true;
+            setMode('erweitert', false);
         }
     },
 );
-
-const optionsSummary = computed(() => {
-    const purpose =
-        form.purpose === 'pruefung' ? 'Prüfungsvorbereitung' : 'Neuer Stoff';
-    const scope = {
-        kurz: 'Kurz',
-        normal: 'Normal',
-        ausfuehrlich: 'Ausführlich',
-    }[form.scope];
-    const modules =
-        form.modules.length === 1 ? '1 Modul' : `${form.modules.length} Module`;
-    const count = form.graphics.length;
-    const graphics = {
-        none: 'Keine Grafik',
-        auto: '1 Grafik (KI)',
-        custom: count === 1 ? '1 eigene Grafik' : `${count} eigene Grafiken`,
-    }[form.graphics_mode];
-
-    return [purpose, scope, modules, graphics].join(' · ');
-});
 
 function imageErrors(): string | undefined {
     const errors = form.errors as Record<string, string | undefined>;
@@ -279,6 +414,9 @@ function submit() {
         ...data,
         child_id: props.children.length ? data.child_id : null,
         child_name: props.children.length ? '' : data.child_name,
+        // Im einfachen Modus erkennt die KI das Fach, die Stufe kommt vom Kind
+        subject: advanced.value ? data.subject : '',
+        level: advanced.value || needsLevel.value ? data.level : '',
         // Wünsche nur bei «Selbst beschreiben» mitschicken
         graphics: data.graphics_mode === 'custom' ? data.graphics : [],
     })).post(store().url, { forceFormData: true });
@@ -376,15 +514,18 @@ function submit() {
                 <InputError :message="form.errors.child_name" />
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="grid gap-2">
-                    <Label for="subject">Fach</Label>
+            <div
+                v-if="advanced || needsLevel"
+                class="grid gap-4 sm:grid-cols-2"
+            >
+                <div v-if="advanced" class="grid gap-2">
+                    <Label for="subject">Fach (optional)</Label>
                     <Input
                         id="subject"
                         v-model="form.subject"
                         list="subjects"
                         autocomplete="off"
-                        placeholder="z. B. Biologie"
+                        placeholder="leer lassen: die KI erkennt das Fach"
                     />
                     <datalist id="subjects">
                         <option v-for="s in subjects" :key="s" :value="s" />
@@ -408,56 +549,55 @@ function submit() {
                 </div>
             </div>
 
-            <details
-                class="group rounded-md border"
-                :open="optionsOpen"
-                @toggle="
-                    optionsOpen = ($event.target as HTMLDetailsElement).open
-                "
-            >
-                <summary
-                    class="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden"
-                >
-                    <ChevronRight
-                        class="size-4 shrink-0 transition-transform group-open:rotate-90"
-                        aria-hidden="true"
-                    />
-                    <span class="font-medium">Mehr Optionen</span>
-                    <span class="min-w-0 truncate text-muted-foreground">
-                        · {{ optionsSummary }}
-                    </span>
-                </summary>
+            <template v-if="advanced">
+                <p v-if="appliedFrom" class="text-sm text-muted-foreground">
+                    Wie bei der letzten Lernseite für
+                    {{ appliedFrom.child }} in {{ appliedFrom.subject }}
+                </p>
 
-                <div class="grid gap-6 border-t p-3 sm:p-4">
-                    <p v-if="appliedFrom" class="text-sm text-muted-foreground">
-                        Wie bei der letzten Lernseite für
-                        {{ appliedFrom.child }} in {{ appliedFrom.subject }}
-                    </p>
+                <GraphicsField
+                    v-model:mode="form.graphics_mode"
+                    v-model:graphics="form.graphics"
+                    :patterns="patterns"
+                    :errors="form.errors"
+                />
 
-                    <GraphicsField
-                        v-model:mode="form.graphics_mode"
-                        v-model:graphics="form.graphics"
-                        :patterns="patterns"
-                        :errors="form.errors"
-                    />
+                <LessonOptions
+                    v-model:purpose="form.purpose"
+                    v-model:scope="form.scope"
+                    v-model:modules="form.modules"
+                    :scope-info="scopeInfo"
+                    :errors="form.errors"
+                />
+            </template>
 
-                    <LessonOptions
-                        v-model:purpose="form.purpose"
-                        v-model:scope="form.scope"
-                        v-model:modules="form.modules"
-                        :scope-info="scopeInfo"
-                        :errors="form.errors"
-                    />
-                </div>
-            </details>
+            <PresetPicker
+                v-else
+                v-model="preset"
+                :last="lastCard"
+                :custom="customSettings"
+                @pick="pickPreset"
+            />
 
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Button
                     type="submit"
                     :disabled="form.processing || preparing || !hasSource"
                 >
                     <Spinner v-if="form.processing" />
                     Lernseite erstellen
+                </Button>
+                <Button
+                    type="button"
+                    variant="link"
+                    class="px-0"
+                    @click="setMode(advanced ? 'einfach' : 'erweitert')"
+                >
+                    {{
+                        advanced
+                            ? 'Weniger Einstellungen'
+                            : 'Alle Einstellungen'
+                    }}
                 </Button>
                 <span
                     v-if="!hasSource && !preparing"
