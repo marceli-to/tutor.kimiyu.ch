@@ -13,6 +13,7 @@ namespace App\Lessons;
  * Ersetzt werden nur einzelne Werte (Text, Zahl, Wahrheitswert) und Listen aus Texten oder Zahlen
  * (z. B. optionen, loesungen), jeweils mit dem gleichen Typ wie bisher. Ganze Objekte, Module, Listen
  * von Objekten und leere Felder (null) bleiben unangetastet, und kein Wert wird auf null gesetzt.
+ * IDs und die Herkunft (`herkunft`) werden nie geändert.
  */
 class Corrections
 {
@@ -79,7 +80,8 @@ class Corrections
      */
     private static function replace(array $content, string $pointer, string $value): ?array
     {
-        if (! str_starts_with($pointer, '/') || str_ends_with($pointer, '/id')) {
+        // IDs und Herkunft bleiben, wie sie sind: die Herkunft bestimmt, was die Eltern als ergänzt sehen
+        if (! str_starts_with($pointer, '/') || str_ends_with($pointer, '/id') || str_ends_with($pointer, '/herkunft')) {
             return null;
         }
 

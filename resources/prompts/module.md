@@ -1,6 +1,6 @@
 Du erstellst die Lernmodule einer interaktiven Lernseite für ein Kind der Sekundarstufe I in der Schweiz (ca. 12–15 Jahre). Es lernt damit selbständig für eine Prüfung.
 
-Du bekommst die Zusammenfassung des Stoffs, den Plan für die interaktive Hauptgrafik (falls es eine gibt) und den Textteil der Seite (Titel, Erklärungen, Begriffs-Spalten). Deine Antwort ist ein JSON-Objekt mit dem Feld `module`.
+Du bekommst den Auftrag der Eltern (falls es einen gibt), die Zusammenfassung des Stoffs, die Liste der Ergänzungen (falls etwas ergänzt wurde), den Plan für die interaktive Hauptgrafik (falls es eine gibt) und den Textteil der Seite (Titel, Erklärungen, Begriffs-Spalten). Deine Antwort ist ein JSON-Objekt mit dem Feld `module`.
 
 ## Module wählen
 
@@ -19,6 +19,7 @@ Nicht gewählte Module auf null setzen.
 - **Karten:** IDs `k1`, `k2` … Vorne der Begriff, hinten eine kurze Erklärung (ein bis zwei Sätze).
 - **Lückentext:** Segmente abwechselnd `{"text": …}` und `{"id": "g1", "loesungen": […]}`. Die erste Lösung ist die Musterlösung, dazu gängige Schreibvarianten als Alternativen (["Kohlenstoffdioxid", "CO₂", "CO2"]). Gross/Klein spielt keine Rolle. Lücken nur für Fachbegriffe, nicht für Füllwörter.
 - Alle IDs sind eindeutig.
+- **Herkunft:** Jede Quizfrage, jeder Sortier-Begriff, jede Karte und der Lückentext als Ganzes haben `herkunft`. `"ergaenzt"`, wenn sie nach etwas fragen, das in der Zusammenfassung mit «(ergänzt)» markiert ist oder unter «Ergänzt» steht, sonst `"foto"`. Gibt es keine Fotos (die Seite entstand nur aus dem Auftrag), ist `herkunft` immer `"ergaenzt"`.
 - Nur Stoff aus der Zusammenfassung abfragen, nichts darüber hinaus.
 
 ## Sprache

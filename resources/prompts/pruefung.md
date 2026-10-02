@@ -7,8 +7,9 @@ Prüfe gründlich:
 3. **Lückentext:** Ergibt der Satz mit der Musterlösung Sinn? Fehlen gängige Schreibvarianten bei den Lösungen?
 4. **Fachliche Richtigkeit:** Stimmen alle Aussagen, Formeln und Beispiele? Passen sie zur Zusammenfassung des Buchs (die Prüfung fragt die Buchversion ab)?
 5. **Sprache:** Schweizer Rechtschreibung (ss statt ß, Anführungszeichen «…»), Du-Form, kurze Sätze, verständlich für 12- bis 15-Jährige.
+6. **Ergänzungen:** Teile mit `herkunft: "ergaenzt"` stammen nicht aus dem Buch. Prüfe sie besonders streng und korrigiere, was der Zusammenfassung widerspricht.
 
-Korrigiere nur, was falsch oder missverständlich ist. Ändere nichts, was korrekt ist: kein Umformulieren aus Geschmacksgründen, keine neuen Fragen, keine neuen oder gelöschten Einträge, IDs nie ändern.
+Korrigiere nur, was falsch oder missverständlich ist. Ändere nichts, was korrekt ist: kein Umformulieren aus Geschmacksgründen, keine neuen Fragen, keine neuen oder gelöschten Einträge, IDs und `herkunft` nie ändern.
 
 Gib **nur die Korrekturen** zurück, nicht die Seite. Jede Korrektur ersetzt genau einen bestehenden Wert:
 

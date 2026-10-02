@@ -103,6 +103,47 @@ it('sends the photos, subject and level, but never the child name', function () 
     }
 });
 
+it('treats the photos as the frame and the prompt as the focus', function () {
+    upload();
+
+    $prompt = $this->fake->requestsFor('analyse')[0]->prompt;
+
+    expect($prompt)->toContain('Die Fotos sind der Rahmen')
+        ->toContain('Auftrag der Eltern: Prüfung am Freitag')
+        ->not->toContain('zum Thema');
+});
+
+it('sends photos without a prompt as before', function () {
+    upload(['prompt' => '']);
+
+    expect($this->fake->requestsFor('analyse')[0]->prompt)
+        ->toContain('Erstelle den Textteil einer Lernseite aus diesem Foto.')
+        ->not->toContain('Auftrag der Eltern');
+});
+
+it('passes the prompt to every later step', function (string $step) {
+    upload();
+
+    expect($this->fake->requestsFor($step)[0]->prompt)->toContain('Auftrag der Eltern: Prüfung am Freitag');
+})->with(['module', 'pruefung', 'grafik']);
+
+it('stores the additions of the analysis and passes them on', function () {
+    $this->fake->push('analyse', analysis(['ergaenzungen' => ['Zellatmung ergänzt.']]));
+
+    upload();
+
+    expect(Lesson::sole()->additions)->toBe(['Zellatmung ergänzt.'])
+        ->and($this->fake->requestsFor('module')[0]->prompt)
+        ->toContain("Ergänzt (nicht auf den Fotos):\n- Zellatmung ergänzt.");
+});
+
+it('stores no additions when nothing was added', function () {
+    upload();
+
+    expect(Lesson::sole()->additions)->toBeNull()
+        ->and($this->fake->requestsFor('module')[0]->prompt)->not->toContain('Ergänzt (nicht auf den Fotos)');
+});
+
 it('re-encodes photos without metadata and scales them down', function () {
     $this->fake->push('analyse', function (ModelRequest $request) {
         $data = $request->images[0]['data'];
@@ -410,6 +451,24 @@ describe('retry', function () {
             ->and($lesson->fresh()->status)->toBe(LessonStatus::Review);
     });
 
+    it('still sends the topic and notes of an old lesson', function () {
+        $lesson = Lesson::factory()->for($this->child)->create([
+            'status' => LessonStatus::Failed,
+            'topic' => 'Fotosynthese',
+            'notes' => 'Bitte mit Beispielen aus dem Garten',
+        ]);
+
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        expect($this->fake->requestsFor('analyse')[0]->prompt)
+            ->toContain('zum Thema «Fotosynthese»')
+            ->toContain('Hinweise der Eltern: Bitte mit Beispielen aus dem Garten')
+            ->not->toContain('Auftrag der Eltern')
+            ->and($this->fake->requestsFor('module')[0]->prompt)
+            ->toContain('Hinweise der Eltern: Bitte mit Beispielen aus dem Garten')
+            ->and($lesson->fresh()->status)->toBe(LessonStatus::Review);
+    });
+
     it('is not possible without photos and content', function () {
         $lesson = Lesson::factory()->for($this->child)->create(['status' => LessonStatus::Failed]);
 
@@ -459,6 +518,17 @@ describe('from a prompt', function () {
 
         $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page->where('lesson.fromTopic', true));
+    });
+
+    it('works from the prompt alone', function () {
+        uploadPrompt();
+
+        $request = $this->fake->requestsFor('analyse')[0];
+
+        expect($request->images)->toBe([])
+            ->and($request->prompt)->toContain('keine Fotos')
+            ->toContain('Auftrag der Eltern: Biodiversität: Arten, Lebensräume und Gefährdung')
+            ->not->toContain('zum Thema');
     });
 
     it('stores photos and prompt together', function () {

@@ -25,6 +25,7 @@ class Prompts
             '{{BEISPIEL}}' => self::json([
                 'quelle' => ['lesbar' => true, 'problem' => null],
                 'zusammenfassung' => '…',
+                'ergaenzungen' => [],
                 'hero_plan' => [
                     'muster' => 'regler',
                     'idee' => 'Ein Blatt im Querschnitt mit Pfeilen für Licht, CO₂ und Wasser (hinein) sowie Sauerstoff und Traubenzucker (hinaus). Drei Regler steuern Licht, CO₂ und Wasser. Die Pfeile hinaus werden so stark wie die knappste Zutat. Eine Anzeige nennt die Leistung und was gerade bremst, ein Satz darunter erklärt es.',
@@ -33,10 +34,15 @@ class Prompts
             ]),
         ]);
 
+        $count = count($images);
+        $photos = $count === 1 ? 'diesem Foto' : "diesen {$count} Fotos";
+
         $source = match (true) {
-            $lesson->isFromTopic() => "Erstelle den Textteil einer Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Thema, keine Fotos»).",
-            count($images) === 1 => 'Erstelle den Textteil einer Lernseite aus diesem Foto.',
-            default => 'Erstelle den Textteil einer Lernseite aus diesen '.count($images).' Fotos.',
+            $count === 0 && $lesson->prompt !== null => 'Erstelle den Textteil einer Lernseite nach dem Auftrag der Eltern. Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).',
+            // Alte Lernseite aus einem Thema (vor dem Auftrag), z. B. beim erneuten Versuch
+            $count === 0 => "Erstelle den Textteil einer Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).",
+            $lesson->prompt !== null => "Erstelle den Textteil einer Lernseite aus {$photos}. Die Fotos sind der Rahmen, der Auftrag der Eltern setzt den Fokus (siehe «Fotos und Auftrag»).",
+            default => "Erstelle den Textteil einer Lernseite aus {$photos}.",
         };
 
         $prompt = implode("\n", array_filter([
@@ -45,7 +51,7 @@ class Prompts
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
             'Interaktive Grafik: '.($lesson->with_hero ? 'ja, wenn ein Muster den Stoff sichtbar macht' : 'nein, von den Eltern abgewählt'),
-            $lesson->notes ? "Hinweise der Eltern: {$lesson->notes}" : null,
+            self::parentInstruction($lesson),
         ], fn ($line) => $line !== null));
 
         return new ModelRequest(
@@ -202,9 +208,36 @@ class Prompts
             : 'Diese Seite hat keine interaktive Grafik. Keine Quizfrage darf sich auf eine Grafik beziehen.';
     }
 
+    /**
+     * Gemeinsamer Teil aller Schritte nach der Analyse: Fach, Stufe, Auftrag, Zusammenfassung und Ergänzungen.
+     */
     private static function context(Lesson $lesson): string
     {
-        return "Fach: {$lesson->subject}\nStufe: {$lesson->level}\n\nZusammenfassung des Stoffs:\n{$lesson->source_summary}";
+        $header = implode("\n", array_filter([
+            "Fach: {$lesson->subject}",
+            "Stufe: {$lesson->level}",
+            self::parentInstruction($lesson),
+        ], fn ($line) => $line !== null));
+
+        $parts = [$header, "Zusammenfassung des Stoffs:\n{$lesson->source_summary}"];
+
+        if ($lesson->additions) {
+            $parts[] = "Ergänzt (nicht auf den Fotos):\n- ".implode("\n- ", $lesson->additions);
+        }
+
+        return implode("\n\n", $parts);
+    }
+
+    /**
+     * Auftrag der Eltern; alte Lernseiten haben stattdessen Hinweise.
+     */
+    private static function parentInstruction(Lesson $lesson): ?string
+    {
+        return match (true) {
+            $lesson->prompt !== null => "Auftrag der Eltern: {$lesson->prompt}",
+            (bool) $lesson->notes => "Hinweise der Eltern: {$lesson->notes}",
+            default => null,
+        };
     }
 
     private static function paletteList(): string

@@ -37,6 +37,14 @@ it('rejects changes to ids', function () {
     expect($result['content'])->toBe($this->content);
 });
 
+it('rejects changes to the origin', function (string $pfad) {
+    // Die Herkunft bestimmt, was die Eltern als ergänzt sehen; die Prüfung darf sie nicht umschreiben
+    $result = Corrections::apply($this->content, [correction($pfad, 'ergaenzt')]);
+
+    expect($result['content'])->toBe($this->content)
+        ->and($result['rejected'])->toHaveCount(1);
+})->with(['/module/quiz/0/herkunft', '/abschnitte/0/bloecke/0/herkunft', '/module/lueckentext/herkunft']);
+
 it('rejects invalid json for non-string values', function () {
     $result = Corrections::apply($this->content, [correction('/module/quiz/0/loesung', 'eins')]);
 
