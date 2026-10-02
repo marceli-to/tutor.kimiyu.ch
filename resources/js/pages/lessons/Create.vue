@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
+import GraphicsField from '@/components/GraphicsField.vue';
+import type { GraphicsMode, GraphicWish } from '@/components/GraphicsField.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
@@ -20,6 +22,7 @@ const props = defineProps<{
     children: { id: number; name: string; level: string | null }[];
     maxImages: number;
     maxEdge: number;
+    patterns: { value: string; label: string }[];
 }>();
 
 const subjects = [
@@ -54,7 +57,8 @@ const form = useForm<{
     child_name: string;
     subject: string;
     level: string;
-    with_hero: boolean;
+    graphics_mode: GraphicsMode;
+    graphics: GraphicWish[];
     images: File[];
 }>({
     prompt: '',
@@ -62,7 +66,8 @@ const form = useForm<{
     child_name: '',
     subject: '',
     level: props.children[0]?.level ?? '',
-    with_hero: true,
+    graphics_mode: 'auto',
+    graphics: [],
     images: [],
 });
 
@@ -146,6 +151,8 @@ function submit() {
         ...data,
         child_id: props.children.length ? data.child_id : null,
         child_name: props.children.length ? '' : data.child_name,
+        // Wünsche nur bei «Selbst beschreiben» mitschicken
+        graphics: data.graphics_mode === 'custom' ? data.graphics : [],
     })).post(store().url, { forceFormData: true });
 }
 </script>
@@ -273,27 +280,12 @@ function submit() {
                 </div>
             </div>
 
-            <div class="flex items-start gap-3">
-                <input
-                    id="with_hero"
-                    v-model="form.with_hero"
-                    type="checkbox"
-                    class="mt-0.5 size-4 accent-primary"
-                    aria-describedby="with_hero_hint"
-                />
-                <div class="grid gap-1">
-                    <Label for="with_hero">Interaktive Grafik erstellen</Label>
-                    <p
-                        id="with_hero_hint"
-                        class="text-sm text-muted-foreground"
-                    >
-                        Ohne Grafik ist die Seite schneller fertig und
-                        günstiger. Sinnvoll z. B. bei Rechenverfahren,
-                        Grammatikregeln oder Vokabeln. Passt keine Grafik zum
-                        Stoff, lässt die KI sie auch von sich aus weg.
-                    </p>
-                </div>
-            </div>
+            <GraphicsField
+                v-model:mode="form.graphics_mode"
+                v-model:graphics="form.graphics"
+                :patterns="patterns"
+                :errors="form.errors"
+            />
 
             <div class="flex items-center gap-4">
                 <Button

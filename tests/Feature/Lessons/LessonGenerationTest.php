@@ -60,6 +60,7 @@ function upload(array $data = []): TestResponse
         'level' => '2. Sek',
         'prompt' => 'Prüfung am Freitag',
         'images' => [photo()],
+        'graphics_mode' => 'auto',
         ...$data,
     ]);
 }
@@ -582,6 +583,8 @@ it('shows the upload form with the parent’s children', function () {
             ->where('children.0.name', 'Mia')
             ->where('maxImages', 4)
             ->where('maxEdge', 1600)
+            ->where('patterns.0', ['value' => 'regler', 'label' => 'Regler'])
+            ->has('patterns', 6)
         );
 });
 
@@ -782,16 +785,17 @@ describe('graphics mode', function () {
             ->and($lesson->graphics()->count())->toBe(0);
     })->with(['none', 'auto']);
 
-    it('lets the ai decide when the form sends no mode', function () {
-        upload()->assertSessionHasNoErrors();
+    it('rejects an upload without a mode', function () {
+        $this->actingAs($this->user)->post(route('lessons.store'), [
+            'child_id' => $this->child->id,
+            'subject' => 'Biologie',
+            'level' => '2. Sek',
+            'prompt' => 'Prüfung am Freitag',
+        ])->assertSessionHasErrors(['graphics_mode' => 'Wähle aus, ob und welche Grafiken die Seite bekommt.']);
+        upload(['with_hero' => false, 'graphics_mode' => null])->assertSessionHasErrors('graphics_mode');
+        upload(['graphics_mode' => 'alle'])->assertSessionHasErrors('graphics_mode');
 
-        expect(Lesson::sole()->graphics_mode)->toBe('auto');
-    });
-
-    it('still understands the old checkbox', function () {
-        upload(['with_hero' => false])->assertSessionHasNoErrors();
-
-        expect(Lesson::sole()->graphics_mode)->toBe('none');
+        expect(Lesson::count())->toBe(0);
     });
 
     it('ignores wishes unless the parents describe the graphics', function () {

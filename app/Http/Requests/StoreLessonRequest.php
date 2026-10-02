@@ -9,17 +9,6 @@ use Illuminate\Validation\Rule;
 class StoreLessonRequest extends FormRequest
 {
     /**
-     * Übergang bis Teil 2, Task 6: Das bisherige Formular schickt noch «with_hero» statt «graphics_mode».
-     * Ohne Modus entscheidet die KI, ausser die Grafik wurde abgewählt.
-     */
-    protected function prepareForValidation(): void
-    {
-        if (! $this->has('graphics_mode')) {
-            $this->merge(['graphics_mode' => $this->has('with_hero') && ! $this->boolean('with_hero') ? 'none' : 'auto']);
-        }
-    }
-
-    /**
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -55,6 +44,7 @@ class StoreLessonRequest extends FormRequest
             'child_name.required_without' => 'Gib den Namen des Kindes ein.',
             'subject.required' => 'Gib das Fach an.',
             'level.required' => 'Gib die Stufe an.',
+            'graphics_mode' => 'Wähle aus, ob und welche Grafiken die Seite bekommt.',
             'prompt.max' => 'Der Auftrag darf höchstens 1000 Zeichen lang sein.',
             'graphics.required' => 'Beschreib mindestens eine Grafik.',
             'graphics.min' => 'Beschreib mindestens eine Grafik.',

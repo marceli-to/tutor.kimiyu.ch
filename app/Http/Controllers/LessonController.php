@@ -6,6 +6,7 @@ use App\Enums\LessonStatus;
 use App\Http\Requests\StoreLessonRequest;
 use App\Lessons\GenerationPipeline;
 use App\Lessons\HeroDocument;
+use App\Lessons\HeroPattern;
 use App\Lessons\ImageProcessor;
 use App\Lessons\LessonGenerator;
 use App\Lessons\LessonView;
@@ -33,6 +34,10 @@ class LessonController extends Controller
             'children' => $request->user()->children()->orderBy('name')->get(['id', 'name', 'level']),
             'maxImages' => config('lessons.images.max_count'),
             'maxEdge' => config('lessons.images.max_edge'),
+            'patterns' => array_map(
+                fn (HeroPattern $pattern) => ['value' => $pattern->value, 'label' => $pattern->label()],
+                HeroPattern::cases(),
+            ),
         ]);
     }
 
