@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Actions\Generation\GenerateGraphic;
 use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
 use App\Models\Lesson;
 
 /**
@@ -21,9 +21,9 @@ class RegenerateGraphic extends LessonStep
         return 'regenerate-graphic';
     }
 
-    protected function run(LessonGenerator $generator): void
+    protected function run(): void
     {
-        $drawn = $generator->graphic($this->lesson, $this->position, keepExisting: true);
+        $drawn = app(GenerateGraphic::class)->handle($this->lesson, $this->position, keepExisting: true);
 
         // Failed: the page stays as it was, also published; the error is stored on the graphic
         $this->lesson->update($drawn ? self::needsReview() : ['step' => null]);

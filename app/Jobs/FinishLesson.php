@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
 
 /**
  * Letzter Schritt: Die Seite ist bereit zur Prüfung durch die Eltern.
@@ -15,7 +14,7 @@ class FinishLesson extends LessonStep
         return null;
     }
 
-    protected function run(LessonGenerator $generator): void
+    protected function run(): void
     {
         $this->lesson->update([
             'status' => LessonStatus::Review,

@@ -1,24 +1,25 @@
 <?php
 
-namespace App\Lessons;
+namespace App\Actions\Generation;
 
-use App\Lessons\Ai\LanguageModel;
 use App\Lessons\Ai\ModelException;
-use App\Lessons\Ai\ModelRequest;
-use App\Lessons\Ai\ModelResponse;
 use App\Lessons\Ai\Prompts;
-use App\Lessons\Ai\UsageAwareModelException;
+use App\Lessons\ContentValidator;
+use App\Lessons\GenerationFailed;
+use App\Lessons\LessonGone;
 use App\Models\Lesson;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Die Schritte der Generierung. Jeder Schritt wird von einem eigenen Job aufgerufen.
+ * Step 1 of the generation: analysis, text part, modules, repair and validation.
  */
-class LessonGenerator
+class AnalyzeLesson
 {
-    public function __construct(private LanguageModel $model) {}
+    public function __construct(
+        private CallModel $callModel,
+        private DeleteLessonImages $deleteImages,
+    ) {}
 
     /**
      * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung und Pläne für die Grafiken; danach der Textteil
@@ -28,7 +29,7 @@ class LessonGenerator
      * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
      * @throws ModelException bei API-Fehlern
      */
-    public function analyze(Lesson $lesson): void
+    public function handle(Lesson $lesson): void
     {
         $images = [];
         $disk = Storage::disk('lesson-images');
@@ -53,7 +54,7 @@ class LessonGenerator
             $lesson->update(['subject' => null, 'subject_detected' => false]);
         }
 
-        $data = $this->call($lesson, Prompts::analysis($lesson, $images))->data;
+        $data = $this->callModel->handle($lesson, Prompts::analysis($lesson, $images))->data;
 
         if (! ($data['source']['readable'] ?? false)) {
             throw new GenerationFailed(
@@ -81,7 +82,7 @@ class LessonGenerator
         $this->storeGraphicPlans($lesson, (array) ($data['graphic_plans'] ?? []));
 
         // Der Textteil mit denselben Fotos, damit die Begriffe dem Buch folgen
-        $page = $this->call($lesson, Prompts::pageRequest($lesson, $images))->data['page'] ?? null;
+        $page = $this->callModel->handle($lesson, Prompts::pageRequest($lesson, $images))->data['page'] ?? null;
 
         if (! is_array($page)) {
             throw new GenerationFailed('Die KI hat keinen gültigen Inhalt geliefert.', 'Der Textteil fehlt in der Antwort.');
@@ -89,7 +90,7 @@ class LessonGenerator
 
         // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
         $lesson->update(['step' => 'modules']);
-        $modules = $this->call($lesson, Prompts::modules($lesson, $page))->data['modules'] ?? [];
+        $modules = $this->callModel->handle($lesson, Prompts::modules($lesson, $page))->data['modules'] ?? [];
         $content = self::assemble($page, self::onlyAllowed($lesson, $modules));
 
         // Fehlerhafte Teile einmal reparieren
@@ -98,7 +99,7 @@ class LessonGenerator
                 continue;
             }
 
-            $repaired = $this->call($lesson, Prompts::repair($lesson, $content, $part, $errors))->data[$part] ?? null;
+            $repaired = $this->callModel->handle($lesson, Prompts::repair($lesson, $content, $part, $errors))->data[$part] ?? null;
 
             if (is_array($repaired)) {
                 $content = $part === 'modules' ? self::assemble($content, self::onlyAllowed($lesson, $repaired)) : self::assemble($repaired, $content['modules']);
@@ -122,7 +123,7 @@ class LessonGenerator
         ]);
 
         if (config('lessons.delete_images')) {
-            $this->deleteImages($lesson);
+            $this->deleteImages->handle($lesson);
         }
     }
 
@@ -135,7 +136,7 @@ class LessonGenerator
     private function storeGraphicPlans(Lesson $lesson, array $plans): void
     {
         // updateOrCreate() would bring back the rows of a deleted lesson
-        if (! $this->stillActive($lesson)) {
+        if (! $lesson->stillExists()) {
             throw new LessonGone;
         }
 
@@ -177,37 +178,6 @@ class LessonGenerator
     }
 
     /**
-     * Zweiter Durchgang, der fachliche Fehler korrigiert. Die Prüfung liefert nur Korrekturen;
-     * ungültige werden verworfen. Scheitert der Aufruf, bleibt die Seite wie sie ist.
-     */
-    public function check(Lesson $lesson): void
-    {
-        try {
-            $corrections = $this->call($lesson, Prompts::check($lesson, $lesson->content))->data['corrections'] ?? [];
-        } catch (ModelException $e) {
-            Log::warning('Prüf-Call fehlgeschlagen', ['lesson' => $lesson->id, 'error' => $e->detail ?? $e->getMessage()]);
-
-            return;
-        }
-
-        $result = Corrections::apply($lesson->content, $corrections);
-
-        if ($result['rejected'] !== []) {
-            Log::warning('Korrekturen der Prüfung verworfen', ['lesson' => $lesson->id, 'rejected' => $result['rejected']]);
-        }
-
-        $lesson->update([
-            'title' => $result['content']['meta']['title'],
-            'content' => $result['content'],
-            // Eine Änderung kann mehrere Korrekturen brauchen (z. B. Optionen und Lösung): ein Hinweis genügt.
-            'check_notes' => array_values(array_unique(array_map(
-                fn (array $c) => ['area' => $c['area'], 'change' => $c['change']],
-                $result['applied'],
-            ), SORT_REGULAR)),
-        ]);
-    }
-
-    /**
      * Das von der KI erkannte Fach, gekürzt; ohne brauchbare Antwort «Allgemein».
      */
     private static function detectedSubject(mixed $subject): string
@@ -246,157 +216,5 @@ class LessonGenerator
         }
 
         return $modules;
-    }
-
-    /**
-     * Neues Quiz für eine bestehende Seite.
-     *
-     * @throws GenerationFailed wenn das neue Quiz ungültig ist; das alte bleibt dann
-     */
-    public function regenerateQuiz(Lesson $lesson): void
-    {
-        $quiz = $this->call($lesson, Prompts::quiz($lesson))->data['quiz'] ?? null;
-
-        $content = $lesson->content;
-        $content['modules']['quiz'] = $quiz;
-
-        if (! is_array($quiz) || ($errors = ContentValidator::errors($content)) !== []) {
-            throw new GenerationFailed('Das neue Quiz war fehlerhaft. Das bisherige Quiz bleibt.', implode(' | ', $errors ?? []));
-        }
-
-        $lesson->update(['content' => $content]);
-    }
-
-    /**
-     * Die Grafik an Position $position. Scheitert sie, fehlt nur diese Grafik, mit einem Hinweis.
-     * Beim Neu-Erstellen ($keepExisting) bleibt die bisherige Grafik, wenn die neue scheitert.
-     * Ohne Plan (abgewählt, kein Muster passt oder der Wunsch passt nicht zum Stoff) passiert nichts.
-     *
-     * @return bool whether a new graphic was stored
-     */
-    public function graphic(Lesson $lesson, int $position, bool $keepExisting = false): bool
-    {
-        $graphic = $lesson->graphic($position);
-
-        if ($graphic?->plan === null) {
-            return false;
-        }
-
-        $fail = function (string $message) use ($graphic, $keepExisting) {
-            $old = $keepExisting ? $graphic->graphic : null;
-
-            $graphic->update([
-                'graphic' => $old,
-                'error' => $old ? $message.' Die bisherige Grafik bleibt.' : $message,
-            ]);
-        };
-
-        try {
-            $hero = $this->call($lesson, Prompts::hero($lesson, $graphic))->data;
-            $errors = HeroValidator::errors($hero);
-
-            if ($errors !== []) {
-                $hero = $this->call($lesson, Prompts::heroRepair($graphic, $hero, $errors))->data;
-                $errors = HeroValidator::errors($hero);
-            }
-        } catch (ModelException $e) {
-            $fail($e->getMessage());
-
-            return false;
-        }
-
-        if ($errors !== []) {
-            $fail('Die Grafik war fehlerhaft: '.implode(' ', $errors));
-
-            return false;
-        }
-
-        $graphic->update([
-            'graphic' => [
-                'pattern' => $hero['pattern'],
-                'description' => $hero['description'],
-                'css' => $hero['css'],
-                'markup' => $hero['markup'],
-                'script' => $hero['script'],
-            ],
-            'error' => null,
-            // Eine neu erstellte Grafik ist wieder sichtbar (am Ende des letzten Abschnitts, ohne Baustein)
-            'hidden' => false,
-        ]);
-
-        return true;
-    }
-
-    public function deleteImages(Lesson $lesson): void
-    {
-        foreach ($lesson->images as $image) {
-            Storage::disk('lesson-images')->delete($image->path);
-            $image->delete();
-        }
-
-        Storage::disk('lesson-images')->deleteDirectory((string) $lesson->id);
-        $lesson->unsetRelation('images');
-    }
-
-    /**
-     * Ein API-Call mit Eintrag im Kosten-Log, auch wenn er scheitert.
-     *
-     * @throws LessonGone when the lesson was deleted during the call
-     */
-    private function call(Lesson $lesson, ModelRequest $request): ModelResponse
-    {
-        $started = hrtime(true);
-        // Kind nur einmal laden, nicht bei jedem Aufruf neu
-        $lesson->loadMissing('child');
-        $userId = $lesson->child?->user_id;
-
-        // Ohne Kind kein Konto für die Kosten: dann gar nicht erst aufrufen
-        if ($userId === null) {
-            throw new GenerationFailed('Diese Lernseite gehört zu keinem Kind mehr.');
-        }
-
-        $log = fn (string $status, ?ModelResponse $response, ?string $error = null) => $lesson->generations()->create([
-            'user_id' => $userId,
-            'step' => $request->step,
-            'model' => $response->model ?? $request->model(),
-            'status' => $status,
-            'input_tokens' => $response->inputTokens ?? 0,
-            'output_tokens' => $response->outputTokens ?? 0,
-            'cache_read_tokens' => $response->cacheReadTokens ?? 0,
-            'cache_write_tokens' => $response->cacheWriteTokens ?? 0,
-            'cost_usd' => $response?->costUsd() ?? 0,
-            'duration_ms' => (int) ((hrtime(true) - $started) / 1_000_000),
-            'error' => $error ? mb_substr($error, 0, 2000) : null,
-        ]);
-
-        try {
-            $response = $this->model->generate($request);
-        } catch (UsageAwareModelException $e) {
-            $log('error', $e->response, $e->detail ?? $e->getMessage());
-
-            throw $e;
-        } catch (ModelException $e) {
-            $log('error', null, $e->detail ?? $e->getMessage());
-
-            throw $e;
-        }
-
-        $log('ok', $response);
-
-        // The parent may have deleted the lesson while the call was running: write nothing back
-        if (! $this->stillActive($lesson)) {
-            throw new LessonGone;
-        }
-
-        return $response;
-    }
-
-    /**
-     * Whether the lesson still exists. The model in the job does not know about a deletion
-     * in the meantime, and update() would write into the deleted row anyway.
-     */
-    private function stillActive(Lesson $lesson): bool
-    {
-        return Lesson::whereKey($lesson->id)->exists();
     }
 }

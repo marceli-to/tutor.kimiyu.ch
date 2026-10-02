@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Lessons\LessonGenerator;
+use App\Actions\Generation\CheckLesson as CheckLessonAction;
 
 class CheckLesson extends LessonStep
 {
@@ -11,8 +11,8 @@ class CheckLesson extends LessonStep
         return 'check';
     }
 
-    protected function run(LessonGenerator $generator): void
+    protected function run(): void
     {
-        $generator->check($this->lesson);
+        app(CheckLessonAction::class)->handle($this->lesson);
     }
 }

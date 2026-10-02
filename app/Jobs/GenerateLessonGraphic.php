@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Lessons\LessonGenerator;
+use App\Actions\Generation\GenerateGraphic;
 use App\Models\Lesson;
 
 /**
@@ -21,8 +21,8 @@ class GenerateLessonGraphic extends LessonStep
         return "graphic-{$this->position}";
     }
 
-    protected function run(LessonGenerator $generator): void
+    protected function run(): void
     {
-        $generator->graphic($this->lesson, $this->position);
+        app(GenerateGraphic::class)->handle($this->lesson, $this->position);
     }
 }

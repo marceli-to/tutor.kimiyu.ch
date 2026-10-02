@@ -2,7 +2,7 @@
 
 namespace App\Actions\Children;
 
-use App\Lessons\LessonGenerator;
+use App\Actions\Generation\DeleteLessonImages;
 use App\Models\Child;
 
 /**
@@ -10,12 +10,12 @@ use App\Models\Child;
  */
 class DeleteChild
 {
-    public function __construct(private LessonGenerator $generator) {}
+    public function __construct(private DeleteLessonImages $deleteImages) {}
 
     public function handle(Child $child): void
     {
         foreach ($child->lessons as $lesson) {
-            $this->generator->deleteImages($lesson);
+            $this->deleteImages->handle($lesson);
         }
 
         $child->delete();

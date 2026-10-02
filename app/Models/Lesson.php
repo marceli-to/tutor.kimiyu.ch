@@ -113,6 +113,15 @@ class Lesson extends Model
     }
 
     /**
+     * Whether the lesson still exists. The model in a job does not know about a deletion
+     * in the meantime, and update() would write into the deleted row anyway.
+     */
+    public function stillExists(): bool
+    {
+        return self::whereKey($this->id)->exists();
+    }
+
+    /**
      * Ready for the child. Not while a part is being regenerated: it would ask for a new check right after.
      */
     public function canBePublished(): bool

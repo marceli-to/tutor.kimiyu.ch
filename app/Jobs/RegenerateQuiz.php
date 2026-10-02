@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Actions\Generation\RegenerateQuizQuestions;
 use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
 
 /**
  * Writes a new quiz for a finished page. A published page stays online meanwhile.
@@ -15,9 +15,9 @@ class RegenerateQuiz extends LessonStep
         return 'regenerate-quiz';
     }
 
-    protected function run(LessonGenerator $generator): void
+    protected function run(): void
     {
-        $generator->regenerateQuiz($this->lesson);
+        app(RegenerateQuizQuestions::class)->handle($this->lesson);
 
         $this->lesson->update(RegenerateGraphic::needsReview());
     }

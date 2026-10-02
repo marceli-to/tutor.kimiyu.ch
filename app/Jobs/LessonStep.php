@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Enums\LessonStatus;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\GenerationFailed;
-use App\Lessons\LessonGenerator;
 use App\Lessons\LessonGone;
 use App\Models\Lesson;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -33,7 +32,7 @@ abstract class LessonStep implements ShouldQueue
 
     abstract protected function step(): ?string;
 
-    abstract protected function run(LessonGenerator $generator): void;
+    abstract protected function run(): void;
 
     /**
      * Status nach einem Fehler. Beim Neu-Erstellen einzelner Teile bleibt die Seite brauchbar.
@@ -44,7 +43,7 @@ abstract class LessonStep implements ShouldQueue
         return LessonStatus::Failed;
     }
 
-    public function handle(LessonGenerator $generator): void
+    public function handle(): void
     {
         // Die Queue lädt auch gelöschte Lernseiten: dann nichts mehr tun, keine Kosten verursachen
         if ($this->lesson->trashed()) {
@@ -56,7 +55,7 @@ abstract class LessonStep implements ShouldQueue
         }
 
         try {
-            $this->run($generator);
+            $this->run();
         } catch (LessonGone) {
             // Deleted during a call: nothing left to do, the next steps stop on their own
             return;
@@ -93,7 +92,7 @@ abstract class LessonStep implements ShouldQueue
     private function markFailed(string $message, ?string $detail): void
     {
         // A deleted lesson keeps its state from the deletion
-        if (! Lesson::whereKey($this->lesson->id)->exists()) {
+        if (! $this->lesson->stillExists()) {
             return;
         }
 

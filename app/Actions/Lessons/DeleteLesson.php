@@ -2,8 +2,8 @@
 
 namespace App\Actions\Lessons;
 
+use App\Actions\Generation\DeleteLessonImages;
 use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\DB;
 
@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\DB;
  */
 class DeleteLesson
 {
-    public function __construct(private LessonGenerator $generator) {}
+    public function __construct(private DeleteLessonImages $deleteImages) {}
 
     public function handle(Lesson $lesson): void
     {
-        $this->generator->deleteImages($lesson);
+        $this->deleteImages->handle($lesson);
 
         // Inhalt und Lernstand verschwinden; die Zeile bleibt nur für die Kostenübersicht
         // (Titel, Fach, Stufe, Kind). «Fehlgeschlagen» statt «Zur Prüfung», weil es keinen Inhalt

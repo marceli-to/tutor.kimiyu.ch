@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Lessons\LessonGenerator;
+use App\Actions\Generation\AnalyzeLesson as AnalyzeLessonAction;
 
 class AnalyzeLesson extends LessonStep
 {
@@ -11,8 +11,8 @@ class AnalyzeLesson extends LessonStep
         return 'analysis';
     }
 
-    protected function run(LessonGenerator $generator): void
+    protected function run(): void
     {
-        $generator->analyze($this->lesson);
+        app(AnalyzeLessonAction::class)->handle($this->lesson);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Generation\AnalyzeLesson as AnalyzeLessonAction;
 use App\Enums\LessonStatus;
 use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
@@ -14,7 +15,6 @@ use App\Lessons\Ai\Prompts;
 use App\Lessons\Ai\Schemas;
 use App\Lessons\GenerationFailed;
 use App\Lessons\GenerationPipeline;
-use App\Lessons\LessonGenerator;
 use App\Models\Child;
 use App\Models\Generation;
 use App\Models\Lesson;
@@ -914,9 +914,9 @@ describe('deleted lessons', function () {
         ]);
         $lesson->delete();
 
-        (new AnalyzeLesson($lesson))->handle(app(LessonGenerator::class));
-        (new GenerateLessonGraphic($lesson, 1))->handle(app(LessonGenerator::class));
-        (new FinishLesson($lesson))->handle(app(LessonGenerator::class));
+        (new AnalyzeLesson($lesson))->handle();
+        (new GenerateLessonGraphic($lesson, 1))->handle();
+        (new FinishLesson($lesson))->handle();
 
         $fresh = Lesson::withTrashed()->find($lesson->id);
         expect($this->fake->requests)->toBe([])
@@ -968,7 +968,7 @@ describe('deleted lessons', function () {
         $lesson->graphic(1)->update(['graphic' => null]);
         deleteDuring($step, $lesson);
 
-        (new $job($lesson, 1))->handle(app(LessonGenerator::class));
+        (new $job($lesson, 1))->handle();
 
         expectStillEmpty($lesson);
     })->with([
@@ -980,7 +980,7 @@ describe('deleted lessons', function () {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create();
         deleteDuring($step, $lesson, $step === 'regenerate-quiz' ? ['quiz' => LessonFactory::fixture('oekosystem')['modules']['quiz']] : null);
 
-        (new $job($lesson, 1))->handle(app(LessonGenerator::class));
+        (new $job($lesson, 1))->handle();
 
         expectStillEmpty($lesson);
     })->with([
@@ -992,7 +992,7 @@ describe('deleted lessons', function () {
         $lesson = Lesson::factory()->for($this->child)->create(['prompt' => 'Fotosynthese']);
         $lesson->setRelation('child', null);
 
-        expect(fn () => app(LessonGenerator::class)->analyze($lesson))->toThrow(GenerationFailed::class);
+        expect(fn () => app(AnalyzeLessonAction::class)->handle($lesson))->toThrow(GenerationFailed::class);
         expect($this->fake->requests)->toBe([])
             ->and(Generation::count())->toBe(0);
     });
@@ -1171,7 +1171,7 @@ describe('graphic plans', function () {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['graphics_mode' => 'auto', 'prompt' => 'Fotosynthese']);
         $this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
 
-        app(LessonGenerator::class)->analyze($lesson);
+        app(AnalyzeLessonAction::class)->handle($lesson);
 
         expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'));
     });
