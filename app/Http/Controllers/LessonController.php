@@ -220,7 +220,7 @@ class LessonController extends Controller
     {
         Gate::authorize('update', $lesson);
 
-        abort_unless($lesson->status === LessonStatus::Review && $lesson->content !== null, 422, 'Diese Lernseite kann nicht freigegeben werden.');
+        abort_unless($this->canPublish($lesson), 422, 'Diese Lernseite kann nicht freigegeben werden.');
 
         $lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
 
@@ -329,6 +329,14 @@ class LessonController extends Controller
             : [1];
     }
 
+    /**
+     * Not while a part is being regenerated: it would ask for a new check right after.
+     */
+    private function canPublish(Lesson $lesson): bool
+    {
+        return $lesson->status === LessonStatus::Review && $lesson->content !== null && ! $lesson->isRegenerating();
+    }
+
     private function render(Lesson $lesson, bool $parent): Response
     {
         return Inertia::render('lessons/Show', [
@@ -337,7 +345,7 @@ class LessonController extends Controller
                 'shareUrl' => $lesson->status === LessonStatus::Published
                     ? route('shared.show', [$lesson->child->share_token, $lesson])
                     : null,
-                'canPublish' => $lesson->status === LessonStatus::Review && $lesson->content !== null,
+                'canPublish' => $this->canPublish($lesson),
                 'canRegenerate' => [
                     'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
                 ],

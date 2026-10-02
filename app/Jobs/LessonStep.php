@@ -37,8 +37,9 @@ abstract class LessonStep implements ShouldQueue
 
     /**
      * Status nach einem Fehler. Beim Neu-Erstellen einzelner Teile bleibt die Seite brauchbar.
+     * null keeps the status (and the publication) as it is.
      */
-    protected function statusAfterFailure(): LessonStatus
+    protected function statusAfterFailure(): ?LessonStatus
     {
         return LessonStatus::Failed;
     }
@@ -77,7 +78,14 @@ abstract class LessonStep implements ShouldQueue
      */
     public function failed(?Throwable $e): void
     {
-        if ($this->lesson->fresh()?->status === LessonStatus::Generating) {
+        $fresh = $this->lesson->fresh();
+
+        // A regeneration leaves the status alone; it only shows itself in the step
+        $running = $this->statusAfterFailure() === null
+            ? $fresh?->step !== null && $fresh->step === $this->step()
+            : $fresh?->status === LessonStatus::Generating;
+
+        if ($running) {
             $this->markFailed('Bei der Erstellung ist ein unerwarteter Fehler aufgetreten.', $e?->getMessage());
         }
     }
@@ -91,8 +99,10 @@ abstract class LessonStep implements ShouldQueue
 
         Log::warning('Lernseite fehlgeschlagen', ['lesson' => $this->lesson->id, 'step' => $this->step(), 'detail' => $detail]);
 
+        $status = $this->statusAfterFailure();
+
         $this->lesson->update([
-            'status' => $this->statusAfterFailure(),
+            ...($status !== null ? ['status' => $status] : []),
             'step' => null,
             'error' => $message,
         ]);

@@ -196,7 +196,9 @@ class LessonContentController extends Controller
 
     private function editable(Lesson $lesson): bool
     {
+        // Not while a part is being regenerated: the job would overwrite the changes
         return $lesson->content !== null
+            && ! $lesson->isRegenerating()
             && in_array($lesson->status, [LessonStatus::Review, LessonStatus::Published], true);
     }
 }

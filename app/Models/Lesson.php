@@ -99,6 +99,14 @@ class Lesson extends Model
     }
 
     /**
+     * A part of a finished page is being regenerated. Status and publication stay as they are meanwhile.
+     */
+    public function isRegenerating(): bool
+    {
+        return $this->step !== null && str_starts_with($this->step, 'neu-');
+    }
+
+    /**
      * Titel für Listen, auch bevor die KI einen Titel gesetzt hat.
      */
     public function displayTitle(): string

@@ -29,11 +29,14 @@ const partSteps: Record<string, { key: string; label: string }[]> = {
     'neu-grafik': [{ key: 'neu-grafik', label: 'Grafik neu zeichnen' }],
 };
 
-const steps = computed(() => {
-    const part = Object.keys(partSteps).find((key) => key === props.step);
+// Regenerating a part of a finished page: the page itself stays as it is meanwhile
+const part = computed(() =>
+    Object.keys(partSteps).find((key) => key === props.step),
+);
 
-    if (part) {
-        return partSteps[part];
+const steps = computed(() => {
+    if (part.value) {
+        return partSteps[part.value];
     }
 
     // Ein Schritt pro Grafik; die Jobs heissen «grafik-{Position}»
@@ -107,10 +110,19 @@ const failed = computed(() => props.status === 'failed');
 
         <template v-else>
             <div>
-                <h1 class="text-xl font-semibold">Die Lernseite entsteht</h1>
+                <h1 class="text-xl font-semibold">
+                    {{
+                        part
+                            ? 'Ein Teil wird neu erstellt'
+                            : 'Die Lernseite entsteht'
+                    }}
+                </h1>
                 <p class="mt-2 text-muted-foreground">
                     Das dauert ein paar Minuten. Du kannst die Seite offen
                     lassen oder später zurückkommen.
+                    <template v-if="part">
+                        Bis dahin bleibt die Seite, wie sie ist.
+                    </template>
                 </p>
             </div>
             <ol class="space-y-3" aria-live="polite">

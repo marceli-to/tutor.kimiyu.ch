@@ -6,6 +6,9 @@ use App\Enums\LessonStatus;
 use App\Lessons\LessonGenerator;
 use App\Models\Lesson;
 
+/**
+ * Draws one graphic of a finished page anew. A published page stays online meanwhile.
+ */
 class RegenerateGraphic extends LessonStep
 {
     public function __construct(Lesson $lesson, public int $position)
@@ -20,12 +23,30 @@ class RegenerateGraphic extends LessonStep
 
     protected function run(LessonGenerator $generator): void
     {
-        $generator->graphic($this->lesson, $this->position, keepExisting: true);
+        $drawn = $generator->graphic($this->lesson, $this->position, keepExisting: true);
+
+        // Failed: the page stays as it was, also published; the error is stored on the graphic
+        $this->lesson->update($drawn ? self::needsReview() : ['step' => null]);
+    }
+
+    /**
+     * Neuer Inhalt von der KI: die Eltern prüfen und geben wieder frei.
+     *
+     * @return array<string, mixed>
+     */
+    public static function needsReview(): array
+    {
+        return [
+            'status' => LessonStatus::Review,
+            'step' => null,
+            'error' => null,
+            'published_at' => null,
+        ];
     }
 
     // Scheitert es, bleibt die Seite wie vorher, auch freigegeben
-    protected function statusAfterFailure(): LessonStatus
+    protected function statusAfterFailure(): ?LessonStatus
     {
-        return $this->lesson->published_at ? LessonStatus::Published : LessonStatus::Review;
+        return null;
     }
 }

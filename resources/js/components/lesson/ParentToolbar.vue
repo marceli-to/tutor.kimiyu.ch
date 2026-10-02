@@ -66,13 +66,13 @@ const texts = {
     quiz: {
         title: 'Neues Quiz erstellen?',
         description:
-            'Die KI schreibt 5 neue Fragen. Das dauert etwa eine Minute. Danach musst du die Seite wieder freigeben.',
+            'Die KI schreibt 5 neue Fragen. Das dauert etwa eine Minute. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.',
         action: 'Neues Quiz erstellen',
     },
     grafik: {
         title: 'Grafik neu erstellen?',
         description:
-            'Die KI zeichnet die interaktive Grafik neu. Das dauert ein bis zwei Minuten. Klappt es nicht, bleibt die bisherige Grafik.',
+            'Die KI zeichnet die interaktive Grafik neu. Das dauert ein bis zwei Minuten. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.',
         action: 'Grafik neu erstellen',
     },
     delete: {

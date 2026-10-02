@@ -262,13 +262,15 @@ class LessonGenerator
      * Die Grafik an Position $position. Scheitert sie, fehlt nur diese Grafik, mit einem Hinweis.
      * Beim Neu-Erstellen ($keepExisting) bleibt die bisherige Grafik, wenn die neue scheitert.
      * Ohne Plan (abgewählt, kein Muster passt oder der Wunsch passt nicht zum Stoff) passiert nichts.
+     *
+     * @return bool whether a new graphic was stored
      */
-    public function graphic(Lesson $lesson, int $position, bool $keepExisting = false): void
+    public function graphic(Lesson $lesson, int $position, bool $keepExisting = false): bool
     {
         $graphic = $lesson->graphic($position);
 
         if ($graphic?->plan === null) {
-            return;
+            return false;
         }
 
         $fail = function (string $message) use ($graphic, $keepExisting) {
@@ -291,13 +293,13 @@ class LessonGenerator
         } catch (ModelException $e) {
             $fail($e->getMessage());
 
-            return;
+            return false;
         }
 
         if ($errors !== []) {
             $fail('Die Grafik war fehlerhaft: '.implode(' ', $errors));
 
-            return;
+            return false;
         }
 
         $graphic->update([
@@ -312,6 +314,8 @@ class LessonGenerator
             // Eine neu erstellte Grafik ist wieder sichtbar (am Ende des letzten Abschnitts, ohne Baustein)
             'hidden' => false,
         ]);
+
+        return true;
     }
 
     public function deleteImages(Lesson $lesson): void

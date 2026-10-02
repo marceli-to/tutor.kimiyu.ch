@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\LessonStatus;
+use App\Jobs\RegenerateGraphic;
+use App\Jobs\RegenerateQuiz;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Models\Attempt;
@@ -337,6 +339,101 @@ describe('regenerating', function () {
             ->and($lesson->graphic(1)->error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.')
             ->and($lesson->status)->toBe(LessonStatus::Review);
     });
+
+    /**
+     * Inside a fake call: the child still sees the page and the parent sees the running regeneration.
+     */
+    function expectStillOnline(Lesson $lesson, string $step): void
+    {
+        test()->get(route('shared.show', [$lesson->child->share_token, $lesson]))->assertOk();
+
+        $fresh = $lesson->fresh();
+        expect($fresh->status)->toBe(LessonStatus::Published)
+            ->and($fresh->step)->toBe($step);
+
+        test()->actingAs(test()->user)->get(route('lessons.show', $lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.status', 'published')
+                ->where('lesson.step', $step)
+                ->where('parent.canPublish', false)
+                ->where('parent.canRegenerate', ['quiz' => false])
+                ->where('parent.graphics.0.canRegenerate', false)
+            );
+        test()->actingAs(test()->user)->get(route('lessons.edit', $lesson))->assertNotFound();
+        test()->actingAs(test()->user)->post(route('lessons.regenerate', [$lesson, 'quiz']))->assertStatus(422);
+    }
+
+    it('keeps a published page online while drawing a graphic and asks for a new check afterwards', function () {
+        $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
+        $this->fake->push('grafik', function () {
+            expectStillOnline($this->lesson, 'neu-grafik');
+
+            return FakeLanguageModel::defaultResponse('grafik');
+        });
+
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
+
+        $lesson = $this->lesson->fresh();
+        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->status)->toBe(LessonStatus::Review)
+            ->and($lesson->published_at)->toBeNull()
+            ->and($lesson->step)->toBeNull();
+    });
+
+    it('leaves a published page as it was when the new graphic fails', function (Closure|Throwable $response) {
+        $publishedAt = now()->subDay()->startOfSecond();
+        $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => $publishedAt]);
+        $this->fake->push('grafik', function () use ($response) {
+            expectStillOnline($this->lesson, 'neu-grafik');
+
+            return $response instanceof Closure ? $response() : throw $response;
+        });
+        $this->fake->push('grafik-reparatur', ['muster' => 'regler']);
+
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
+
+        $lesson = $this->lesson->fresh();
+        expect($lesson->status)->toBe(LessonStatus::Published)
+            ->and($lesson->published_at)->toEqual($publishedAt)
+            ->and($lesson->step)->toBeNull()
+            ->and($lesson->error)->toBeNull()
+            ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->graphic(1)->error)->toEndWith('Die bisherige Grafik bleibt.');
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))->assertOk();
+    })->with([
+        'api error' => [new ModelException('Die KI war nicht erreichbar.')],
+        'broken graphic' => [fn () => fn () => ['muster' => 'regler']],
+    ]);
+
+    it('keeps a published page online while writing a new quiz', function () {
+        $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
+        $this->fake->push('neu-quiz', function () {
+            expectStillOnline($this->lesson, 'neu-quiz');
+
+            return ['quiz' => []];
+        });
+
+        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'quiz']));
+
+        $lesson = $this->lesson->fresh();
+        expect($lesson->status)->toBe(LessonStatus::Published)
+            ->and($lesson->step)->toBeNull();
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))->assertOk();
+    });
+
+    it('clears the running regeneration after an unexpected error', function (string $job) {
+        $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now(), 'step' => 'neu-grafik']);
+        $step = $job === RegenerateQuiz::class ? 'neu-quiz' : 'neu-grafik';
+        $this->lesson->update(['step' => $step]);
+
+        (new $job($this->lesson, 1))->failed(new RuntimeException('Timeout'));
+
+        $lesson = $this->lesson->fresh();
+        expect($lesson->status)->toBe(LessonStatus::Published)
+            ->and($lesson->published_at)->not->toBeNull()
+            ->and($lesson->step)->toBeNull()
+            ->and($lesson->error)->toBe('Bei der Erstellung ist ein unerwarteter Fehler aufgetreten.');
+    })->with([RegenerateQuiz::class, RegenerateGraphic::class]);
 
     it('only redraws the chosen graphic', function () {
         $first = $this->lesson->graphic(1)->only(['graphic', 'updated_at']);

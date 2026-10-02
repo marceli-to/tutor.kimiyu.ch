@@ -64,13 +64,13 @@ class GenerationPipeline
             default => throw new InvalidArgumentException("Unbekannter Teil: {$part}"),
         };
 
+        // A published page stays online for the child; the step shows the parent the progress
         $lesson->update([
-            'status' => LessonStatus::Generating,
             'step' => "neu-{$part}",
             'error' => null,
         ]);
 
-        Bus::chain([$job, new FinishLesson($lesson)])->dispatch();
+        dispatch($job);
     }
 
     /**
@@ -80,6 +80,7 @@ class GenerationPipeline
     {
         return in_array($lesson->status, [LessonStatus::Review, LessonStatus::Published], true)
             && $lesson->content !== null
+            && ! $lesson->isRegenerating()
             && ($part !== 'grafik' || $lesson->graphic($position)?->plan !== null)
             && ($part !== 'quiz' || ! empty($lesson->content['module']['quiz']));
     }

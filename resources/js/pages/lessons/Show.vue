@@ -42,14 +42,22 @@ const props = defineProps<{
     };
 }>();
 
-const generating = computed(() =>
-    ['draft', 'generating'].includes(props.lesson.status),
+// A regenerated part keeps the status (the child still sees the page), only the step shows it
+const regenerating = computed(
+    () => props.lesson.step?.startsWith('neu-') ?? false,
+);
+
+const generating = computed(
+    () =>
+        ['draft', 'generating'].includes(props.lesson.status) ||
+        regenerating.value,
 );
 
 // Solange die Seite entsteht, alle 3 Sekunden den Stand abfragen
+// (with the parent's actions and graphic errors, which change at the end as well)
 const { start, stop } = usePoll(
     3000,
-    { only: ['lesson'] },
+    { only: ['lesson', 'parent'] },
     { autoStart: generating.value },
 );
 
