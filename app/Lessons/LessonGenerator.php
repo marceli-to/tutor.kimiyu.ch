@@ -128,6 +128,11 @@ class LessonGenerator
      */
     private function storeGraphicPlans(Lesson $lesson, array $plans): void
     {
+        // updateOrCreate() would bring back the rows of a deleted lesson
+        if (! $this->stillActive($lesson)) {
+            throw new LessonGone;
+        }
+
         $positions = match ($lesson->graphics_mode) {
             'none' => [],
             'custom' => $lesson->graphics()->pluck('position')->all(),
@@ -322,6 +327,8 @@ class LessonGenerator
 
     /**
      * Ein API-Call mit Eintrag im Kosten-Log, auch wenn er scheitert.
+     *
+     * @throws LessonGone when the lesson was deleted during the call
      */
     private function call(Lesson $lesson, ModelRequest $request): ModelResponse
     {
@@ -363,6 +370,20 @@ class LessonGenerator
 
         $log('ok', $response);
 
+        // The parent may have deleted the lesson while the call was running: write nothing back
+        if (! $this->stillActive($lesson)) {
+            throw new LessonGone;
+        }
+
         return $response;
+    }
+
+    /**
+     * Whether the lesson still exists. The model in the job does not know about a deletion
+     * in the meantime, and update() would write into the deleted row anyway.
+     */
+    private function stillActive(Lesson $lesson): bool
+    {
+        return Lesson::whereKey($lesson->id)->exists();
     }
 }

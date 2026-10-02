@@ -6,6 +6,7 @@ use App\Enums\LessonStatus;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\GenerationFailed;
 use App\Lessons\LessonGenerator;
+use App\Lessons\LessonGone;
 use App\Models\Lesson;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -55,6 +56,9 @@ abstract class LessonStep implements ShouldQueue
 
         try {
             $this->run($generator);
+        } catch (LessonGone) {
+            // Deleted during a call: nothing left to do, the next steps stop on their own
+            return;
         } catch (GenerationFailed $e) {
             $this->markFailed($e->getMessage(), $e->detail);
             $this->fail($e);
@@ -80,6 +84,11 @@ abstract class LessonStep implements ShouldQueue
 
     private function markFailed(string $message, ?string $detail): void
     {
+        // A deleted lesson keeps its state from the deletion
+        if (! Lesson::whereKey($this->lesson->id)->exists()) {
+            return;
+        }
+
         Log::warning('Lernseite fehlgeschlagen', ['lesson' => $this->lesson->id, 'step' => $this->step(), 'detail' => $detail]);
 
         $this->lesson->update([

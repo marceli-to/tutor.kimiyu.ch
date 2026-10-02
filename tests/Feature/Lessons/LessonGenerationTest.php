@@ -5,12 +5,15 @@ use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
 use App\Jobs\FinishLesson;
 use App\Jobs\GenerateLessonGraphic;
+use App\Jobs\RegenerateGraphic;
+use App\Jobs\RegenerateQuiz;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\ModelRequest;
 use App\Lessons\Ai\Prompts;
 use App\Lessons\Ai\Schemas;
 use App\Lessons\GenerationFailed;
+use App\Lessons\GenerationPipeline;
 use App\Lessons\LessonGenerator;
 use App\Models\Child;
 use App\Models\Generation;
@@ -907,6 +910,69 @@ describe('deleted lessons', function () {
             ->and($fresh->status)->toBe(LessonStatus::Generating)
             ->and($fresh->step)->toBe('warteschlange');
     });
+
+    /**
+     * Deletes the lesson like the parent does, while the call for $step is still running.
+     */
+    function deleteDuring(string $step, Lesson $lesson, ?array $response = null): void
+    {
+        test()->fake->push($step, function () use ($step, $lesson, $response) {
+            test()->actingAs(test()->user)->delete(route('lessons.destroy', $lesson))->assertRedirect(route('dashboard'));
+
+            return $response ?? FakeLanguageModel::defaultResponse($step);
+        });
+    }
+
+    function expectStillEmpty(Lesson $lesson): void
+    {
+        $deleted = Lesson::withTrashed()->find($lesson->id);
+
+        expect($deleted->trashed())->toBeTrue()
+            ->and($deleted->status)->toBe(LessonStatus::Failed)
+            ->and($deleted->only(['content', 'source_summary', 'additions', 'check_notes', 'error', 'step']))->each->toBeNull()
+            ->and($deleted->graphics()->count())->toBe(0);
+    }
+
+    it('does not write the analysis into a lesson deleted during a call', function (string $step) {
+        $lesson = Lesson::factory()->for($this->child)->create([
+            'status' => LessonStatus::Draft,
+            'prompt' => 'Fotosynthese',
+            'subject' => 'Biologie',
+        ]);
+        deleteDuring($step, $lesson);
+
+        GenerationPipeline::start($lesson);
+
+        expectStillEmpty($lesson);
+        // Costs of the calls made so far stay logged
+        expect(Generation::where('lesson_id', $lesson->id)->pluck('step')->last())->toBe($step)
+            ->and($this->fake->requestsFor('grafik'))->toBe([]);
+    })->with(['analyse', 'seite', 'module']);
+
+    it('does not write the check or the graphic into a lesson deleted during a call', function (string $step, string $job) {
+        $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['status' => LessonStatus::Generating]);
+        $lesson->graphic(1)->update(['graphic' => null]);
+        deleteDuring($step, $lesson);
+
+        (new $job($lesson, 1))->handle(app(LessonGenerator::class));
+
+        expectStillEmpty($lesson);
+    })->with([
+        'check' => ['pruefung', CheckLesson::class],
+        'graphic' => ['grafik', GenerateLessonGraphic::class],
+    ]);
+
+    it('does not write a new quiz or graphic into a lesson deleted during a call', function (string $step, string $job) {
+        $lesson = Lesson::factory()->for($this->child)->fromFixture()->create();
+        deleteDuring($step, $lesson, $step === 'neu-quiz' ? ['quiz' => LessonFactory::fixture('oekosystem')['module']['quiz']] : null);
+
+        (new $job($lesson, 1))->handle(app(LessonGenerator::class));
+
+        expectStillEmpty($lesson);
+    })->with([
+        'quiz' => ['neu-quiz', RegenerateQuiz::class],
+        'graphic' => ['grafik', RegenerateGraphic::class],
+    ]);
 
     it('does not call the api when the child is gone', function () {
         $lesson = Lesson::factory()->for($this->child)->create(['prompt' => 'Fotosynthese']);
