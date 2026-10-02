@@ -157,16 +157,19 @@ class LessonContentController extends Controller
             ->pluck('position');
 
         foreach ($unplaced as $nr) {
-            $section = collect($content['abschnitte'] ?? [])
-                ->filter(fn (array $section) => count($section['bloecke'] ?? []) < 4)
-                ->keys()
-                ->last();
+            $target = null;
 
-            if ($section === null) {
+            foreach ($content['abschnitte'] ?? [] as $k => $section) {
+                if (count($section['bloecke'] ?? []) < 4) {
+                    $target = $k;
+                }
+            }
+
+            if ($target === null) {
                 break;
             }
 
-            $content['abschnitte'][$section]['bloecke'][] = ['typ' => 'grafik', 'nr' => $nr];
+            $content['abschnitte'][$target]['bloecke'][] = ['typ' => 'grafik', 'nr' => $nr];
         }
 
         return $content;
