@@ -586,6 +586,59 @@ it('shows the upload form with the parent’s children', function () {
         );
 });
 
+describe('remembered settings', function () {
+    function lessonFor(Child $child, array $attributes): Lesson
+    {
+        return Lesson::factory()->for($child)->create(['level' => '2. Sek', ...$attributes]);
+    }
+
+    it('passes the settings of the latest lesson per child and subject', function () {
+        $leo = Child::factory()->for($this->user)->create(['name' => 'Leo']);
+
+        lessonFor($this->child, ['subject' => 'Biologie', 'purpose' => 'neu', 'scope' => 'normal', 'modules' => null, 'graphics_mode' => 'auto', 'created_at' => now()->subDays(3)]);
+        lessonFor($this->child, ['subject' => ' biologie ', 'purpose' => 'pruefung', 'scope' => 'kurz', 'modules' => ['quiz', 'karten'], 'graphics_mode' => 'none', 'created_at' => now()->subDay()]);
+        lessonFor($this->child, ['subject' => 'Mathematik', 'scope' => 'ausfuehrlich', 'created_at' => now()->subDays(2)]);
+        lessonFor($leo, ['subject' => 'Biologie', 'purpose' => 'neu', 'scope' => 'ausfuehrlich', 'modules' => ['sortieren'], 'graphics_mode' => 'custom']);
+
+        $this->actingAs($this->user)->get(route('lessons.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lastSettings', 3)
+                ->where("lastSettings.{$this->child->id}|biologie", [
+                    'purpose' => 'pruefung',
+                    'scope' => 'kurz',
+                    'modules' => ['quiz', 'karten'],
+                    'graphics_mode' => 'none',
+                ])
+                ->where("lastSettings.{$this->child->id}|mathematik.scope", 'ausfuehrlich')
+                // Alte Lernseiten ohne Liste: alle Module waren erlaubt
+                ->where("lastSettings.{$this->child->id}|mathematik.modules", ['quiz', 'sortieren', 'karten', 'lueckentext'])
+                ->where("lastSettings.{$leo->id}|biologie.modules", ['sortieren'])
+                ->where("lastSettings.{$leo->id}|biologie.graphics_mode", 'custom')
+            );
+    });
+
+    it('ignores deleted lessons and lessons of other parents', function () {
+        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'kurz', 'created_at' => now()->subDays(2)]);
+        lessonFor($this->child, ['subject' => 'Biologie', 'scope' => 'ausfuehrlich', 'created_at' => now()->subDay()])->delete();
+        lessonFor(Child::factory()->create(), ['subject' => 'Chemie', 'scope' => 'ausfuehrlich']);
+
+        $this->actingAs($this->user)->get(route('lessons.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lastSettings', 1)
+                ->where("lastSettings.{$this->child->id}|biologie.scope", 'kurz')
+            );
+    });
+
+    it('passes the counts per scope for the labels', function () {
+        $this->actingAs($this->user)->get(route('lessons.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('scopeInfo.kurz.quiz', 3)
+                ->where('scopeInfo.kurz.abschnitte', '1–2')
+                ->has('scopeInfo', 3)
+            );
+    });
+});
+
 describe('from a prompt', function () {
     function uploadPrompt(array $data = []): TestResponse
     {
@@ -1081,20 +1134,20 @@ describe('purpose, scope and modules', function () {
         'duplicate module' => [['modules' => ['quiz', 'quiz']], 'modules.1'],
     ]);
 
-    // Übergang bis Teil 3c, Task 4: das Formular schickt die Felder noch nicht
-    it('fills defaults when the form does not send the settings', function () {
+    it('rejects a form without purpose, scope and modules', function () {
         $this->actingAs($this->user)->post(route('lessons.store'), [
             'child_id' => $this->child->id,
             'subject' => 'Biologie',
             'level' => '2. Sek',
             'prompt' => 'Prüfung am Freitag',
             'graphics_mode' => 'auto',
-        ])->assertSessionHasNoErrors();
+        ])->assertSessionHasErrors([
+            'purpose' => 'Wähle den Zweck der Lernseite.',
+            'scope' => 'Wähle den Umfang der Lernseite.',
+            'modules' => 'Wähle mindestens ein Lernmodul.',
+        ]);
 
-        $lesson = Lesson::sole();
-        expect($lesson->purpose)->toBe('neu')
-            ->and($lesson->scope)->toBe('normal')
-            ->and($lesson->modules)->toBe(['quiz', 'sortieren', 'karten', 'lueckentext']);
+        expect(Lesson::count())->toBe(0);
     });
 });
 

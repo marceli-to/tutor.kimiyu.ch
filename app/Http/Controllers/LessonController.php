@@ -38,7 +38,39 @@ class LessonController extends Controller
                 fn (HeroPattern $pattern) => ['value' => $pattern->value, 'label' => $pattern->label()],
                 HeroPattern::cases(),
             ),
+            'lastSettings' => $this->lastSettings($request),
+            'scopeInfo' => config('lessons.scope'),
         ]);
+    }
+
+    /**
+     * Einstellungen der jüngsten Lernseite pro Kind und Fach, Schlüssel «{childId}|{fach}».
+     * Das Fach ist frei eingegeben, darum klein geschrieben und ohne Leerzeichen am Rand.
+     *
+     * @return array<string, array{purpose: string, scope: string, modules: list<string>, graphics_mode: string}>
+     */
+    private function lastSettings(Request $request): array
+    {
+        return Lesson::query()
+            ->whereIn('child_id', $request->user()->children()->select('id'))
+            ->latest()
+            ->latest('id')
+            ->get(['id', 'child_id', 'subject', 'purpose', 'scope', 'modules', 'graphics_mode', 'created_at'])
+            ->unique(fn (Lesson $lesson) => self::settingsKey($lesson->child_id, $lesson->subject))
+            ->mapWithKeys(fn (Lesson $lesson) => [
+                self::settingsKey($lesson->child_id, $lesson->subject) => [
+                    'purpose' => $lesson->purpose,
+                    'scope' => $lesson->scope,
+                    'modules' => $lesson->allowedModules(),
+                    'graphics_mode' => $lesson->graphics_mode,
+                ],
+            ])
+            ->all();
+    }
+
+    private static function settingsKey(int $childId, ?string $subject): string
+    {
+        return $childId.'|'.mb_strtolower(trim((string) $subject));
     }
 
     public function store(StoreLessonRequest $request): RedirectResponse

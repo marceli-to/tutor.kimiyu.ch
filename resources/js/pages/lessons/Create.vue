@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { ChevronRight } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import GraphicsField from '@/components/GraphicsField.vue';
 import type { GraphicsMode, GraphicWish } from '@/components/GraphicsField.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import LessonOptions from '@/components/LessonOptions.vue';
+import type {
+    LessonModule,
+    Purpose,
+    Scope,
+    ScopeInfo,
+} from '@/components/LessonOptions.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +31,16 @@ const props = defineProps<{
     maxImages: number;
     maxEdge: number;
     patterns: { value: string; label: string }[];
+    lastSettings: Record<string, RememberedSettings>;
+    scopeInfo: ScopeInfo;
 }>();
+
+type RememberedSettings = {
+    purpose: Purpose;
+    scope: Scope;
+    modules: LessonModule[];
+    graphics_mode: GraphicsMode;
+};
 
 const subjects = [
     'Natur und Technik',
@@ -59,6 +76,9 @@ const form = useForm<{
     level: string;
     graphics_mode: GraphicsMode;
     graphics: GraphicWish[];
+    purpose: Purpose;
+    scope: Scope;
+    modules: LessonModule[];
     images: File[];
 }>({
     prompt: '',
@@ -68,6 +88,9 @@ const form = useForm<{
     level: props.children[0]?.level ?? '',
     graphics_mode: 'auto',
     graphics: [],
+    purpose: 'neu',
+    scope: 'normal',
+    modules: ['quiz', 'sortieren', 'karten', 'lueckentext'],
     images: [],
 });
 
@@ -136,6 +159,111 @@ watch(
         }
     },
 );
+
+type RememberedField = keyof RememberedSettings;
+
+const rememberedFields: RememberedField[] = [
+    'purpose',
+    'scope',
+    'modules',
+    'graphics_mode',
+];
+
+// Felder, die die Eltern in diesem Formular selbst geändert haben, überschreibt das Merken nicht mehr
+const touched = new Set<RememberedField>();
+let applying = false;
+
+for (const field of rememberedFields) {
+    watch(
+        () => form[field],
+        () => {
+            if (!applying) {
+                touched.add(field);
+            }
+        },
+        { flush: 'sync' },
+    );
+}
+
+const appliedFrom = ref<{ child: string; subject: string } | null>(null);
+
+// Einstellungen der letzten Lernseite für dieses Kind in diesem Fach übernehmen
+function applyRemembered() {
+    const child = props.children.find((c) => c.id === form.child_id);
+    const subject = form.subject.trim();
+    const remembered = child
+        ? props.lastSettings[`${child.id}|${subject.toLowerCase()}`]
+        : undefined;
+
+    if (!child || !remembered) {
+        appliedFrom.value = null;
+
+        return;
+    }
+
+    const values: RememberedSettings = {
+        ...remembered,
+        modules: [...remembered.modules],
+        // Eigene Grafikwünsche gelten nur für die eine Lernseite
+        graphics_mode:
+            remembered.graphics_mode === 'custom'
+                ? 'auto'
+                : remembered.graphics_mode,
+    };
+    const fields = rememberedFields.filter((field) => !touched.has(field));
+
+    applying = true;
+
+    for (const field of fields) {
+        (form as Record<RememberedField, unknown>)[field] = values[field];
+    }
+
+    applying = false;
+    appliedFrom.value = fields.length ? { child: child.name, subject } : null;
+}
+
+watch(
+    () => [form.child_id, form.subject.trim().toLowerCase()],
+    applyRemembered,
+);
+
+const optionsOpen = ref(false);
+
+const optionFields = ['purpose', 'scope', 'modules', 'graphics'];
+
+// Fehler in den Optionen sollen sichtbar sein
+watch(
+    () => Object.keys(form.errors),
+    (keys) => {
+        if (
+            keys.some((key) =>
+                optionFields.some((field) => key.startsWith(field)),
+            )
+        ) {
+            optionsOpen.value = true;
+        }
+    },
+);
+
+const optionsSummary = computed(() => {
+    const purpose =
+        form.purpose === 'pruefung' ? 'Prüfungsvorbereitung' : 'Neuer Stoff';
+    const scope = {
+        kurz: 'Kurz',
+        normal: 'Normal',
+        ausfuehrlich: 'Ausführlich',
+    }[form.scope];
+    const modules =
+        form.modules.length === 1 ? '1 Modul' : `${form.modules.length} Module`;
+    const count = form.graphics.length;
+    const graphics = {
+        none: 'Keine Grafik',
+        auto: '1 Grafik (KI)',
+        custom: count === 1 ? '1 eigene Grafik' : `${count} eigene Grafiken`,
+    }[form.graphics_mode];
+
+    return [purpose, scope, modules, graphics].join(' · ');
+});
 
 function imageErrors(): string | undefined {
     const errors = form.errors as Record<string, string | undefined>;
@@ -280,12 +408,48 @@ function submit() {
                 </div>
             </div>
 
-            <GraphicsField
-                v-model:mode="form.graphics_mode"
-                v-model:graphics="form.graphics"
-                :patterns="patterns"
-                :errors="form.errors"
-            />
+            <details
+                class="group rounded-md border"
+                :open="optionsOpen"
+                @toggle="
+                    optionsOpen = ($event.target as HTMLDetailsElement).open
+                "
+            >
+                <summary
+                    class="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden"
+                >
+                    <ChevronRight
+                        class="size-4 shrink-0 transition-transform group-open:rotate-90"
+                        aria-hidden="true"
+                    />
+                    <span class="font-medium">Mehr Optionen</span>
+                    <span class="min-w-0 truncate text-muted-foreground">
+                        · {{ optionsSummary }}
+                    </span>
+                </summary>
+
+                <div class="grid gap-6 border-t p-3 sm:p-4">
+                    <p v-if="appliedFrom" class="text-sm text-muted-foreground">
+                        Wie bei der letzten Lernseite für
+                        {{ appliedFrom.child }} in {{ appliedFrom.subject }}
+                    </p>
+
+                    <GraphicsField
+                        v-model:mode="form.graphics_mode"
+                        v-model:graphics="form.graphics"
+                        :patterns="patterns"
+                        :errors="form.errors"
+                    />
+
+                    <LessonOptions
+                        v-model:purpose="form.purpose"
+                        v-model:scope="form.scope"
+                        v-model:modules="form.modules"
+                        :scope-info="scopeInfo"
+                        :errors="form.errors"
+                    />
+                </div>
+            </details>
 
             <div class="flex items-center gap-4">
                 <Button

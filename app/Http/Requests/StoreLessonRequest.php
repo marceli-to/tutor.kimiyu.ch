@@ -10,17 +10,6 @@ use Illuminate\Validation\Rule;
 class StoreLessonRequest extends FormRequest
 {
     /**
-     * Übergang bis Teil 3c, Task 4: Das Formular schickt Zweck, Umfang und Module noch nicht.
-     * Fehlen die Felder ganz, gelten die Standardwerte. Mit Task 4 wieder entfernen.
-     */
-    protected function prepareForValidation(): void
-    {
-        $defaults = ['purpose' => 'neu', 'scope' => 'normal', 'modules' => Lesson::MODULES];
-
-        $this->merge(array_diff_key($defaults, $this->all()));
-    }
-
-    /**
      * @return array<string, mixed>
      */
     public function rules(): array
