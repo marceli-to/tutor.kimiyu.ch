@@ -49,7 +49,7 @@ Jede Phase ist einzeln auslieferbar.
    | vokabeln (später) | Sonnet 5.5 | medium | |
 
    Per `.env` überschreibbar (`LESSON_MODEL_MODULE=…`, `LESSON_EFFORT_GRAFIK=…`). `LanguageModel` erhält Modell und Effort aus dem `ModelRequest` statt aus dem Konstruktor.
-2. **Prüfung liefert nur Korrekturen**: Liste von Änderungen (`pfad` als JSON-Pointer, `neu`, `grund`) statt des ganzen Teils. Die App wendet sie an und validiert das Ergebnis; ungültige Pfade werden verworfen und geloggt. `check_notes` entstehen aus `grund`.
+2. **Prüfung liefert nur Korrekturen**: Liste von Änderungen (`pfad` als JSON-Pointer, `wert` als neuer Wert, `bereich` und `aenderung` für die Eltern) statt der ganzen Seite. Ersetzt werden nur einzelne Werte (Text, Zahl) und Listen aus Texten (z. B. `optionen`, `loesungen`), mit dem gleichen Typ wie bisher; keine ganzen Objekte, Module oder Listen von Objekten, keine `null`-Felder. Korrekturen am selben Eintrag (z. B. `optionen` und `loesung` einer Quizfrage) werden zusammen angewendet und nur behalten, wenn die Seite danach gültig ist; sonst wird die ganze Gruppe verworfen und geloggt. `check_notes` entstehen aus `bereich` und `aenderung`, gleiche Hinweise nur einmal.
 3. **Ein Prüf-Call statt zwei**: Seite und Module zusammen.
 4. **Grafik-Prompt straffen**: ein kompaktes Beispiel statt beider Fixture-Grafiken in voller Länge.
 5. **Kostenübersicht pro Schritt** auf der Kosten-Seite (Ø Tokens und Kosten je Schritt und Modell), um jede Massnahme zu messen.
