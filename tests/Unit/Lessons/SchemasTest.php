@@ -9,6 +9,7 @@ it('only uses features the structured output supports', function (array $schema)
     expect(JsonSchema::unsupportedKeywords($schema))->toBe([]);
 })->with([
     'analysis' => fn () => Schemas::analysis(),
+    'page' => fn () => Schemas::part('seite'),
     'modules' => fn () => Schemas::modulesResult(),
     'repair page' => fn () => Schemas::part('seite'),
     'repair modules' => fn () => Schemas::part('module'),
@@ -26,14 +27,27 @@ it('allows modules without quiz but a new quiz always has questions', function (
 });
 
 it('never sends the whole page as one schema', function () {
-    // Die API lehnt das Schema der ganzen Seite ab: «The compiled grammar is too large»
-    expect(Schemas::analysis()['properties']['seite']['anyOf'][0]['properties'])->not->toHaveKey('module')
+    // Die API lehnt das Schema der ganzen Seite ab: «The compiled grammar is too large».
+    // Auch Analyse und Textteil zusammen sind zu gross, deshalb schreibt ein eigener Schritt den Textteil.
+    expect(Schemas::analysis()['properties'])->not->toHaveKey('seite')
         ->and(Schemas::part('seite')['properties']['seite']['properties'])->not->toHaveKey('module');
+});
+
+it('keeps the schemas small enough for the api', function () {
+    // Die API kompiliert jedes Schema zu einer Grammatik und lehnt zu grosse ab
+    // («The compiled grammar is too large»). Die Grenze ist nicht dokumentiert; gemessen mit echten
+    // Aufrufen: die frühere Analyse mit Textteil (5261 Bytes JSON) war zu gross; die Analyse ohne
+    // Textteil (1586) und {seite: page()} (3721) gehen durch, ebenso ein Schema mit 4409 Bytes.
+    // Die Länge des JSON ist nur eine Faustregel für die Grösse der Grammatik (anyOf und enum zählen
+    // mehr als Text). Schlägt dieser Test fehl, das Schema mit einem echten Aufruf prüfen, bevor die
+    // Grenze erhöht wird.
+    expect(strlen(json_encode(Schemas::analysis())))->toBeLessThan(2500)
+        ->and(strlen(json_encode(Schemas::part('seite'))))->toBeLessThan(4500);
 });
 
 it('has a list of additions in the analysis and an origin on every item', function () {
     $analysis = Schemas::analysis()['properties'];
-    $page = $analysis['seite']['anyOf'][0]['properties'];
+    $page = Schemas::page()['properties'];
     $modules = Schemas::modules()['properties'];
     $origin = ['type' => 'string', 'enum' => ['foto', 'ergaenzt']];
 
@@ -62,6 +76,7 @@ it('matches the responses of the fake model', function (string $step, Closure $s
     expect(JsonSchema::errors(FakeLanguageModel::defaultResponse($step), $schema()))->toBe([]);
 })->with([
     ['analyse', fn () => Schemas::analysis()],
+    ['seite', fn () => Schemas::part('seite')],
     ['module', fn () => Schemas::modulesResult()],
     ['reparatur-seite', fn () => Schemas::part('seite')],
     ['reparatur-module', fn () => Schemas::part('module')],
@@ -82,7 +97,6 @@ it('lets the analysis report unreadable photos without content', function () {
         'zusammenfassung' => '',
         'ergaenzungen' => [],
         'grafik_plaene' => [],
-        'seite' => null,
     ];
 
     expect(JsonSchema::errors($response, Schemas::analysis()))->toBe([]);

@@ -20,8 +20,9 @@ class LessonGenerator
     public function __construct(private LanguageModel $model) {}
 
     /**
-     * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung, Pläne für die Grafiken, Textteil; danach die Module.
-     * Bei Regelverstössen ein Reparatur-Call pro betroffenem Teil.
+     * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung und Pläne für die Grafiken; danach der Textteil
+     * (eigener Aufruf, zusammen ist das Schema für die API zu gross) und die Module.
+     * Bei Regelverstössen ein Reparatur-Call pro betroffenem Teil. Scheitert ein Aufruf, beginnt ein neuer Versuch von vorn.
      *
      * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
      * @throws ModelException bei API-Fehlern
@@ -48,7 +49,7 @@ class LessonGenerator
 
         $data = $this->call($lesson, Prompts::analysis($lesson, $images))->data;
 
-        if (! ($data['quelle']['lesbar'] ?? false) || ! is_array($data['seite'] ?? null)) {
+        if (! ($data['quelle']['lesbar'] ?? false)) {
             throw new GenerationFailed(
                 ($data['quelle']['problem'] ?? null) ?: match (true) {
                     ! $lesson->isFromTopic() => 'Auf den Fotos war kein Schulstoff zu erkennen.',
@@ -59,9 +60,8 @@ class LessonGenerator
             );
         }
 
-        // Zuerst Zusammenfassung und Plan speichern, die nächsten Aufrufe brauchen sie
+        // Zuerst Zusammenfassung und Pläne speichern, die nächsten Aufrufe brauchen sie
         $lesson->update([
-            'step' => 'module',
             'source_summary' => (string) ($data['zusammenfassung'] ?? ''),
             // Ohne Fotos ist alles ergänzt, eine Liste wäre bedeutungslos
             'additions' => $lesson->isFromTopic()
@@ -71,8 +71,15 @@ class LessonGenerator
 
         $this->storeGraphicPlans($lesson, (array) ($data['grafik_plaene'] ?? []));
 
+        // Der Textteil mit denselben Fotos, damit die Begriffe dem Buch folgen
+        $page = $this->call($lesson, Prompts::pageRequest($lesson, $images))->data['seite'] ?? null;
+
+        if (! is_array($page)) {
+            throw new GenerationFailed('Die KI hat keinen gültigen Inhalt geliefert.', 'Der Textteil fehlt in der Antwort.');
+        }
+
         // Die ganze Seite ist für eine strukturierte Antwort zu gross, deshalb kommen die Module separat
-        $page = $data['seite'];
+        $lesson->update(['step' => 'module']);
         $modules = $this->call($lesson, Prompts::modules($lesson, $page))->data['module'] ?? [];
         $content = self::assemble($page, self::onlyAllowed($lesson, $modules));
 

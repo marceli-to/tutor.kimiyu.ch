@@ -34,6 +34,7 @@ return [
 
     'max_tokens' => [
         'analyse' => 32000,
+        'seite' => 32000,
         'module' => 32000,
         'reparatur' => 32000,
         'pruefung' => 16000,
@@ -48,6 +49,8 @@ return [
     */
     'models' => [
         'analyse' => ['model' => env('LESSON_MODEL_ANALYSE'), 'effort' => env('LESSON_EFFORT_ANALYSE')],
+        // Textteil, der zweite Teil der Analyse: liest dieselben Fotos, deshalb dieselben Einstellungen
+        'seite' => ['model' => env('LESSON_MODEL_ANALYSE'), 'effort' => env('LESSON_EFFORT_ANALYSE')],
         'module' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
         'neu-quiz' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],
         'reparatur' => ['model' => env('LESSON_MODEL_MODULE', 'claude-sonnet-5-5'), 'effort' => env('LESSON_EFFORT_MODULE', 'medium')],

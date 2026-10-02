@@ -15,7 +15,8 @@ use App\Lessons\Palettes;
 class Schemas
 {
     /**
-     * Erster Schritt: Quelle lesen, Zusammenfassung, Pläne für die Grafiken und der Textteil der Seite.
+     * Erster Schritt: Quelle lesen, Zusammenfassung und Pläne für die Grafiken. Der Textteil kommt
+     * separat (part('seite')): zusammen lehnt die API die Grammatik als zu gross ab.
      *
      * @return array<string, mixed>
      */
@@ -33,7 +34,6 @@ class Schemas
                 'plan' => self::nullable(self::heroPlan()),
                 'hinweis' => self::nullable(['type' => 'string', 'description' => 'Warum der Wunsch nicht passt, ein Satz für die Eltern']),
             ])],
-            'seite' => self::nullable(self::page()),
         ]);
     }
 
@@ -58,8 +58,8 @@ class Schemas
     }
 
     /**
-     * Reparatur eines Teils. Die ganze Seite ist für eine einzelne strukturierte
-     * Antwort zu gross (die API lehnt die Grammatik ab), deshalb getrennt.
+     * Ein Teil der Seite: Textteil (Schritt «seite» und Reparatur) oder Module (Reparatur). Die ganze
+     * Seite ist für eine einzelne strukturierte Antwort zu gross (die API lehnt die Grammatik ab).
      *
      * @return array<string, mixed>
      */

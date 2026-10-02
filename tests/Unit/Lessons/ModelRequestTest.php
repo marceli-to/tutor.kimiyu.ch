@@ -30,3 +30,23 @@ it('falls back to the global default for unknown steps and empty values', functi
         ->and(modelRequest('analyse')->effort())->toBe('high')
         ->and(modelRequest('grafik')->model())->toBe('claude-opus-5-5');
 });
+
+it('writes the page with the model and effort of the analysis', function () {
+    $env = ['LESSON_MODEL_ANALYSE' => 'claude-test-analyse', 'LESSON_EFFORT_ANALYSE' => 'max'];
+
+    foreach ($env as $key => $value) {
+        $_ENV[$key] = $_SERVER[$key] = $value;
+    }
+
+    try {
+        $config = require config_path('lessons.php');
+    } finally {
+        foreach ($env as $key => $value) {
+            unset($_ENV[$key], $_SERVER[$key]);
+        }
+    }
+
+    expect($config['models']['seite'])->toBe(['model' => 'claude-test-analyse', 'effort' => 'max'])
+        ->and($config['models']['analyse'])->toBe($config['models']['seite'])
+        ->and($config['max_tokens']['seite'])->toBe(32000);
+});

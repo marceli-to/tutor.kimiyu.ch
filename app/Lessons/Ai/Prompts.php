@@ -19,40 +19,101 @@ use Illuminate\Support\Facades\File;
 class Prompts
 {
     /**
+     * Erster Schritt: Quelle prüfen, Zusammenfassung, Ergänzungen und Pläne für die Grafiken.
+     * Der Textteil kommt in einem eigenen Aufruf (pageRequest), zusammen ist das Schema für die API zu gross.
+     *
      * @param  list<array{mime: string, data: string}>  $images
      */
     public static function analysis(Lesson $lesson, array $images): ModelRequest
     {
-        $system = strtr(self::load('analyse'), [
-            '{{PALETTEN}}' => self::paletteList(),
-            '{{BEISPIEL}}' => self::json([
-                'quelle' => ['lesbar' => true, 'problem' => null],
-                'zusammenfassung' => '…',
-                'ergaenzungen' => [],
-                'grafik_plaene' => [[
-                    'nr' => 1,
-                    'plan' => [
-                        'muster' => 'regler',
-                        'idee' => 'Ein Blatt im Querschnitt mit Pfeilen für Licht, CO₂ und Wasser (hinein) sowie Sauerstoff und Traubenzucker (hinaus). Drei Regler steuern Licht, CO₂ und Wasser. Die Pfeile hinaus werden so stark wie die knappste Zutat. Eine Anzeige nennt die Leistung und was gerade bremst, ein Satz darunter erklärt es.',
-                    ],
-                    'hinweis' => null,
-                ]],
-                'seite' => self::page(LessonFactory::fixture('fotosynthese')),
-            ]),
+        $system = self::analysisSystem([
+            'quelle' => ['lesbar' => true, 'problem' => null],
+            'zusammenfassung' => '…',
+            'ergaenzungen' => [],
+            'grafik_plaene' => [[
+                'nr' => 1,
+                'plan' => [
+                    'muster' => 'regler',
+                    'idee' => 'Ein Blatt im Querschnitt mit Pfeilen für Licht, CO₂ und Wasser (hinein) sowie Sauerstoff und Traubenzucker (hinaus). Drei Regler steuern Licht, CO₂ und Wasser. Die Pfeile hinaus werden so stark wie die knappste Zutat. Eine Anzeige nennt die Leistung und was gerade bremst, ein Satz darunter erklärt es.',
+                ],
+                'hinweis' => null,
+            ]],
         ]);
 
-        $count = count($images);
+        return new ModelRequest(
+            step: 'analyse',
+            system: $system,
+            prompt: implode("\n\n", [
+                'Schritt 1 von 2: Liefere nur `quelle`, `zusammenfassung`, `ergaenzungen` und `grafik_plaene`. Den Textteil (`seite`) schreibst du im zweiten Schritt.',
+                self::sourceLines($lesson, count($images)),
+            ]),
+            schema: Schemas::analysis(),
+            maxTokens: config('lessons.max_tokens.analyse'),
+            images: $images,
+        );
+    }
+
+    /**
+     * Zweiter Teil der Analyse: der Textteil der Seite, mit denselben Fotos (damit die Begriffe dem Buch folgen),
+     * der gespeicherten Zusammenfassung, den Ergänzungen und den Plänen für die Grafiken.
+     *
+     * @param  list<array{mime: string, data: string}>  $images
+     */
+    public static function pageRequest(Lesson $lesson, array $images): ModelRequest
+    {
+        $system = self::analysisSystem(['seite' => self::page(LessonFactory::fixture('fotosynthese'))]);
+
+        $parts = [
+            'Schritt 2 von 2: Liefere nur `seite`, den Textteil der Lernseite. Quelle, Zusammenfassung, Ergänzungen und die Pläne für die Grafiken stehen fest (unten), halte dich daran.',
+            self::sourceLines($lesson, count($images)),
+            "Zusammenfassung des Stoffs:\n{$lesson->source_summary}",
+        ];
+
+        if ($lesson->additions) {
+            $parts[] = "Ergänzt (nicht auf den Fotos), diese Bausteine haben `herkunft: \"ergaenzt\"`:\n- ".implode("\n- ", $lesson->additions);
+        }
+
+        $parts[] = self::pagePlanText($lesson);
+
+        return new ModelRequest(
+            step: 'seite',
+            system: $system,
+            prompt: implode("\n\n", $parts),
+            schema: Schemas::part('seite'),
+            maxTokens: config('lessons.max_tokens.seite'),
+            images: $images,
+        );
+    }
+
+    /**
+     * Gemeinsames Regelwerk beider Aufrufe der Analyse, mit dem Beispiel für die Felder des jeweiligen Aufrufs.
+     *
+     * @param  array<string, mixed>  $example
+     */
+    private static function analysisSystem(array $example): string
+    {
+        return strtr(self::load('analyse'), [
+            '{{PALETTEN}}' => self::paletteList(),
+            '{{BEISPIEL}}' => self::json($example),
+        ]);
+    }
+
+    /**
+     * Quelle und Auftrag, für beide Aufrufe der Analyse gleich.
+     */
+    private static function sourceLines(Lesson $lesson, int $count): string
+    {
         $photos = $count === 1 ? 'diesem Foto' : "diesen {$count} Fotos";
 
         $source = match (true) {
-            $count === 0 && $lesson->prompt !== null => 'Erstelle den Textteil einer Lernseite nach dem Auftrag der Eltern. Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).',
+            $count === 0 && $lesson->prompt !== null => 'Erstelle eine Lernseite nach dem Auftrag der Eltern. Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).',
             // Alte Lernseite aus einem Thema (vor dem Auftrag), z. B. beim erneuten Versuch
-            $count === 0 => "Erstelle den Textteil einer Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).",
-            $lesson->prompt !== null => "Erstelle den Textteil einer Lernseite aus {$photos}. Die Fotos sind der Rahmen, der Auftrag der Eltern setzt den Fokus (siehe «Fotos und Auftrag»).",
-            default => "Erstelle den Textteil einer Lernseite aus {$photos}.",
+            $count === 0 => "Erstelle eine Lernseite zum Thema «{$lesson->topic}». Es gibt keine Fotos, arbeite aus deinem Fachwissen (siehe «Nur ein Auftrag, keine Fotos»).",
+            $lesson->prompt !== null => "Erstelle eine Lernseite aus {$photos}. Die Fotos sind der Rahmen, der Auftrag der Eltern setzt den Fokus (siehe «Fotos und Auftrag»).",
+            default => "Erstelle eine Lernseite aus {$photos}.",
         };
 
-        $prompt = implode("\n", array_filter([
+        return implode("\n", array_filter([
             $source,
             $count > 1 ? 'Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.' : null,
             '',
@@ -63,15 +124,6 @@ class Prompts
             self::graphicsWish($lesson),
             self::parentInstruction($lesson),
         ], fn ($line) => $line !== null));
-
-        return new ModelRequest(
-            step: 'analyse',
-            system: $system,
-            prompt: $prompt,
-            schema: Schemas::analysis(),
-            maxTokens: config('lessons.max_tokens.analyse'),
-            images: $images,
-        );
     }
 
     /**
@@ -248,6 +300,31 @@ class Prompts
             ]),
             default => 'Grafiken: höchstens eine, wenn ein Muster den Stoff sichtbar macht',
         };
+    }
+
+    /**
+     * Die Pläne aus dem ersten Schritt, für den Textteil: wo Bausteine «grafik» hingehören
+     * und ob es Grafik 1 für «meta.anleitung» und «probieren» gibt.
+     */
+    private static function pagePlanText(Lesson $lesson): string
+    {
+        $graphics = $lesson->graphics()->whereNotNull('plan')->orderBy('position')->get();
+
+        $plans = $graphics->map(fn (LessonGraphic $graphic) => 'Grafik '.$graphic->position
+            .($graphic->position === 1 ? ' (oben)' : ' (Baustein `grafik` im passenden Abschnitt)')
+            .": Muster {$graphic->plan['muster']}\n{$graphic->plan['idee']}");
+
+        $lines = $plans->isNotEmpty() ? ["Geplante Grafiken:\n\n".$plans->implode("\n\n")] : [];
+
+        if (! $graphics->contains('position', 1)) {
+            $lines[] = 'Diese Seite hat keine Grafik 1: `probieren` ist null, `meta.anleitung` sagt in einem Satz, worum es geht.';
+        }
+
+        $lines[] = $graphics->contains(fn (LessonGraphic $graphic) => $graphic->position > 1)
+            ? 'Setze für jede geplante Grafik ab Nummer 2 genau einen Baustein `grafik` mit ihrer `nr`, für andere Nummern keinen.'
+            : 'Kein Baustein `grafik`.';
+
+        return implode("\n\n", $lines);
     }
 
     /**
