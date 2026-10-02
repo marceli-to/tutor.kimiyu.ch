@@ -6,7 +6,7 @@
 
 **Decisions (user, 2026-10-02):** «All English, migrate data», «English comments», «Tabs everywhere».
 
-**Order:** Task 1–3 rename keys/values (one coherent change, data migration included), Task 4 renames remaining German identifiers, Task 5 translates comments, Task 6 switches to tabs (formatting-only commit, last, so earlier diffs stay readable). The suite must be green after every task.
+**Order:** Task 1–3 rename keys/values (one coherent change, data migration included), Task 3b moves logic into actions and page-data classes, Task 4 renames remaining German identifiers, Task 5 translates comments, Task 6 switches to tabs (formatting-only commit, last, so earlier diffs stay readable). The suite must be green after every task.
 
 **Conventions:** as in the earlier plans, but from now on: English comments, English keys. German stays in UI text, validation messages and prompt prose. Commits German with `Co-Authored-By`, stage by name, never commit `public/build`/`package-lock.json`, never migrate `database/database.sqlite`. Every schema change → API probe `/private/tmp/claude-501/-Users-marceli-to-Jamon-digital-Webroot-tutor-kimiyu-ch/e7dd5486-15dd-473f-918f-d4d584f0eca8/scratchpad/probe.php` (max_tokens 1, < $0.01), all OK.
 
@@ -96,6 +96,23 @@ Labels shown to people (pattern labels, palette labels, purpose/scope cards) sta
 **Files:** `resources/js/types/lesson.ts`, all components under `resources/js/components/lesson/`, `pages/lessons/*.vue`, `pages/shared/*.vue`, `GraphicsField.vue`, `LessonOptions.vue`, `PresetPicker.vue`, `lib/presets.ts`, `lib/lesson.ts`; regenerate Wayfinder (`php artisan wayfinder:generate --with-form`).
 - `npm run types:check`, `npm run check`, `npm run build`.
 - Commit (with Tasks 1–2 if combined): «Englische Schlüssel im Inhalt, in Schemas und Code; Daten migriert»
+
+### Task 3b: Actions, page data classes, slim controllers
+
+**Decision (user, 2026-10-02):** slim controllers; every write use case is an action class with exactly one public `handle()` method (plain class, resolved from the container, no package); Inertia props come from one data class per page; `LessonGenerator` is split into one action per generation step.
+
+**Structure:**
+- `app/Actions/Lessons/`: `CreateLesson` (photo processing, child creation, lesson + graphic wishes in a transaction, start pipeline; returns the lesson), `DeleteLesson` (photos, attempts, emptying, graphics, soft delete), `PublishLesson`, `UnpublishLesson`, `UpdateLessonContent` (cloze parsing, validation, hiding removed graphics; throws `ValidationException` as today), `RetryLesson`, `RegenerateQuiz`, `RegenerateGraphic` (both start the pipeline).
+- `app/Actions/Children/`: `CreateChild`, `UpdateChild`, `DeleteChild`, `RenewShareLink`.
+- `app/Actions/Progress/`: `RecordAnswer` (check via `Progress::check`, store attempt, return the result for the JSON response).
+- `app/Actions/Generation/`: `AnalyzeLesson` (step 1 + page + modules + repair + validation, i.e. today's `LessonGenerator::analyze`), `CheckLesson`, `GenerateGraphic`, `RegenerateQuizQuestions`, `DeleteLessonImages`, plus a shared `CallModel` action (today's private `LessonGenerator::call()` with cost logging and the «lesson still active» guard). Name clash with the jobs (`App\Jobs\AnalyzeLesson` …): keep the jobs' names, actions live in their own namespace; import with aliases where both appear. Jobs call `app(Action::class)->handle($lesson, …)` in `run()`. Remove `LessonGenerator` when empty.
+- `app/Http/PageData/` (or extend `app/Lessons/LessonView` — pick one place and name it consistently): `LessonPage` (today's `LessonController::render()` + `plannedGraphics` + `canPublish`), `CreateLessonPage` (children, patterns, scopeInfo, lastSettings, lastByChild), `EditLessonPage` (content with unplaced graphics, labels, palettes), `CostOverview`, `Dashboard`, `ChildProgress`, `SharedLessonIndex`. Each has one public method returning the props array (e.g. `toArray()` or `props()` — pick one, use everywhere).
+- Controllers afterwards: authorize (`Gate`/policies as today), call one action or page-data class, redirect/toast/render. No private helpers with business logic left in controllers; aim for ≤ ~10 lines per method.
+- Fortify's existing `app/Actions/Fortify/*` stay as they are (framework contracts).
+
+**Tests:** behaviour is unchanged, so the existing feature tests are the safety net and must stay green without changes to their assertions. Add unit tests for actions only where logic moved and is now testable in isolation (e.g. `DeleteLesson`, `UpdateLessonContent`, `RecordAnswer`, `CallModel` guard).
+
+**Commit(s):** «Actions und Seitendaten, schlanke Controller» (may be split into Lessons / Children+Progress / Generation).
 
 ### Task 4: Remaining German identifiers
 
