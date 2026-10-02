@@ -190,7 +190,8 @@ describe('publishing and sharing', function () {
                 ->where('parent.childName', 'Mia')
                 ->where('parent.canPublish', true)
                 ->where('parent.shareUrl', null)
-                ->where('parent.canRegenerate', ['quiz' => true, 'grafik' => true])
+                ->where('parent.canRegenerate', ['quiz' => true])
+                ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true]])
             );
 
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
@@ -322,11 +323,10 @@ describe('regenerating', function () {
             ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
     });
 
-    it('still draws graphic 1 from the old address', function () {
-        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'grafik']))
-            ->assertRedirect(route('lessons.show', $this->lesson));
+    it('no longer draws a graphic from the old address', function () {
+        $this->actingAs($this->user)->post('/lernseiten/'.$this->lesson->id.'/neu/grafik')->assertNotFound();
 
-        expect($this->lesson->fresh()->graphic(1)->graphic['muster'])->toBe('regler');
+        expect($this->fake->requestsFor('grafik'))->toBe([]);
     });
 
     it('keeps the old graphic when the new one fails', function () {

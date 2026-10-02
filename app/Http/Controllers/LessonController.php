@@ -11,6 +11,7 @@ use App\Lessons\LessonGenerator;
 use App\Lessons\LessonView;
 use App\Models\Child;
 use App\Models\Lesson;
+use App\Models\LessonGraphic;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -178,11 +179,6 @@ class LessonController extends Controller
      */
     public function regenerate(Lesson $lesson, string $part): RedirectResponse
     {
-        // Übergang bis Teil 2, Task 5: Die Werkzeugleiste ruft für die Grafik noch diese Adresse auf
-        if ($part === 'grafik') {
-            return $this->regenerateGraphic($lesson, 1);
-        }
-
         Gate::authorize('update', $lesson);
 
         abort_unless(GenerationPipeline::canRegenerate($lesson, $part), 422, 'Das geht bei dieser Lernseite gerade nicht.');
@@ -228,14 +224,40 @@ class LessonController extends Controller
     }
 
     /**
-     * Hero-Grafik als eigenständiges Dokument für das sandboxed iframe.
+     * Eine Grafik als eigenständiges Dokument für das sandboxed iframe.
      * Signierte URL statt Session, weil das iframe keinen eigenen Origin hat.
      */
-    public function hero(Lesson $lesson): HttpResponse
+    public function graphic(Lesson $lesson, int $nr): HttpResponse
     {
-        abort_unless($lesson->hero !== null, 404);
+        $graphic = $lesson->graphic($nr)?->graphic;
 
-        return HeroDocument::response($lesson);
+        abort_unless($graphic !== null, 404);
+
+        return HeroDocument::response($lesson, $graphic);
+    }
+
+    /**
+     * Welche Grafiken gebaut werden, für die Fortschrittsanzeige. Nach der Analyse die mit Plan,
+     * vorher Grafik 1 («KI entscheidet») oder die Wünsche der Eltern.
+     *
+     * @return list<int>
+     */
+    private function plannedGraphics(Lesson $lesson): array
+    {
+        if ($lesson->graphics_mode === 'none') {
+            return [];
+        }
+
+        if ($lesson->content !== null) {
+            return array_values($lesson->graphics
+                ->filter(fn (LessonGraphic $graphic) => $graphic->plan !== null)
+                ->map(fn (LessonGraphic $graphic) => $graphic->position)
+                ->all());
+        }
+
+        return $lesson->graphics_mode === 'custom'
+            ? array_values($lesson->graphics->map(fn (LessonGraphic $graphic) => $graphic->position)->all())
+            : [1];
     }
 
     private function render(Lesson $lesson, bool $parent): Response
@@ -249,9 +271,13 @@ class LessonController extends Controller
                 'canPublish' => $lesson->status === LessonStatus::Review && $lesson->content !== null,
                 'canRegenerate' => [
                     'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
-                    // Übergang bis Teil 2, Task 5: nur Grafik 1
-                    'grafik' => GenerationPipeline::canRegenerate($lesson, 'grafik', 1),
                 ],
+                // Fehler der Grafiken sehen nur die Eltern
+                'graphics' => $lesson->graphics->map(fn (LessonGraphic $graphic) => [
+                    'nr' => $graphic->position,
+                    'error' => $graphic->error,
+                    'canRegenerate' => GenerationPipeline::canRegenerate($lesson, 'grafik', $graphic->position),
+                ])->values()->all(),
                 'additions' => $lesson->isFromTopic() ? [] : ($lesson->additions ?? []),
             ] : null,
             'lesson' => [
@@ -261,8 +287,7 @@ class LessonController extends Controller
                 'error' => $lesson->error,
                 'canRetry' => GenerationPipeline::canRetry($lesson),
                 'fromTopic' => $lesson->isFromTopic(),
-                'withHero' => $lesson->with_hero,
-                'heroError' => $lesson->hero_error,
+                'plannedGraphics' => $this->plannedGraphics($lesson),
                 'checkNotes' => $lesson->check_notes ?? [],
             ],
         ]);

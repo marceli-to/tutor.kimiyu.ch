@@ -10,12 +10,19 @@ import QuizModule from '@/components/lesson/QuizModule.vue';
 import SortModule from '@/components/lesson/SortModule.vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { useIsDark } from '@/composables/useIsDark';
-import type { LessonContent, LessonHero, ModuleAnswer, Palette } from '@/types';
+import type {
+    LessonContent,
+    LessonGraphics,
+    LessonHero,
+    ModuleAnswer,
+    Palette,
+} from '@/types';
 
 const props = defineProps<{
     content: LessonContent;
     palette: Palette;
     hero: LessonHero | null;
+    graphics: LessonGraphics;
     subject: string;
     level: string;
 }>();
@@ -83,6 +90,7 @@ function toggleTheme() {
                     v-for="(block, n) in section.bloecke"
                     :key="n"
                     :block="block"
+                    :graphics="graphics"
                 />
             </section>
 

@@ -1,10 +1,14 @@
 <?php
 
+use App\Enums\LessonStatus;
 use App\Models\Child;
 use App\Models\Lesson;
 use App\Models\LessonGraphic;
+use App\Models\User;
 use Database\Factories\LessonFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+use Inertia\Testing\AssertableInertia as Assert;
 
 describe('migration', function () {
     it('moves existing graphics to position 1 and sets the graphics mode', function () {
@@ -68,5 +72,148 @@ describe('model', function () {
             ->and($graphic->graphic)->toBe($hero)
             ->and($graphic->plan)->toBe(['muster' => $hero['muster'], 'idee' => $hero['beschreibung']])
             ->and($graphic->error)->toBeNull();
+    });
+});
+
+describe('display', function () {
+    beforeEach(function () {
+        $this->user = User::factory()->create();
+        $this->child = Child::factory()->for($this->user)->create();
+
+        // Grafik 2 im zweiten Abschnitt; Grafik 3 ist fehlgeschlagen, hat aber einen Platz
+        $content = LessonFactory::fixture('oekosystem');
+        $content['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+        $content['abschnitte'][0]['bloecke'][] = ['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto'];
+
+        $this->lesson = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create([
+            'graphics_mode' => 'custom',
+            'content' => $content,
+        ]);
+        $this->lesson->graphics()->create([
+            'position' => 2,
+            'request' => 'Nahrungskette zum Durchklicken',
+            'plan' => ['muster' => 'schritte', 'idee' => 'Vier Schritte'],
+            'graphic' => [...LessonFactory::fixture('fotosynthese.hero'), 'beschreibung' => 'Die Nahrungskette', 'markup' => '<p id="grafik-zwei">Zwei</p>'],
+        ]);
+        $this->lesson->graphics()->create([
+            'position' => 3,
+            'request' => 'Kreislauf',
+            'plan' => ['muster' => 'kreislauf', 'idee' => 'Kreislauf'],
+            'error' => 'Die KI war nicht erreichbar.',
+        ]);
+    });
+
+    function blocksOfType(array $content, string $type): array
+    {
+        return collect($content['abschnitte'])
+            ->flatMap(fn (array $section, int $k) => collect($section['bloecke'])
+                ->filter(fn (array $block) => $block['typ'] === $type)
+                ->map(fn (array $block) => [...$block, 'abschnitt' => $k]))
+            ->values()
+            ->all();
+    }
+
+    it('gives the parent all finished graphics and the state of each graphic', function () {
+        $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lesson.graphics', 2)
+                ->has('lesson.graphics.1.url')
+                ->where('lesson.graphics.2.beschreibung', 'Die Nahrungskette')
+                ->missing('lesson.graphics.3')
+                ->where('lesson.hero', fn ($hero) => $hero['url'] === $page->toArray()['props']['lesson']['graphics'][1]['url'])
+                ->where('parent.graphics', [
+                    ['nr' => 1, 'error' => null, 'canRegenerate' => true],
+                    ['nr' => 2, 'error' => null, 'canRegenerate' => true],
+                    ['nr' => 3, 'error' => 'Die KI war nicht erreichbar.', 'canRegenerate' => true],
+                ])
+                ->where('parent.canRegenerate', ['quiz' => true])
+                ->where('lesson.plannedGraphics', [1, 2, 3])
+            );
+    });
+
+    it('gives the child only the finished graphics, without errors, wishes or plans', function () {
+        $response = $this->get(route('shared.show', [$this->child->share_token, $this->lesson]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('lesson.graphics', 2)
+            ->has('lesson.graphics.2.url')
+            ->has('lesson.hero.url')
+        );
+
+        $keys = [];
+        array_walk_recursive($response->viewData('page')['props'], function ($value, $key) use (&$keys) {
+            $keys[] = $key;
+        });
+        $flat = json_encode($response->viewData('page')['props']);
+
+        expect($keys)->not->toContain('error')->not->toContain('request')->not->toContain('plan')
+            ->and($flat)->not->toContain('Nahrungskette zum Durchklicken')
+            ->and($flat)->not->toContain('Vier Schritte')
+            ->and($flat)->not->toContain('nicht erreichbar');
+    });
+
+    it('removes the block of an unfinished graphic', function () {
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'grafik'), 'nr') === [2])
+            );
+    });
+
+    it('appends a finished graphic without a block to the last section', function () {
+        $content = LessonFactory::fixture('oekosystem');
+        $this->lesson->update(['content' => $content]);
+
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.content', function ($content) {
+                    $blocks = blocksOfType($content->toArray(), 'grafik');
+
+                    return count($blocks) === 1
+                        && $blocks[0]['nr'] === 2
+                        && $blocks[0]['abschnitt'] === count($content['abschnitte']) - 1;
+                })
+            );
+    });
+
+    it('serves each graphic under its own signed url', function () {
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 2]))
+            ->assertOk()
+            ->assertHeader('Content-Security-Policy')
+            ->assertSee('<p id="grafik-zwei">', escape: false);
+
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))
+            ->assertOk()
+            ->assertSee(LessonFactory::fixture('oekosystem.hero')['markup'], escape: false);
+
+        $this->get(route('lessons.graphic', [$this->lesson, 2]))->assertForbidden();
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 3]))->assertNotFound();
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 4]))->assertNotFound();
+    });
+
+    it('only offers a new graphic where there is a plan', function () {
+        $this->lesson->graphic(3)->update(['plan' => null, 'error' => 'Passt nicht zum Stoff.']);
+        $this->lesson->update(['status' => LessonStatus::Review]);
+
+        $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('parent.graphics.2', ['nr' => 3, 'error' => 'Passt nicht zum Stoff.', 'canRegenerate' => false])
+                ->where('lesson.plannedGraphics', [1, 2])
+            );
+    });
+
+    it('plans the graphics from the wishes before the analysis', function () {
+        $lesson = Lesson::factory()->for($this->child)->create(['status' => LessonStatus::Generating, 'graphics_mode' => 'custom']);
+        $lesson->graphics()->create(['position' => 1, 'request' => 'Eins']);
+        $lesson->graphics()->create(['position' => 2, 'request' => 'Zwei']);
+
+        $auto = Lesson::factory()->for($this->child)->create(['status' => LessonStatus::Generating, 'graphics_mode' => 'auto']);
+        $none = Lesson::factory()->for($this->child)->create(['status' => LessonStatus::Generating, 'graphics_mode' => 'none']);
+
+        $this->actingAs($this->user)->get(route('lessons.show', $lesson))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.plannedGraphics', [1, 2]));
+        $this->actingAs($this->user)->get(route('lessons.show', $auto))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.plannedGraphics', [1]));
+        $this->actingAs($this->user)->get(route('lessons.show', $none))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.plannedGraphics', []));
     });
 });

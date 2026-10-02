@@ -8,20 +8,23 @@ use Illuminate\Support\Facades\File;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Baut das eigenständige HTML-Dokument für die Hero-Grafik.
+ * Baut das eigenständige HTML-Dokument für eine interaktive Grafik.
  *
  * Es wird in einem iframe mit sandbox="allow-scripts" (ohne allow-same-origin) angezeigt
  * und bekommt eine CSP ohne jeden Netzwerkzugriff.
  */
 class HeroDocument
 {
-    public static function response(Lesson $lesson): Response
+    /**
+     * @param  array{muster: string, beschreibung: string, css: string, markup: string, script: string}  $graphic
+     */
+    public static function response(Lesson $lesson, array $graphic): Response
     {
         $palette = Palettes::get($lesson->content['meta']['palette'] ?? null);
 
         $html = view('lesson-hero', [
             'title' => $lesson->title ?? 'Grafik',
-            'hero' => $lesson->hero,
+            'hero' => $graphic,
             'fontFaces' => self::fontFaces(),
             'paletteLight' => self::cssVariables($palette['light']),
             'paletteDark' => self::cssVariables($palette['dark']),

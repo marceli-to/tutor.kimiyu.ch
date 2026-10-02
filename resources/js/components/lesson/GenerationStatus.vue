@@ -12,7 +12,8 @@ const props = defineProps<{
     step: string | null;
     error: string | null;
     canRetry: boolean;
-    withHero: boolean;
+    // Positionen der Grafiken, die gebaut werden
+    plannedGraphics: number[];
 }>();
 
 const fullSteps = [
@@ -20,7 +21,6 @@ const fullSteps = [
     { key: 'analyse', label: 'Stoff lesen und Erklärungen schreiben' },
     { key: 'module', label: 'Quiz und Übungen erstellen' },
     { key: 'pruefung', label: 'Inhalt nachprüfen' },
-    { key: 'grafik', label: 'Interaktive Grafik zeichnen' },
 ];
 
 // Beim Neu-Erstellen einzelner Teile gibt es nur einen Schritt
@@ -36,14 +36,34 @@ const steps = computed(() => {
         return partSteps[part];
     }
 
-    return props.withHero
-        ? fullSteps
-        : fullSteps.filter((s) => s.key !== 'grafik');
+    // Ein Schritt pro Grafik; die Jobs heissen «grafik-{Position}»
+    const total = props.plannedGraphics.length;
+    const graphicSteps = props.plannedGraphics.map((position, index) => ({
+        key: `grafik-${position}`,
+        label:
+            total > 1
+                ? `Grafik ${index + 1} von ${total} wird gebaut`
+                : 'Interaktive Grafik zeichnen',
+    }));
+
+    return [...fullSteps, ...graphicSteps];
 });
 
-const current = computed(() =>
-    steps.value.findIndex((s) => s.key === props.step),
-);
+const current = computed(() => {
+    const index = steps.value.findIndex((s) => s.key === props.step);
+    const position = Number(props.step?.match(/^grafik-(\d)$/)?.[1]);
+
+    if (index !== -1 || !position) {
+        return index;
+    }
+
+    // Ein Job für eine Grafik ohne Plan läuft nur kurz durch: als nächste geplante Grafik anzeigen
+    const next = steps.value.findIndex(
+        (s) => s.key.startsWith('grafik-') && Number(s.key.slice(7)) > position,
+    );
+
+    return next === -1 ? steps.value.length : next;
+});
 const failed = computed(() => props.status === 'failed');
 </script>
 

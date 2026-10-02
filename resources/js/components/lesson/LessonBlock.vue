@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import HeroFrame from '@/components/lesson/HeroFrame.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { categoryClasses } from '@/lib/lesson';
-import type { LessonBlock } from '@/types';
+import type { LessonBlock, LessonGraphics } from '@/types';
 
 defineProps<{
     block: LessonBlock;
+    graphics: LessonGraphics;
 }>();
 </script>
 
@@ -71,6 +73,19 @@ defineProps<{
             </p>
         </div>
     </div>
+
+    <figure
+        v-else-if="block.typ === 'grafik' && graphics[block.nr]"
+        class="m-0"
+    >
+        <HeroFrame :hero="graphics[block.nr]!" />
+        <figcaption
+            v-if="graphics[block.nr]!.beschreibung"
+            class="mt-2 max-w-[66ch] text-base text-ls-muted"
+        >
+            {{ graphics[block.nr]!.beschreibung }}
+        </figcaption>
+    </figure>
 
     <div
         v-else-if="block.typ === 'box'"

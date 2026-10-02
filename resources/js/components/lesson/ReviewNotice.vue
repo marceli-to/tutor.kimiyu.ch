@@ -1,12 +1,19 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue';
+import type { GraphicState } from '@/types';
+
+const props = defineProps<{
     status: string;
     error: string | null;
     checkNotes: { bereich: string; aenderung: string }[];
-    heroError: string | null;
+    graphics: GraphicState[];
     fromTopic: boolean;
     additions: string[];
 }>();
+
+const graphicErrors = computed(() =>
+    props.graphics.filter((graphic) => graphic.error),
+);
 </script>
 
 <template>
@@ -62,9 +69,18 @@ defineProps<{
                     </li>
                 </ul>
             </details>
-            <p v-if="heroError" class="mt-3 mb-0 text-ls-bad">
-                Die interaktive Grafik konnte nicht erstellt werden.
-                {{ heroError }}
+            <p
+                v-for="graphic in graphicErrors"
+                :key="graphic.nr"
+                class="mt-3 mb-0 text-ls-bad"
+            >
+                <template v-if="graphics.length > 1">
+                    Grafik {{ graphic.nr }}:
+                </template>
+                <template v-else>
+                    Die interaktive Grafik konnte nicht erstellt werden.
+                </template>
+                {{ graphic.error }}
             </p>
         </template>
     </div>

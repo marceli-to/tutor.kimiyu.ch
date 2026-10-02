@@ -91,7 +91,7 @@ it('turns uploaded photos into a lesson ready for review', function () {
             ->where('lesson.status', 'review')
             ->where('lesson.content.meta.palette', 'gruen')
             ->has('lesson.hero.url')
-            ->where('lesson.heroError', null)
+            ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true]])
         );
 });
 
@@ -712,9 +712,9 @@ describe('without a graphic', function () {
 
         $this->actingAs($this->user)->get(route('lessons.show', $lesson))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('lesson.withHero', false)
+                ->where('lesson.plannedGraphics', [])
                 ->where('lesson.hero', null)
-                ->where('parent.canRegenerate.grafik', false)
+                ->where('parent.graphics', [])
             );
     });
 

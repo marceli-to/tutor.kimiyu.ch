@@ -29,6 +29,8 @@ import {
     regenerate,
     unpublish,
 } from '@/routes/lessons';
+import { regenerate as regenerateGraphic } from '@/routes/lessons/graphic';
+import type { GraphicState } from '@/types';
 
 const props = defineProps<{
     lessonId: number;
@@ -36,11 +38,25 @@ const props = defineProps<{
     childName: string;
     shareUrl: string | null;
     canPublish: boolean;
-    canRegenerate: { quiz: boolean; grafik: boolean };
+    canRegenerate: { quiz: boolean };
+    graphics: GraphicState[];
 }>();
 
 type Confirm = 'quiz' | 'grafik' | 'delete' | null;
 const confirm = ref<Confirm>(null);
+// Welche Grafik neu erstellt werden soll
+const graphicNr = ref(1);
+
+function graphicLabel(nr: number) {
+    return nr === 1 && props.graphics.length > 1
+        ? 'Grafik 1 (oben)'
+        : `Grafik ${nr}`;
+}
+
+function confirmGraphic(nr: number) {
+    graphicNr.value = nr;
+    confirm.value = 'grafik';
+}
 
 const texts = {
     quiz: {
@@ -67,7 +83,7 @@ function confirmForm() {
         case 'quiz':
             return regenerate.form([props.lessonId, 'quiz']);
         case 'grafik':
-            return regenerate.form([props.lessonId, 'grafik']);
+            return regenerateGraphic.form([props.lessonId, graphicNr.value]);
         default:
             return destroy.form(props.lessonId);
     }
@@ -140,10 +156,16 @@ function confirmForm() {
                         Neues Quiz erstellen
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        :disabled="!canRegenerate.grafik"
-                        @select="confirm = 'grafik'"
+                        v-for="graphic in graphics"
+                        :key="graphic.nr"
+                        :disabled="!graphic.canRegenerate"
+                        @select="confirmGraphic(graphic.nr)"
                     >
-                        Grafik neu erstellen
+                        {{
+                            graphics.length > 1
+                                ? `${graphicLabel(graphic.nr)} neu erstellen`
+                                : 'Grafik neu erstellen'
+                        }}
                     </DropdownMenuItem>
                     <template v-if="status === 'published'">
                         <DropdownMenuSeparator />
@@ -173,7 +195,13 @@ function confirmForm() {
         >
             <DialogContent v-if="confirm">
                 <DialogHeader>
-                    <DialogTitle>{{ texts[confirm].title }}</DialogTitle>
+                    <DialogTitle>
+                        {{
+                            confirm === 'grafik' && graphics.length > 1
+                                ? `${graphicLabel(graphicNr)} neu erstellen?`
+                                : texts[confirm].title
+                        }}
+                    </DialogTitle>
                     <DialogDescription>
                         {{ texts[confirm].description }}
                     </DialogDescription>

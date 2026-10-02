@@ -103,6 +103,16 @@ export type LessonHero = {
     beschreibung: string;
 };
 
+// Fertige Grafiken nach Position (1 oben, 2 und 3 an ihrem Block im Inhalt)
+export type LessonGraphics = Partial<Record<number, LessonHero>>;
+
+// Nur für Eltern: Zustand jeder Grafik, auch der fehlgeschlagenen
+export type GraphicState = {
+    nr: number;
+    error: string | null;
+    canRegenerate: boolean;
+};
+
 // Ergebnis einer einzelnen Antwort, für den Lernstand (Phase 4)
 export type ModuleAnswer = {
     module: 'quiz' | 'sortieren' | 'lueckentext';

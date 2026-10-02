@@ -41,13 +41,13 @@ it('does not expose the child share token', function () {
         ->and($this->child->share_token)->toHaveLength(40);
 });
 
-describe('hero document', function () {
+describe('graphic document', function () {
     it('needs a signed url', function () {
-        $this->get(route('lessons.hero', $this->lesson))->assertForbidden();
+        $this->get(route('lessons.graphic', [$this->lesson, 1]))->assertForbidden();
     });
 
     it('is served with a csp that blocks all network access', function () {
-        $response = $this->get(URL::signedRoute('lessons.hero', $this->lesson));
+        $response = $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]));
 
         $response->assertOk()
             ->assertHeader('Content-Security-Policy')
@@ -64,8 +64,8 @@ describe('hero document', function () {
     });
 
     it('returns 404 when the lesson has no hero', function () {
-        $this->lesson->update(['hero' => null]);
+        $this->lesson->graphic(1)->update(['graphic' => null]);
 
-        $this->get(URL::signedRoute('lessons.hero', $this->lesson))->assertNotFound();
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))->assertNotFound();
     });
 });

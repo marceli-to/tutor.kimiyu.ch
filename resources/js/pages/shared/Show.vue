@@ -4,7 +4,13 @@ import { ArrowLeft } from '@lucide/vue';
 import LessonPage from '@/components/lesson/LessonPage.vue';
 import { saveAnswer } from '@/lib/saveAnswer';
 import { answer as answerRoute, index } from '@/routes/shared';
-import type { LessonContent, LessonHero, ModuleAnswer, Palette } from '@/types';
+import type {
+    LessonContent,
+    LessonGraphics,
+    LessonHero,
+    ModuleAnswer,
+    Palette,
+} from '@/types';
 
 const props = defineProps<{
     token: string;
@@ -15,6 +21,7 @@ const props = defineProps<{
         content: LessonContent;
         palette: Palette;
         hero: LessonHero | null;
+        graphics: LessonGraphics;
     };
 }>();
 
@@ -32,6 +39,7 @@ function onAnswer(answer: ModuleAnswer) {
         :content="lesson.content"
         :palette="lesson.palette"
         :hero="lesson.hero"
+        :graphics="lesson.graphics"
         :subject="lesson.subject"
         :level="lesson.level"
         @answer="onAnswer"

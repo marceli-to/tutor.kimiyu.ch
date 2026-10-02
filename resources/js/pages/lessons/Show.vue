@@ -5,7 +5,13 @@ import GenerationStatus from '@/components/lesson/GenerationStatus.vue';
 import LessonPage from '@/components/lesson/LessonPage.vue';
 import ParentToolbar from '@/components/lesson/ParentToolbar.vue';
 import ReviewNotice from '@/components/lesson/ReviewNotice.vue';
-import type { LessonContent, LessonHero, Palette } from '@/types';
+import type {
+    GraphicState,
+    LessonContent,
+    LessonGraphics,
+    LessonHero,
+    Palette,
+} from '@/types';
 
 const props = defineProps<{
     // Nur für die Eltern, nicht in der lokalen Vorschau
@@ -13,7 +19,8 @@ const props = defineProps<{
         childName: string;
         shareUrl: string | null;
         canPublish: boolean;
-        canRegenerate: { quiz: boolean; grafik: boolean };
+        canRegenerate: { quiz: boolean };
+        graphics: GraphicState[];
         additions: string[];
     } | null;
     lesson: {
@@ -23,13 +30,14 @@ const props = defineProps<{
         error: string | null;
         canRetry: boolean;
         fromTopic: boolean;
-        withHero: boolean;
+        // Positionen der Grafiken, die gebaut werden (für die Fortschrittsanzeige)
+        plannedGraphics: number[];
         subject: string;
         level: string;
         content: LessonContent | null;
         palette: Palette | null;
         hero: LessonHero | null;
-        heroError: string | null;
+        graphics: LessonGraphics;
         checkNotes: { bereich: string; aenderung: string }[];
     };
 }>();
@@ -63,7 +71,7 @@ watch(generating, (active) => (active ? start() : stop()));
         :step="lesson.step"
         :error="lesson.error"
         :can-retry="lesson.canRetry"
-        :with-hero="lesson.withHero"
+        :planned-graphics="lesson.plannedGraphics"
     />
 
     <template v-else>
@@ -75,12 +83,14 @@ watch(generating, (active) => (active ? start() : stop()));
             :share-url="parent.shareUrl"
             :can-publish="parent.canPublish"
             :can-regenerate="parent.canRegenerate"
+            :graphics="parent.graphics"
         />
 
         <LessonPage
             :content="lesson.content"
             :palette="lesson.palette"
             :hero="lesson.hero"
+            :graphics="lesson.graphics"
             :subject="lesson.subject"
             :level="lesson.level"
         >
@@ -89,7 +99,7 @@ watch(generating, (active) => (active ? start() : stop()));
                     :status="lesson.status"
                     :error="lesson.error"
                     :check-notes="lesson.checkNotes"
-                    :hero-error="lesson.heroError"
+                    :graphics="parent?.graphics ?? []"
                     :from-topic="lesson.fromTopic"
                     :additions="parent?.additions ?? []"
                 />

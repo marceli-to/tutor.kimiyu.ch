@@ -29,9 +29,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('lernseiten/{lesson}/nochmals', [LessonController::class, 'retry'])->name('lessons.retry');
     Route::post('lernseiten/{lesson}/freigeben', [LessonController::class, 'publish'])->name('lessons.publish');
     Route::post('lernseiten/{lesson}/zurueckziehen', [LessonController::class, 'unpublish'])->name('lessons.unpublish');
-    // «grafik» nur als Übergang bis Teil 2, Task 5 (leitet auf Grafik 1 weiter)
     Route::post('lernseiten/{lesson}/neu/{part}', [LessonController::class, 'regenerate'])
-        ->whereIn('part', ['quiz', 'grafik'])
+        ->whereIn('part', ['quiz'])
         ->name('lessons.regenerate');
     Route::post('lernseiten/{lesson}/grafik/{nr}/neu', [LessonController::class, 'regenerateGraphic'])
         ->where('nr', '[1-3]')
@@ -41,9 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('lernseiten/{lesson}/inhalt', [LessonContentController::class, 'update'])->name('lessons.update');
 });
 
-Route::get('lernseiten/{lesson}/grafik', [LessonController::class, 'hero'])
+Route::get('lernseiten/{lesson}/grafik/{nr}', [LessonController::class, 'graphic'])
+    ->whereNumber('nr')
     ->middleware('signed')
-    ->name('lessons.hero');
+    ->name('lessons.graphic');
 
 // Für Kinder: nicht erratbarer Link pro Kind, nur freigegebene Seiten, kein Login
 Route::middleware(['noindex', 'throttle:60,1'])->group(function () {
