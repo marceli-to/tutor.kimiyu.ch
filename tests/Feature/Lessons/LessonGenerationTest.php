@@ -9,7 +9,10 @@ use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\ModelRequest;
 use App\Lessons\Ai\Prompts;
+use App\Lessons\GenerationFailed;
+use App\Lessons\LessonGenerator;
 use App\Models\Child;
+use App\Models\Generation;
 use App\Models\Lesson;
 use App\Models\User;
 use Database\Factories\LessonFactory;
@@ -619,5 +622,35 @@ describe('without a graphic', function () {
 
         expect(Lesson::sole()->with_hero)->toBeTrue()
             ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
+    });
+});
+
+describe('deleted lessons', function () {
+    it('stops the generation when the lesson was deleted', function () {
+        $lesson = Lesson::factory()->for($this->child)->create([
+            'status' => LessonStatus::Generating,
+            'step' => 'warteschlange',
+            'prompt' => 'Fotosynthese',
+        ]);
+        $lesson->delete();
+
+        (new AnalyzeLesson($lesson))->handle(app(LessonGenerator::class));
+        (new GenerateLessonHero($lesson))->handle(app(LessonGenerator::class));
+        (new FinishLesson($lesson))->handle(app(LessonGenerator::class));
+
+        $fresh = Lesson::withTrashed()->find($lesson->id);
+        expect($this->fake->requests)->toBe([])
+            ->and(Generation::count())->toBe(0)
+            ->and($fresh->status)->toBe(LessonStatus::Generating)
+            ->and($fresh->step)->toBe('warteschlange');
+    });
+
+    it('does not call the api when the child is gone', function () {
+        $lesson = Lesson::factory()->for($this->child)->create(['prompt' => 'Fotosynthese']);
+        $lesson->setRelation('child', null);
+
+        expect(fn () => app(LessonGenerator::class)->analyze($lesson))->toThrow(GenerationFailed::class);
+        expect($this->fake->requests)->toBe([])
+            ->and(Generation::count())->toBe(0);
     });
 });

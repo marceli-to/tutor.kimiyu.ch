@@ -3,6 +3,7 @@
 use App\Enums\LessonStatus;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
+use App\Models\Attempt;
 use App\Models\Child;
 use App\Models\Generation;
 use App\Models\Lesson;
@@ -359,6 +360,51 @@ it('deletes a lesson', function () {
 
     $other = Lesson::factory()->fromFixture()->create();
     $this->actingAs($this->user)->delete(route('lessons.destroy', $other))->assertForbidden();
+});
+
+it('removes the content and the progress of a deleted lesson but keeps its costs', function () {
+    $this->lesson->update([
+        'status' => LessonStatus::Published,
+        'published_at' => now(),
+        'prompt' => 'Prüfung am Freitag',
+        'notes' => 'Alte Hinweise',
+        'topic' => 'Ökosystem',
+        'source_summary' => 'Zusammenfassung',
+        'additions' => ['Ergänzt.'],
+        'hero' => LessonFactory::fixture('fotosynthese.hero'),
+        'hero_error' => 'Fehler',
+        'check_notes' => [['bereich' => 'Quiz', 'aenderung' => 'Korrigiert']],
+        'error' => 'Alter Fehler',
+        'step' => 'module',
+    ]);
+    $this->lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analyse', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.4]);
+    $other = Lesson::factory()->for($this->child)->fromFixture('fotosynthese')->create(['status' => LessonStatus::Published, 'published_at' => now()]);
+    $old = Attempt::forceCreate(['child_id' => $this->child->id, 'lesson_id' => $other->id, 'module' => 'quiz', 'item_id' => 'q1', 'correct' => true, 'created_at' => now()->subDays(3)]);
+    Attempt::forceCreate(['child_id' => $this->child->id, 'lesson_id' => $this->lesson->id, 'module' => 'quiz', 'item_id' => 'q1', 'correct' => true, 'created_at' => now()]);
+
+    $this->actingAs($this->user)->delete(route('lessons.destroy', $this->lesson))->assertRedirect(route('dashboard'));
+
+    $deleted = Lesson::withTrashed()->find($this->lesson->id);
+    expect($deleted->trashed())->toBeTrue()
+        ->and($deleted->status)->toBe(LessonStatus::Failed)
+        ->and($deleted->published_at)->toBeNull()
+        ->and($deleted->only(['content', 'prompt', 'notes', 'topic', 'source_summary', 'additions', 'hero', 'hero_plan', 'hero_error', 'check_notes', 'error', 'step']))
+        ->each->toBeNull()
+        ->and($deleted->title)->toBe('Biotop + Biozönose = Ökosystem')
+        ->and($deleted->subject)->toBe($this->lesson->subject)
+        ->and($deleted->child_id)->toBe($this->child->id)
+        ->and(Attempt::where('lesson_id', $this->lesson->id)->count())->toBe(0)
+        ->and(Attempt::where('lesson_id', $other->id)->count())->toBe(1);
+
+    $this->actingAs($this->user)->get(route('costs'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('lessons.0.id', $this->lesson->id)
+            ->where('lessons.0.title', 'Biotop + Biozönose = Ökosystem')
+            ->where('lessons.0.deleted', true)
+        );
+
+    $this->actingAs($this->user)->get(route('children.progress', $this->child))
+        ->assertInertia(fn (Assert $page) => $page->where('child.lastActivity', $old->created_at->diffForHumans()));
 });
 
 it('shows the public pages', function () {

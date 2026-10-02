@@ -99,7 +99,32 @@ class LessonController extends Controller
         Gate::authorize('delete', $lesson);
 
         $generator->deleteImages($lesson);
-        $lesson->delete();
+
+        // Inhalt und Lernstand verschwinden; die Zeile bleibt nur für die Kostenübersicht
+        // (Titel, Fach, Stufe, Kind). «Fehlgeschlagen» statt «Zur Prüfung», weil es keinen Inhalt
+        // mehr gibt: so lässt sie sich weder freigeben noch neu erstellen.
+        DB::transaction(function () use ($lesson) {
+            $lesson->attempts()->delete();
+
+            $lesson->updateQuietly([
+                'status' => LessonStatus::Failed,
+                'published_at' => null,
+                'content' => null,
+                'prompt' => null,
+                'notes' => null,
+                'topic' => null,
+                'source_summary' => null,
+                'additions' => null,
+                'hero' => null,
+                'hero_plan' => null,
+                'hero_error' => null,
+                'check_notes' => null,
+                'error' => null,
+                'step' => null,
+            ]);
+
+            $lesson->delete();
+        });
 
         $this->toast('Lernseite gelöscht.');
 

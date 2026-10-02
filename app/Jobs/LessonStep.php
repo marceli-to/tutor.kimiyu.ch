@@ -44,6 +44,11 @@ abstract class LessonStep implements ShouldQueue
 
     public function handle(LessonGenerator $generator): void
     {
+        // Die Queue lädt auch gelöschte Lernseiten: dann nichts mehr tun, keine Kosten verursachen
+        if ($this->lesson->trashed()) {
+            return;
+        }
+
         if ($this->step() !== null) {
             $this->lesson->update(['step' => $this->step()]);
         }

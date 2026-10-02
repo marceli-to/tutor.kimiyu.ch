@@ -37,6 +37,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Verloren beim Rollback: Kosten ohne Lernseite (Lernseite samt Kind gelöscht) und die Zuordnung
+        // der Kosten zum Konto (user_id). Danach verschwinden Kosten wieder mit der Lernseite.
         DB::table('generations')->whereNull('lesson_id')->delete();
 
         Schema::table('generations', function (Blueprint $table) {

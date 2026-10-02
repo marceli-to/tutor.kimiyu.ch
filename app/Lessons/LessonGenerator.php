@@ -236,8 +236,15 @@ class LessonGenerator
         $started = hrtime(true);
         // Kind nur einmal laden, nicht bei jedem Aufruf neu
         $lesson->loadMissing('child');
+        $userId = $lesson->child?->user_id;
+
+        // Ohne Kind kein Konto für die Kosten: dann gar nicht erst aufrufen
+        if ($userId === null) {
+            throw new GenerationFailed('Diese Lernseite gehört zu keinem Kind mehr.');
+        }
+
         $log = fn (string $status, ?ModelResponse $response, ?string $error = null) => $lesson->generations()->create([
-            'user_id' => $lesson->child->user_id,
+            'user_id' => $userId,
             'step' => $request->step,
             'model' => $response->model ?? $request->model(),
             'status' => $status,

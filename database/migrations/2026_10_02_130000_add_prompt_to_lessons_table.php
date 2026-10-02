@@ -21,6 +21,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Verloren beim Rollback: der Auftrag der Eltern, die Anzahl Fotos und die Ergänzungen der KI.
+        // Lernseiten nur aus einem Auftrag haben danach weder Thema noch Auftrag und lassen sich nicht neu erstellen.
         Schema::table('lessons', function (Blueprint $table) {
             $table->dropColumn(['prompt', 'photo_count', 'additions']);
         });

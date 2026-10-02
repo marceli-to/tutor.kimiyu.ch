@@ -57,7 +57,7 @@ const texts = {
     },
     delete: {
         title: 'Lernseite löschen?',
-        description: `Die Lernseite und der Lernstand von ${props.childName} dazu werden endgültig gelöscht.`,
+        description: `Die Lernseite und der Lernstand von ${props.childName} dazu werden endgültig gelöscht. Die Kosten bleiben in der Kostenübersicht.`,
         action: 'Endgültig löschen',
     },
 } as const;
