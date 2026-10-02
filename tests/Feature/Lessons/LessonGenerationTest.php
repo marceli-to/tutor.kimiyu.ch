@@ -4,7 +4,7 @@ use App\Enums\LessonStatus;
 use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
 use App\Jobs\FinishLesson;
-use App\Jobs\GenerateLessonHero;
+use App\Jobs\GenerateLessonGraphic;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\ModelRequest;
@@ -74,6 +74,9 @@ it('turns uploaded photos into a lesson ready for review', function () {
         ->and($lesson->step)->toBeNull()
         ->and($lesson->title)->toBe('Wie macht ein Blatt Zucker aus Licht?')
         ->and($lesson->content)->toBe(LessonFactory::fixture('fotosynthese'))
+        ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+        ->and($lesson->graphic(1)->plan['muster'])->toBe('regler')
+        ->and($lesson->graphic(1)->error)->toBeNull()
         ->and($lesson->hero['muster'])->toBe('regler')
         ->and($lesson->hero_plan['muster'])->toBe('regler')
         ->and($lesson->source_summary)->toContain('Fotosynthese')
@@ -404,6 +407,8 @@ it('publishes the page without a graphic when the hero stays broken', function (
 
     $lesson = Lesson::sole();
     expect($lesson->status)->toBe(LessonStatus::Review)
+        ->and($lesson->graphic(1)->graphic)->toBeNull()
+        ->and($lesson->graphic(1)->error)->toContain('Inline-Event-Handler')
         ->and($lesson->hero)->toBeNull()
         ->and($lesson->hero_error)->toContain('Inline-Event-Handler')
         ->and($this->fake->requestsFor('grafik-reparatur'))->toHaveCount(1);
@@ -466,7 +471,7 @@ it('runs the steps as a chain', function () {
 
     upload();
 
-    Bus::assertChained([AnalyzeLesson::class, CheckLesson::class, GenerateLessonHero::class, FinishLesson::class]);
+    Bus::assertChained([AnalyzeLesson::class, CheckLesson::class, GenerateLessonGraphic::class, FinishLesson::class]);
 
     $lesson = Lesson::sole();
     expect($lesson->status)->toBe(LessonStatus::Generating)
@@ -497,8 +502,8 @@ describe('retry', function () {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create([
             'status' => LessonStatus::Failed,
             'hero' => null,
-            'hero_plan' => ['muster' => 'regler', 'idee' => 'Regler'],
         ]);
+        $lesson->graphic(1)->update(['graphic' => null, 'error' => 'Die KI war nicht erreichbar.']);
 
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
 
@@ -745,7 +750,7 @@ describe('deleted lessons', function () {
         $lesson->delete();
 
         (new AnalyzeLesson($lesson))->handle(app(LessonGenerator::class));
-        (new GenerateLessonHero($lesson))->handle(app(LessonGenerator::class));
+        (new GenerateLessonGraphic($lesson, 1))->handle(app(LessonGenerator::class));
         (new FinishLesson($lesson))->handle(app(LessonGenerator::class));
 
         $fresh = Lesson::withTrashed()->find($lesson->id);
@@ -926,5 +931,120 @@ describe('graphic plans', function () {
 
         expect(Lesson::sole()->graphics()->count())->toBe(0)
             ->and($this->fake->requestsFor('module')[0]->prompt)->toContain('Diese Seite hat keine interaktive Grafik.');
+    });
+});
+
+describe('graphic generation', function () {
+    function threePlans(): array
+    {
+        $page = Prompts::page(LessonFactory::fixture('fotosynthese'));
+        $page['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+
+        return [...analysis(), 'seite' => $page, 'grafik_plaene' => [
+            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+            ['nr' => 2, 'plan' => plan('schritte', 'Vier Schritte'), 'hinweis' => null],
+            ['nr' => 3, 'plan' => plan('rechner', 'Ein Rechner'), 'hinweis' => null],
+        ]];
+    }
+
+    it('queues one job per possible graphic', function (string $mode, int $jobs) {
+        Bus::fake();
+
+        upload(['graphics_mode' => $mode, ...($mode === 'custom' ? ['graphics' => wishes()['graphics']] : [])]);
+
+        Bus::assertChained([
+            AnalyzeLesson::class,
+            CheckLesson::class,
+            ...array_fill(0, $jobs, GenerateLessonGraphic::class),
+            FinishLesson::class,
+        ]);
+    })->with([['none', 0], ['auto', 1], ['custom', 3]]);
+
+    it('builds each graphic on its own and keeps the others when one breaks', function () {
+        $broken = [...LessonFactory::fixture('fotosynthese.hero'), 'markup' => '<button onclick="x()">Los</button>'];
+        $this->fake->push('analyse', threePlans());
+        $this->fake->push('grafik', function (ModelRequest $request) {
+            expect(Lesson::sole()->step)->toBe('grafik-1');
+
+            return LessonFactory::fixture('fotosynthese.hero');
+        });
+        $this->fake->push('grafik', function (ModelRequest $request) use ($broken) {
+            expect(Lesson::sole()->step)->toBe('grafik-2');
+
+            return $broken;
+        });
+        $this->fake->push('grafik-reparatur', $broken);
+        $this->fake->push('grafik', LessonFactory::fixture('oekosystem.hero'));
+
+        upload(wishes());
+
+        $lesson = Lesson::sole();
+        $requests = $this->fake->requestsFor('grafik');
+
+        expect($lesson->status)->toBe(LessonStatus::Review)
+            ->and($requests)->toHaveCount(3)
+            ->and($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->graphic(1)->error)->toBeNull()
+            ->and($lesson->graphic(2)->graphic)->toBeNull()
+            ->and($lesson->graphic(2)->error)->toContain('Inline-Event-Handler')
+            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->graphic(3)->error)->toBeNull()
+            ->and($lesson->hero)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->hero_error)->toBeNull();
+
+        expect($requests[0]->prompt)->toContain("Muster: regler\nDrei Regler")->not->toContain('nicht oben auf der Seite')
+            ->and($requests[1]->prompt)->toContain("Muster: schritte\nVier Schritte")
+            ->toContain('Diese Grafik steht im Abschnitt «Was man wissen muss» neben dem Text, nicht oben auf der Seite.')
+            ->and($requests[2]->prompt)->toContain("Muster: rechner\nEin Rechner")
+            ->toContain('Diese Grafik steht weiter unten auf der Seite neben dem Text, nicht oben auf der Seite.');
+
+        foreach ($requests as $request) {
+            expect($request->prompt)->not->toContain('herkunft')
+                ->not->toContain('Ein Blatt mit Reglern');
+        }
+    });
+
+    it('skips a graphic whose wish did not fit', function () {
+        $this->fake->push('analyse', [...threePlans(), 'grafik_plaene' => [
+            ['nr' => 1, 'plan' => plan('regler', 'Drei Regler'), 'hinweis' => null],
+            ['nr' => 2, 'plan' => null, 'hinweis' => 'Passt nicht zu den Fotos.'],
+        ]]);
+
+        upload(wishes());
+
+        $lesson = Lesson::sole();
+        expect($this->fake->requestsFor('grafik'))->toHaveCount(1)
+            ->and($lesson->graphic(2)->error)->toBe('Passt nicht zu den Fotos.')
+            ->and($lesson->graphic(3)->error)->toBe('Für diese Grafik hat die KI keinen Plan erstellt.')
+            ->and($lesson->status)->toBe(LessonStatus::Review);
+    });
+
+    it('only builds the missing graphics on a retry', function () {
+        $lesson = Lesson::factory()->for($this->child)->fromFixture()->create([
+            'status' => LessonStatus::Failed,
+            'graphics_mode' => 'custom',
+        ]);
+        $lesson->graphics()->create(['position' => 2, 'plan' => plan('schritte', 'Vier Schritte'), 'error' => 'Die KI war nicht erreichbar.']);
+        $lesson->graphics()->create(['position' => 3, 'request' => 'Ein Vulkan', 'error' => 'Passt nicht zu den Fotos.']);
+
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        $lesson->refresh();
+        expect(collect($this->fake->requests)->pluck('step')->all())->toBe(['grafik'])
+            ->and($this->fake->requests[0]->prompt)->toContain("Muster: schritte\nVier Schritte")
+            ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->graphic(2)->error)->toBeNull()
+            ->and($lesson->graphic(3)->error)->toBe('Passt nicht zu den Fotos.')
+            ->and($lesson->status)->toBe(LessonStatus::Review);
+    });
+
+    it('uses the model settings of the graphic step', function () {
+        config()->set('lessons.models.grafik', ['model' => 'claude-test-grafik', 'effort' => 'medium']);
+        $this->fake->push('analyse', threePlans());
+
+        upload(wishes());
+
+        expect(collect($this->fake->requestsFor('grafik'))->map->model()->unique()->all())->toBe(['claude-test-grafik'])
+            ->and($this->fake->requestsFor('grafik'))->toHaveCount(3);
     });
 });

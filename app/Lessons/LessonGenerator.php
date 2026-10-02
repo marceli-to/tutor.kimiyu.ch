@@ -9,6 +9,7 @@ use App\Lessons\Ai\ModelResponse;
 use App\Lessons\Ai\Prompts;
 use App\Lessons\Ai\UsageAwareModelException;
 use App\Models\Lesson;
+use App\Models\LessonGraphic;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -151,8 +152,14 @@ class LessonGenerator
             ]);
         }
 
-        // Übergang bis Teil 2, Task 8: Grafik 1 auch in der alten Spalte, die Anzeige liest sie noch
-        $lesson->update(['hero_plan' => $planned[1] ?? null]);
+        $first = $lesson->graphic(1);
+
+        if ($first !== null) {
+            $this->mirrorFirstGraphic($lesson, $first);
+        } else {
+            // Übergang bis Teil 2, Task 8: ohne Grafik 1 auch kein Plan in der alten Spalte
+            $lesson->update(['hero_plan' => null]);
+        }
     }
 
     /**
@@ -221,31 +228,34 @@ class LessonGenerator
     }
 
     /**
-     * Die interaktive Grafik. Scheitert sie, bekommt die Seite keine Grafik, aber einen Hinweis.
+     * Die Grafik an Position $position. Scheitert sie, fehlt nur diese Grafik, mit einem Hinweis.
      * Beim Neu-Erstellen ($keepExisting) bleibt die bisherige Grafik, wenn die neue scheitert.
+     * Ohne Plan (abgewählt, kein Muster passt oder der Wunsch passt nicht zum Stoff) passiert nichts.
      */
-    public function hero(Lesson $lesson, bool $keepExisting = false): void
+    public function graphic(Lesson $lesson, int $position, bool $keepExisting = false): void
     {
-        $fail = function (string $message) use ($lesson, $keepExisting) {
-            $lesson->update([
-                'hero' => $keepExisting ? $lesson->hero : null,
-                'hero_error' => $keepExisting && $lesson->hero ? $message.' Die bisherige Grafik bleibt.' : $message,
-            ]);
-        };
+        $graphic = $lesson->graphic($position);
 
-        // Kein Plan: Die Eltern haben die Grafik abgewählt oder kein Muster passt zum Stoff
-        if ($lesson->hero_plan === null) {
-            $lesson->update(['hero' => $keepExisting ? $lesson->hero : null, 'hero_error' => null]);
-
+        if ($graphic?->plan === null) {
             return;
         }
 
+        $fail = function (string $message) use ($lesson, $graphic, $keepExisting) {
+            $old = $keepExisting ? $graphic->graphic : null;
+
+            $graphic->update([
+                'graphic' => $old,
+                'error' => $old ? $message.' Die bisherige Grafik bleibt.' : $message,
+            ]);
+            $this->mirrorFirstGraphic($lesson, $graphic);
+        };
+
         try {
-            $hero = $this->call($lesson, Prompts::hero($lesson))->data;
+            $hero = $this->call($lesson, Prompts::hero($lesson, $graphic))->data;
             $errors = HeroValidator::errors($hero);
 
             if ($errors !== []) {
-                $hero = $this->call($lesson, Prompts::heroRepair($lesson, $hero, $errors))->data;
+                $hero = $this->call($lesson, Prompts::heroRepair($graphic, $hero, $errors))->data;
                 $errors = HeroValidator::errors($hero);
             }
         } catch (ModelException $e) {
@@ -260,15 +270,32 @@ class LessonGenerator
             return;
         }
 
-        $lesson->update([
-            'hero' => [
+        $graphic->update([
+            'graphic' => [
                 'muster' => $hero['muster'],
                 'beschreibung' => $hero['beschreibung'],
                 'css' => $hero['css'],
                 'markup' => $hero['markup'],
                 'script' => $hero['script'],
             ],
-            'hero_error' => null,
+            'error' => null,
+        ]);
+        $this->mirrorFirstGraphic($lesson, $graphic);
+    }
+
+    /**
+     * Übergang bis Teil 2, Task 8: Grafik 1 auch in den alten Spalten, die Anzeige liest sie noch.
+     */
+    private function mirrorFirstGraphic(Lesson $lesson, LessonGraphic $graphic): void
+    {
+        if ($graphic->position !== 1) {
+            return;
+        }
+
+        $lesson->update([
+            'hero_plan' => $graphic->plan,
+            'hero' => $graphic->graphic,
+            'hero_error' => $graphic->error,
         ]);
     }
 

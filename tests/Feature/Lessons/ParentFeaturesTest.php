@@ -312,20 +312,62 @@ describe('regenerating', function () {
     });
 
     it('draws a new graphic', function () {
-        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'grafik']));
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]))
+            ->assertRedirect(route('lessons.show', $this->lesson));
 
-        expect($this->lesson->fresh()->hero['muster'])->toBe('regler')
-            ->and($this->lesson->fresh()->status)->toBe(LessonStatus::Review);
+        $lesson = $this->lesson->fresh();
+        expect($lesson->graphic(1)->graphic['muster'])->toBe('regler')
+            ->and($lesson->hero['muster'])->toBe('regler')
+            ->and($lesson->status)->toBe(LessonStatus::Review)
+            ->and($this->fake->requestsFor('grafik'))->toHaveCount(1);
+    });
+
+    it('still draws graphic 1 from the old address', function () {
+        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'grafik']))
+            ->assertRedirect(route('lessons.show', $this->lesson));
+
+        expect($this->lesson->fresh()->graphic(1)->graphic['muster'])->toBe('regler');
     });
 
     it('keeps the old graphic when the new one fails', function () {
         $this->fake->push('grafik', new ModelException('Die KI war nicht erreichbar.'));
 
-        $this->actingAs($this->user)->post(route('lessons.regenerate', [$this->lesson, 'grafik']));
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 1]));
 
         $lesson = $this->lesson->fresh();
-        expect($lesson->hero)->toBe(LessonFactory::fixture('oekosystem.hero'))
-            ->and($lesson->hero_error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.');
+        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->graphic(1)->error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.')
+            ->and($lesson->hero)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->hero_error)->toBe('Die KI war nicht erreichbar. Die bisherige Grafik bleibt.')
+            ->and($lesson->status)->toBe(LessonStatus::Review);
+    });
+
+    it('only redraws the chosen graphic', function () {
+        $first = $this->lesson->graphic(1)->only(['graphic', 'updated_at']);
+        $this->lesson->graphics()->create(['position' => 2, 'plan' => ['muster' => 'schritte', 'idee' => 'Vier Schritte'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
+        $this->lesson->graphics()->create(['position' => 3, 'plan' => ['muster' => 'rechner', 'idee' => 'Ein Rechner'], 'graphic' => LessonFactory::fixture('oekosystem.hero')]);
+        $this->travel(1)->minute();
+
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 2]));
+
+        $lesson = $this->lesson->fresh();
+        expect($this->fake->requestsFor('grafik'))->toHaveCount(1)
+            ->and($this->fake->requestsFor('grafik')[0]->prompt)->toContain("Muster: schritte\nVier Schritte")
+            ->and($lesson->graphic(1)->only(['graphic', 'updated_at']))->toEqual($first)
+            ->and($lesson->graphic(2)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'))
+            ->and($lesson->graphic(3)->graphic)->toBe(LessonFactory::fixture('oekosystem.hero'))
+            ->and($lesson->hero)->toBe(LessonFactory::fixture('oekosystem.hero'));
+    });
+
+    it('only redraws graphics that exist and have a plan', function () {
+        $this->lesson->graphics()->create(['position' => 2, 'request' => 'Ein Vulkan', 'error' => 'Passt nicht.']);
+
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 2]))->assertStatus(422);
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 3]))->assertStatus(422);
+        $this->actingAs($this->user)->post('/lernseiten/'.$this->lesson->id.'/grafik/4/neu')->assertNotFound();
+        $this->actingAs(User::factory()->create())->post(route('lessons.graphic.regenerate', [$this->lesson, 1]))->assertForbidden();
+
+        expect($this->fake->requests)->toBe([]);
     });
 
     it('is not possible while the lesson is being generated', function () {

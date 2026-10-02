@@ -174,15 +174,34 @@ class LessonController extends Controller
     }
 
     /**
-     * Nur das Quiz oder nur die Grafik neu erstellen lassen.
+     * Nur das Quiz neu erstellen lassen.
      */
     public function regenerate(Lesson $lesson, string $part): RedirectResponse
     {
+        // Übergang bis Teil 2, Task 5: Die Werkzeugleiste ruft für die Grafik noch diese Adresse auf
+        if ($part === 'grafik') {
+            return $this->regenerateGraphic($lesson, 1);
+        }
+
         Gate::authorize('update', $lesson);
 
         abort_unless(GenerationPipeline::canRegenerate($lesson, $part), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
         GenerationPipeline::regenerate($lesson, $part);
+
+        return to_route('lessons.show', $lesson);
+    }
+
+    /**
+     * Nur eine Grafik neu erstellen lassen; die anderen bleiben.
+     */
+    public function regenerateGraphic(Lesson $lesson, int $nr): RedirectResponse
+    {
+        Gate::authorize('update', $lesson);
+
+        abort_unless(GenerationPipeline::canRegenerate($lesson, 'grafik', $nr), 422, 'Das geht bei dieser Lernseite gerade nicht.');
+
+        GenerationPipeline::regenerate($lesson, 'grafik', $nr);
 
         return to_route('lessons.show', $lesson);
     }
@@ -230,7 +249,8 @@ class LessonController extends Controller
                 'canPublish' => $lesson->status === LessonStatus::Review && $lesson->content !== null,
                 'canRegenerate' => [
                     'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
-                    'grafik' => GenerationPipeline::canRegenerate($lesson, 'grafik'),
+                    // Übergang bis Teil 2, Task 5: nur Grafik 1
+                    'grafik' => GenerationPipeline::canRegenerate($lesson, 'grafik', 1),
                 ],
                 'additions' => $lesson->isFromTopic() ? [] : ($lesson->additions ?? []),
             ] : null,

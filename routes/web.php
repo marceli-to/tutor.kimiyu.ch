@@ -29,9 +29,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('lernseiten/{lesson}/nochmals', [LessonController::class, 'retry'])->name('lessons.retry');
     Route::post('lernseiten/{lesson}/freigeben', [LessonController::class, 'publish'])->name('lessons.publish');
     Route::post('lernseiten/{lesson}/zurueckziehen', [LessonController::class, 'unpublish'])->name('lessons.unpublish');
+    // «grafik» nur als Übergang bis Teil 2, Task 5 (leitet auf Grafik 1 weiter)
     Route::post('lernseiten/{lesson}/neu/{part}', [LessonController::class, 'regenerate'])
         ->whereIn('part', ['quiz', 'grafik'])
         ->name('lessons.regenerate');
+    Route::post('lernseiten/{lesson}/grafik/{nr}/neu', [LessonController::class, 'regenerateGraphic'])
+        ->where('nr', '[1-3]')
+        ->name('lessons.graphic.regenerate');
 
     Route::get('lernseiten/{lesson}/bearbeiten', [LessonContentController::class, 'edit'])->name('lessons.edit');
     Route::put('lernseiten/{lesson}/inhalt', [LessonContentController::class, 'update'])->name('lessons.update');

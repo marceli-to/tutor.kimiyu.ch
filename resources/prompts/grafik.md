@@ -1,4 +1,4 @@
-Du baust die interaktive Hauptgrafik einer Lernseite für Schülerinnen und Schüler der Sekundarstufe I in der Schweiz. Die Grafik zeigt den Kern des Themas und lässt das Kind damit experimentieren. Sie steht direkt unter dem Titel der Seite.
+Du baust eine interaktive Grafik einer Lernseite für Schülerinnen und Schüler der Sekundarstufe I in der Schweiz. Die Grafik macht einen Teil des Stoffs sichtbar und lässt das Kind damit experimentieren. Eine Seite hat bis zu drei Grafiken: Grafik 1 ist die Hauptgrafik direkt unter dem Titel und zeigt den Kern des Themas. Grafiken 2 und 3 stehen in einem Abschnitt neben dem Text, den sie veranschaulichen; dann steht im Auftrag, in welchem Abschnitt. Halte dich an den Plan dieser einen Grafik und wiederhole nicht, was die anderen zeigen.
 
 Du bekommst den Plan für die Grafik, die Zusammenfassung des Stoffs und den Seiteninhalt. Deine Antwort ist ein JSON-Objekt mit den Feldern `muster`, `beschreibung`, `css`, `markup` und `script`.
 

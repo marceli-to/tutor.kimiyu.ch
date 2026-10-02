@@ -172,20 +172,31 @@ class Prompts
         return $content;
     }
 
-    public static function hero(Lesson $lesson): ModelRequest
+    /**
+     * Eine Grafik nach ihrem Plan. Grafik 1 steht oben, 2 und 3 im Abschnitt mit ihrem Baustein.
+     */
+    public static function hero(Lesson $lesson, LessonGraphic $graphic): ModelRequest
     {
         // Ein Beispiel reicht als Massstab; jedes weitere kostet nur Input
         $example = '### '.LessonFactory::fixture('fotosynthese')['meta']['titel']."\n\n```json\n".self::json(LessonFactory::fixture('fotosynthese.hero'))."\n```";
 
+        $place = null;
+
+        if ($graphic->position > 1) {
+            $title = self::graphicSection($lesson->content ?? [], $graphic->position);
+            $place = 'Diese Grafik steht '.($title !== null ? "im Abschnitt «{$title}»" : 'weiter unten auf der Seite').' neben dem Text, nicht oben auf der Seite.';
+        }
+
         return new ModelRequest(
             step: 'grafik',
             system: strtr(self::load('grafik'), ['{{BEISPIELE}}' => $example]),
-            prompt: implode("\n\n", [
-                "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}",
+            prompt: implode("\n\n", array_filter([
+                self::graphicPlanText($graphic),
+                $place,
                 // Die Grafik sieht das Kind: ohne Herkunft und ohne Liste der Ergänzungen
                 self::context($lesson, forChild: true),
                 "Inhalt der Lernseite:\n".self::json(LessonView::withoutOrigin($lesson->content ?? [])),
-            ]),
+            ])),
             schema: Schemas::hero(),
             maxTokens: config('lessons.max_tokens.grafik'),
         );
@@ -195,19 +206,24 @@ class Prompts
      * @param  array<string, mixed>  $hero
      * @param  list<string>  $errors
      */
-    public static function heroRepair(Lesson $lesson, array $hero, array $errors): ModelRequest
+    public static function heroRepair(LessonGraphic $graphic, array $hero, array $errors): ModelRequest
     {
         return new ModelRequest(
             step: 'grafik-reparatur',
             system: self::load('grafik-reparatur'),
             prompt: implode("\n\n", [
-                "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}",
+                self::graphicPlanText($graphic),
                 "Diese Probleme müssen behoben werden:\n- ".implode("\n- ", $errors),
                 "Bisheriges Ergebnis:\n".self::json($hero),
             ]),
             schema: Schemas::hero(),
             maxTokens: config('lessons.max_tokens.grafik'),
         );
+    }
+
+    private static function graphicPlanText(LessonGraphic $graphic): string
+    {
+        return "Plan für die Grafik:\nMuster: {$graphic->plan['muster']}\n{$graphic->plan['idee']}";
     }
 
     /**

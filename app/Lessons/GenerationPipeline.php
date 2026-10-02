@@ -6,8 +6,8 @@ use App\Enums\LessonStatus;
 use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
 use App\Jobs\FinishLesson;
-use App\Jobs\GenerateLessonHero;
-use App\Jobs\RegenerateHero;
+use App\Jobs\GenerateLessonGraphic;
+use App\Jobs\RegenerateGraphic;
 use App\Jobs\RegenerateQuiz;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Bus;
@@ -30,8 +30,16 @@ class GenerationPipeline
             }
         }
 
-        if ($lesson->hero === null && $lesson->with_hero) {
-            $jobs[] = new GenerateLessonHero($lesson);
+        // Ein Job pro möglicher Grafik; welche einen Plan haben, steht erst nach der Analyse fest
+        $positions = match ($lesson->graphics_mode) {
+            'none' => [],
+            'custom' => [1, 2, 3],
+            default => [1],
+        };
+        $finished = $lesson->graphics()->whereNotNull('graphic')->pluck('position')->all();
+
+        foreach (array_diff($positions, $finished) as $position) {
+            $jobs[] = new GenerateLessonGraphic($lesson, $position);
         }
 
         $jobs[] = new FinishLesson($lesson);
@@ -46,13 +54,13 @@ class GenerationPipeline
     }
 
     /**
-     * Einen Teil einer fertigen Seite neu erstellen lassen: «quiz» oder «grafik».
+     * Einen Teil einer fertigen Seite neu erstellen lassen: «quiz» oder die Grafik an Position $position.
      */
-    public static function regenerate(Lesson $lesson, string $part): void
+    public static function regenerate(Lesson $lesson, string $part, int $position = 1): void
     {
         $job = match ($part) {
             'quiz' => new RegenerateQuiz($lesson),
-            'grafik' => new RegenerateHero($lesson),
+            'grafik' => new RegenerateGraphic($lesson, $position),
             default => throw new InvalidArgumentException("Unbekannter Teil: {$part}"),
         };
 
@@ -65,11 +73,14 @@ class GenerationPipeline
         Bus::chain([$job, new FinishLesson($lesson)])->dispatch();
     }
 
-    public static function canRegenerate(Lesson $lesson, string $part): bool
+    /**
+     * Eine Grafik lässt sich nur neu erstellen, wenn es für sie einen Plan gibt.
+     */
+    public static function canRegenerate(Lesson $lesson, string $part, int $position = 1): bool
     {
         return in_array($lesson->status, [LessonStatus::Review, LessonStatus::Published], true)
             && $lesson->content !== null
-            && ($part !== 'grafik' || $lesson->hero_plan !== null);
+            && ($part !== 'grafik' || $lesson->graphic($position)?->plan !== null);
     }
 
     /**
