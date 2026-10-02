@@ -23,8 +23,8 @@ class Schemas
     {
         return self::object([
             'quelle' => self::object([
-                'lesbar' => ['type' => 'boolean', 'description' => 'false, wenn die Fotos unleserlich sind, das Thema unklar ist oder kein Schulstoff erkennbar ist'],
-                'problem' => self::nullable(['type' => 'string', 'description' => 'Kurze Erklärung für die Eltern, was mit den Fotos oder dem Thema nicht stimmt']),
+                'lesbar' => ['type' => 'boolean', 'description' => 'false, wenn die Fotos unleserlich sind, der Auftrag unklar ist oder kein Schulstoff erkennbar ist'],
+                'problem' => self::nullable(['type' => 'string', 'description' => 'Kurze Erklärung für die Eltern, was mit den Fotos oder dem Auftrag nicht stimmt']),
             ]),
             'zusammenfassung' => ['type' => 'string', 'description' => 'Neutrale, vollständige Zusammenfassung des Stoffs in eigenen Worten'],
             'ergaenzungen' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Pro Ergänzung ein Satz: was auf den Fotos fehlte und was aus Fachwissen ergänzt wurde. Leer, wenn nichts ergänzt wurde oder es keine Fotos gibt.'],

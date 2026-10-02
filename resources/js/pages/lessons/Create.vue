@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { ImagePlus, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -106,12 +106,24 @@ function chipFits(text: string): boolean {
     return withChip(text).length <= PROMPT_MAX;
 }
 
-function addChip(text: string) {
-    if (chipFits(text)) {
-        form.prompt = withChip(text);
+async function addChip(text: string) {
+    if (!chipFits(text)) {
+        promptInput.value?.focus();
+
+        return;
     }
 
+    const next = withChip(text);
+    // Der neue Baustein steht am Ende; seine «…» markieren, damit die Eltern sie gleich überschreiben
+    const placeholder = next.indexOf('…', next.length - text.length);
+    form.prompt = next;
+
+    await nextTick();
     promptInput.value?.focus();
+
+    if (placeholder !== -1) {
+        promptInput.value?.setSelectionRange(placeholder, placeholder + 1);
+    }
 }
 
 // Stufe vom gewählten Kind übernehmen, solange nichts anderes eingetragen ist
@@ -384,6 +396,12 @@ onBeforeUnmount(() =>
                     <Spinner v-if="form.processing" />
                     Lernseite erstellen
                 </Button>
+                <span
+                    v-if="!hasSource && !preparing"
+                    class="text-sm text-muted-foreground"
+                >
+                    Lade ein Foto hoch oder schreib einen Auftrag.
+                </span>
                 <span
                     v-if="form.progress"
                     class="text-sm text-muted-foreground"

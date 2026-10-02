@@ -73,7 +73,7 @@ class GenerationPipeline
     }
 
     /**
-     * Ein neuer Versuch geht nur, wenn es eine Quelle gibt (Fotos oder Thema) oder der Inhalt schon steht.
+     * Ein neuer Versuch geht nur, wenn es eine Quelle gibt (Fotos, Auftrag ohne Fotos oder Thema) oder der Inhalt schon steht.
      */
     public static function canRetry(Lesson $lesson): bool
     {

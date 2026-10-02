@@ -20,7 +20,7 @@ class LessonGenerator
     public function __construct(private LanguageModel $model) {}
 
     /**
-     * Fotos oder Thema → Zusammenfassung, Plan für die Grafik, Textteil; danach die Module.
+     * Fotos, Auftrag oder (bei alten Lernseiten) Thema → Zusammenfassung, Plan für die Grafik, Textteil; danach die Module.
      * Bei Regelverstössen ein Reparatur-Call pro betroffenem Teil.
      *
      * @throws GenerationFailed wenn kein brauchbarer Inhalt entsteht
@@ -29,8 +29,11 @@ class LessonGenerator
     public function analyze(Lesson $lesson): void
     {
         $images = [];
+        $disk = Storage::disk('lesson-images');
+
         foreach ($lesson->images as $image) {
-            $data = Storage::disk('lesson-images')->get($image->path);
+            // Die Disk wirft bei fehlenden Dateien; fehlende Fotos werden unten verständlich gemeldet
+            $data = $disk->exists($image->path) ? $disk->get($image->path) : null;
 
             if (is_string($data)) {
                 $images[] = ['mime' => $image->mime_type, 'data' => $data];
@@ -47,9 +50,12 @@ class LessonGenerator
 
         if (! ($data['quelle']['lesbar'] ?? false) || ! is_array($data['seite'] ?? null)) {
             throw new GenerationFailed(
-                ($data['quelle']['problem'] ?? null) ?: ($lesson->isFromTopic()
-                    ? 'Zu diesem Thema konnte keine Lernseite erstellt werden.'
-                    : 'Auf den Fotos war kein Schulstoff zu erkennen.'),
+                ($data['quelle']['problem'] ?? null) ?: match (true) {
+                    ! $lesson->isFromTopic() => 'Auf den Fotos war kein Schulstoff zu erkennen.',
+                    $lesson->prompt !== null => 'Zu diesem Auftrag konnte keine Lernseite erstellt werden.',
+                    // Alte Lernseiten aus einem Thema
+                    default => 'Zu diesem Thema konnte keine Lernseite erstellt werden.',
+                },
             );
         }
 

@@ -514,6 +514,35 @@ describe('retry', function () {
         $this->actingAs($this->user)->post(route('lessons.retry', $lesson))->assertStatus(422);
     });
 
+    it('is not possible for a photo lesson with a prompt whose photos are gone', function () {
+        $lesson = Lesson::factory()->for($this->child)->create([
+            'status' => LessonStatus::Failed,
+            'prompt' => 'Prüfung am Freitag',
+            'photo_count' => 2,
+            'error' => 'Die KI war nicht erreichbar.',
+        ]);
+
+        $this->actingAs($this->user)->get(route('lessons.show', $lesson))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.canRetry', false));
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson))->assertStatus(422);
+        expect($this->fake->requests)->toBe([]);
+    });
+
+    it('explains that the photos are missing when only their files are gone', function () {
+        $lesson = Lesson::factory()->for($this->child)->create([
+            'status' => LessonStatus::Failed,
+            'prompt' => 'Prüfung am Freitag',
+            'photo_count' => 1,
+        ]);
+        $lesson->images()->create(['path' => "{$lesson->id}/weg.jpg", 'mime_type' => 'image/jpeg', 'size' => 1]);
+
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        expect($lesson->fresh()->status)->toBe(LessonStatus::Failed)
+            ->and($lesson->fresh()->error)->toBe('Es sind keine Fotos mehr vorhanden. Bitte die Lernseite neu erstellen.')
+            ->and($this->fake->requests)->toBe([]);
+    });
+
     it('is only allowed for the parent', function () {
         $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['status' => LessonStatus::Failed]);
 
@@ -632,6 +661,17 @@ describe('from a prompt', function () {
 
         expect($lesson->fresh()->status)->toBe(LessonStatus::Review);
     });
+});
+
+it('names the prompt or the topic when no lesson could be made', function () {
+    $this->fake->push('analyse', analysis(['quelle' => ['lesbar' => false, 'problem' => null], 'seite' => null]));
+    uploadPrompt();
+    expect(Lesson::sole()->error)->toBe('Zu diesem Auftrag konnte keine Lernseite erstellt werden.');
+
+    $this->fake->push('analyse', analysis(['quelle' => ['lesbar' => false, 'problem' => null], 'seite' => null]));
+    $legacy = Lesson::factory()->for($this->child)->create(['status' => LessonStatus::Failed, 'topic' => 'Fotosynthese']);
+    $this->actingAs($this->user)->post(route('lessons.retry', $legacy));
+    expect($legacy->fresh()->error)->toBe('Zu diesem Thema konnte keine Lernseite erstellt werden.');
 });
 
 describe('without a graphic', function () {

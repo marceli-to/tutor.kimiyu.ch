@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, setLayoutProps, useForm } from '@inertiajs/vue3';
 import { Plus, Trash2 } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, toRaw } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import EditField from '@/components/lesson/EditField.vue';
@@ -58,6 +58,23 @@ function splitParagraphs(value: string | null | undefined): string[] {
         .split(/\n\s*\n/)
         .map((p) => p.trim())
         .filter(Boolean);
+}
+
+// Stabile Schlüssel für Bausteine, auch wenn einer entfernt wird (splice). Nur im Browser,
+// damit der Inhalt für den Server unverändert bleibt.
+const blockKeys = new WeakMap<object, number>();
+let nextBlockKey = 0;
+
+function blockKey(block: object): number {
+    const raw = toRaw(block);
+    let key = blockKeys.get(raw);
+
+    if (key === undefined) {
+        key = nextBlockKey++;
+        blockKeys.set(raw, key);
+    }
+
+    return key;
 }
 
 function newId(prefix: string): string {
@@ -171,7 +188,7 @@ function save() {
 
                 <div
                     v-for="(block, b) in section.bloecke"
-                    :key="b"
+                    :key="blockKey(block)"
                     class="space-y-3 border-l-2 pl-4"
                 >
                     <div

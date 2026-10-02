@@ -83,3 +83,19 @@ it('keeps the origin when the content is edited', function () {
     expect($stored['abschnitte'][0]['bloecke'][0]['herkunft'])->toBe('ergaenzt')
         ->and($stored['module']['lueckentext']['herkunft'])->toBe('foto');
 });
+
+it('keeps origin and prompt out of everything the child receives', function () {
+    $this->lesson->update(['prompt' => 'Geheimer Auftrag der Eltern']);
+
+    foreach ([
+        $this->get(route('shared.index', $this->child->share_token)),
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson])),
+        $this->postJson(route('shared.answer', [$this->child->share_token, $this->lesson]), ['module' => 'quiz', 'item_id' => 'q1', 'answer' => 1]),
+        $this->postJson(route('shared.answer', [$this->child->share_token, $this->lesson]), ['module' => 'lueckentext', 'item_id' => 'g1', 'answer' => 'x']),
+    ] as $response) {
+        $response->assertOk()
+            ->assertDontSee('herkunft')
+            ->assertDontSee('Geheimer Auftrag')
+            ->assertDontSee('Zellatmung als Gegenstück');
+    }
+});
