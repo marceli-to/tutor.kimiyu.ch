@@ -113,6 +113,24 @@ class Lesson extends Model
     }
 
     /**
+     * Ready for the child. Not while a part is being regenerated: it would ask for a new check right after.
+     */
+    public function canBePublished(): bool
+    {
+        return $this->status === LessonStatus::Review && $this->content !== null && ! $this->isRegenerating();
+    }
+
+    /**
+     * The parents can correct the content. Not while a part is being regenerated: the job would overwrite the changes.
+     */
+    public function isEditable(): bool
+    {
+        return $this->content !== null
+            && ! $this->isRegenerating()
+            && in_array($this->status, [LessonStatus::Review, LessonStatus::Published], true);
+    }
+
+    /**
      * The subject for display, also before (or without) the detection.
      */
     public function subjectLabel(): string

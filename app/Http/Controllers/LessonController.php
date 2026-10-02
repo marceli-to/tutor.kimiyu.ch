@@ -2,29 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Lessons\CreateLesson;
+use App\Actions\Lessons\DeleteLesson;
+use App\Actions\Lessons\PublishLesson;
+use App\Actions\Lessons\RegenerateGraphic;
+use App\Actions\Lessons\RegenerateQuiz;
+use App\Actions\Lessons\RetryLesson;
+use App\Actions\Lessons\UnpublishLesson;
 use App\Enums\LessonStatus;
 use App\Http\Requests\StoreLessonRequest;
 use App\Lessons\GenerationPipeline;
 use App\Lessons\HeroDocument;
 use App\Lessons\HeroPattern;
-use App\Lessons\ImageProcessor;
-use App\Lessons\LessonGenerator;
 use App\Lessons\LessonView;
-use App\Models\Child;
 use App\Models\Lesson;
 use App\Models\LessonGraphic;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class LessonController extends Controller
@@ -103,69 +101,9 @@ class LessonController extends Controller
         return $childId.'|'.mb_strtolower(trim((string) $subject));
     }
 
-    public function store(StoreLessonRequest $request): RedirectResponse
+    public function store(StoreLessonRequest $request, CreateLesson $createLesson): RedirectResponse
     {
-        // Zuerst alle Fotos verarbeiten, damit bei einem kaputten Bild nichts halb gespeichert wird
-        $images = [];
-        foreach ($request->file('images', []) as $index => $file) {
-            try {
-                $images[] = ImageProcessor::process($file);
-            } catch (InvalidArgumentException) {
-                throw ValidationException::withMessages([
-                    "images.$index" => 'Foto '.($index + 1).' konnte nicht gelesen werden. Bitte als JPEG speichern und nochmals hochladen.',
-                ]);
-            }
-        }
-
-        $lesson = DB::transaction(function () use ($request, $images) {
-            $level = $request->string('level')->trim()->value() ?: (string) $request->childLevel();
-
-            $child = $request->filled('child_id')
-                ? $request->user()->children()->findOrFail($request->integer('child_id'))
-                : $request->user()->children()->create([
-                    'name' => $request->string('child_name')->trim()->value(),
-                    'level' => $level,
-                ]);
-
-            /** @var Child $child */
-            $lesson = $child->lessons()->create([
-                'status' => LessonStatus::Draft,
-                // Leer: Die KI erkennt das Fach in der Analyse
-                'subject' => $request->string('subject')->trim()->value() ?: null,
-                'level' => $level,
-                'prompt' => $request->string('prompt')->trim()->value() ?: null,
-                'photo_count' => count($images),
-                'graphics_mode' => $request->validated('graphics_mode'),
-                'purpose' => $request->validated('purpose'),
-                'scope' => $request->validated('scope'),
-                'modules' => array_values($request->validated('modules')),
-            ]);
-
-            // Wünsche der Eltern als Grafik 1 bis 3
-            foreach (array_values($request->validated('graphics', [])) as $index => $wish) {
-                $lesson->graphics()->create([
-                    'position' => $index + 1,
-                    'request' => trim($wish['description']),
-                    'pattern' => $wish['pattern'] ?? null,
-                ]);
-            }
-
-            foreach ($images as $position => $image) {
-                $path = $lesson->id.'/'.Str::random(32).'.jpg';
-                Storage::disk('lesson-images')->put($path, $image['data']);
-
-                $lesson->images()->create([
-                    'path' => $path,
-                    'mime_type' => $image['mime'],
-                    'size' => strlen($image['data']),
-                    'position' => $position,
-                ]);
-            }
-
-            return $lesson;
-        });
-
-        GenerationPipeline::start($lesson);
+        $lesson = $createLesson->handle($request->user(), $request->validated(), $request->childLevel());
 
         return to_route('lessons.show', $lesson);
     }
@@ -177,36 +115,11 @@ class LessonController extends Controller
         return $this->render($lesson, parent: true);
     }
 
-    public function destroy(Lesson $lesson, LessonGenerator $generator): RedirectResponse
+    public function destroy(Lesson $lesson, DeleteLesson $deleteLesson): RedirectResponse
     {
         Gate::authorize('delete', $lesson);
 
-        $generator->deleteImages($lesson);
-
-        // Inhalt und Lernstand verschwinden; die Zeile bleibt nur für die Kostenübersicht
-        // (Titel, Fach, Stufe, Kind). «Fehlgeschlagen» statt «Zur Prüfung», weil es keinen Inhalt
-        // mehr gibt: so lässt sie sich weder freigeben noch neu erstellen.
-        DB::transaction(function () use ($lesson) {
-            $lesson->attempts()->delete();
-            // Die Grafiken sind Inhalt der Lernseite
-            $lesson->graphics()->delete();
-
-            $lesson->updateQuietly([
-                'status' => LessonStatus::Failed,
-                'published_at' => null,
-                'content' => null,
-                'prompt' => null,
-                'notes' => null,
-                'topic' => null,
-                'source_summary' => null,
-                'additions' => null,
-                'check_notes' => null,
-                'error' => null,
-                'step' => null,
-            ]);
-
-            $lesson->delete();
-        });
+        $deleteLesson->handle($lesson);
 
         $this->toast('Lernseite gelöscht.');
 
@@ -216,26 +129,26 @@ class LessonController extends Controller
     /**
      * Freigeben: Das Kind sieht die Seite über seinen Link.
      */
-    public function publish(Lesson $lesson): RedirectResponse
+    public function publish(Lesson $lesson, PublishLesson $publishLesson): RedirectResponse
     {
         Gate::authorize('update', $lesson);
 
-        abort_unless($this->canPublish($lesson), 422, 'Diese Lernseite kann nicht freigegeben werden.');
+        abort_unless($lesson->canBePublished(), 422, 'Diese Lernseite kann nicht freigegeben werden.');
 
-        $lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
+        $publishLesson->handle($lesson);
 
         $this->toast("Freigegeben. {$lesson->child->name} sieht die Seite jetzt über den Link.");
 
         return back();
     }
 
-    public function unpublish(Lesson $lesson): RedirectResponse
+    public function unpublish(Lesson $lesson, UnpublishLesson $unpublishLesson): RedirectResponse
     {
         Gate::authorize('update', $lesson);
 
         abort_unless($lesson->status === LessonStatus::Published, 422);
 
-        $lesson->update(['status' => LessonStatus::Review, 'published_at' => null]);
+        $unpublishLesson->handle($lesson);
 
         $this->toast('Die Seite ist für das Kind nicht mehr sichtbar.');
 
@@ -245,13 +158,13 @@ class LessonController extends Controller
     /**
      * Nur das Quiz neu erstellen lassen.
      */
-    public function regenerate(Lesson $lesson, string $part): RedirectResponse
+    public function regenerate(Lesson $lesson, string $part, RegenerateQuiz $regenerateQuiz): RedirectResponse
     {
         Gate::authorize('update', $lesson);
 
         abort_unless(GenerationPipeline::canRegenerate($lesson, $part), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
-        GenerationPipeline::regenerate($lesson, $part);
+        $regenerateQuiz->handle($lesson);
 
         return to_route('lessons.show', $lesson);
     }
@@ -259,24 +172,24 @@ class LessonController extends Controller
     /**
      * Nur eine Grafik neu erstellen lassen; die anderen bleiben.
      */
-    public function regenerateGraphic(Lesson $lesson, int $nr): RedirectResponse
+    public function regenerateGraphic(Lesson $lesson, int $nr, RegenerateGraphic $regenerateGraphic): RedirectResponse
     {
         Gate::authorize('update', $lesson);
 
         abort_unless(GenerationPipeline::canRegenerate($lesson, 'graphic', $nr), 422, 'Das geht bei dieser Lernseite gerade nicht.');
 
-        GenerationPipeline::regenerate($lesson, 'graphic', $nr);
+        $regenerateGraphic->handle($lesson, $nr);
 
         return to_route('lessons.show', $lesson);
     }
 
-    public function retry(Lesson $lesson): RedirectResponse
+    public function retry(Lesson $lesson, RetryLesson $retryLesson): RedirectResponse
     {
         Gate::authorize('update', $lesson);
 
         abort_unless(GenerationPipeline::canRetry($lesson), 422, 'Diese Lernseite kann nicht nochmals erstellt werden.');
 
-        GenerationPipeline::start($lesson);
+        $retryLesson->handle($lesson);
 
         return to_route('lessons.show', $lesson);
     }
@@ -329,14 +242,6 @@ class LessonController extends Controller
             : [1];
     }
 
-    /**
-     * Not while a part is being regenerated: it would ask for a new check right after.
-     */
-    private function canPublish(Lesson $lesson): bool
-    {
-        return $lesson->status === LessonStatus::Review && $lesson->content !== null && ! $lesson->isRegenerating();
-    }
-
     private function render(Lesson $lesson, bool $parent): Response
     {
         return Inertia::render('lessons/Show', [
@@ -345,7 +250,7 @@ class LessonController extends Controller
                 'shareUrl' => $lesson->status === LessonStatus::Published
                     ? route('shared.show', [$lesson->child->share_token, $lesson])
                     : null,
-                'canPublish' => $this->canPublish($lesson),
+                'canPublish' => $lesson->canBePublished(),
                 'canRegenerate' => [
                     'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
                 ],
