@@ -181,6 +181,20 @@ it('tells the system prompts to keep the origin marker away from the child', fun
         ->and($this->fake->requestsFor('module')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht');
 });
 
+it('gives the repair of the text part the graphic plans and the rules for graphic blocks', function () {
+    $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['graphics_mode' => 'custom']);
+    $lesson->graphics()->create(['position' => 2, 'plan' => ['muster' => 'schritte', 'idee' => 'Vier Schritte']]);
+    $content = $lesson->content;
+    $content['abschnitte'][0]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+
+    $request = Prompts::repair($lesson, $content, 'seite', ['Ein Fehler.']);
+
+    expect($request->prompt)->toContain('Geplante Grafiken:')
+        ->toContain("Grafik 2 (im Abschnitt «{$content['abschnitte'][0]['titel']}»): Muster schritte\nVier Schritte")
+        ->and($request->system)->toContain('Bausteine `grafik` nur für geplante Grafiken mit Nummer 2 oder 3')
+        ->and(Prompts::repair($lesson, $content, 'module', ['Ein Fehler.'])->prompt)->not->toContain('Geplante Grafiken:');
+});
+
 it('tells the repair to keep origin and ids', function () {
     $broken = LessonFactory::fixture('fotosynthese');
     $broken['module']['quiz'] = array_slice($broken['module']['quiz'], 0, 2);
@@ -1002,6 +1016,7 @@ describe('graphics mode', function () {
             'level' => '2. Sek',
             'prompt' => 'Prüfung am Freitag',
         ])->assertSessionHasErrors(['graphics_mode' => 'Wähle aus, ob und welche Grafiken die Seite bekommt.']);
+        // The old key `with_hero` does not replace the mode
         upload(['with_hero' => false, 'graphics_mode' => null])->assertSessionHasErrors('graphics_mode');
         upload(['graphics_mode' => 'alle'])->assertSessionHasErrors('graphics_mode');
 
@@ -1135,6 +1150,30 @@ describe('graphic plans', function () {
         $lesson = Lesson::sole();
         expect($lesson->graphics->pluck('plan', 'position')->all())->toBe([1 => plan('regler', 'Drei Regler')])
             ->and($this->fake->requestsFor('module')[0]->prompt)->toContain("Grafik 1 (oben): Muster regler\nDrei Regler");
+    });
+
+    it('forgets the plan of an earlier attempt when the ai now decides against a graphic', function () {
+        $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+        upload(['graphics_mode' => 'auto']);
+        $lesson = Lesson::sole();
+        expect($lesson->status)->toBe(LessonStatus::Failed)
+            ->and($lesson->graphic(1)->plan)->not->toBeNull();
+
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        expect($lesson->fresh()->status)->toBe(LessonStatus::Review)
+            ->and($lesson->graphics()->count())->toBe(0)
+            ->and($this->fake->requestsFor('grafik'))->toBe([]);
+    });
+
+    it('keeps a finished graphic when a new analysis has no plan for it', function () {
+        $lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['graphics_mode' => 'auto', 'prompt' => 'Fotosynthese']);
+        $this->fake->push('analyse', [...analysis(), 'grafik_plaene' => []]);
+
+        app(LessonGenerator::class)->analyze($lesson);
+
+        expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.hero'));
     });
 
     it('stores no plan when the parents switched the graphics off', function () {
@@ -1460,6 +1499,61 @@ describe('subject detected by the ai', function () {
         expect(Schemas::analysis()['properties'])->toHaveKey('fach')
             ->and(Schemas::analysis()['required'])->toContain('fach')
             ->and(file_get_contents(resource_path('prompts/analyse.md')))->toContain('`fach`');
+    });
+
+    it('remembers whether the subject was detected', function () {
+        $this->fake->push('analyse', analysis(['fach' => 'Chemie']));
+        upload(['subject' => '']);
+        expect(Lesson::sole()->subject_detected)->toBeTrue();
+
+        Lesson::query()->forceDelete();
+        upload();
+        expect(Lesson::sole()->subject_detected)->toBeFalse();
+    });
+
+    it('detects the subject again on a retry', function () {
+        $this->fake->push('analyse', analysis(['fach' => 'Chemie']));
+        $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+        upload(['subject' => '']);
+        $lesson = Lesson::sole();
+        expect($lesson->subject)->toBe('Chemie');
+
+        $this->fake->push('analyse', analysis(['fach' => 'Biologie']));
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        expect($this->fake->requestsFor('analyse')[1]->prompt)->toContain('Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag')
+            ->and($lesson->fresh()->subject)->toBe('Biologie')
+            ->and($lesson->fresh()->subject_detected)->toBeTrue();
+    });
+
+    it('keeps the subject of the parents on a retry', function () {
+        $this->fake->push('seite', new ModelException('Die KI war nicht erreichbar.'));
+        upload(['subject' => 'Biologie']);
+        $lesson = Lesson::sole();
+
+        $this->fake->push('analyse', analysis(['fach' => 'Chemie']));
+        $this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+
+        expect($this->fake->requestsFor('analyse')[1]->prompt)->toContain('Fach: Biologie')
+            ->and($lesson->fresh()->subject)->toBe('Biologie')
+            ->and($lesson->fresh()->subject_detected)->toBeFalse();
+    });
+
+    it('shows an unknown subject for lessons that failed before the detection', function () {
+        $failed = lessonFor($this->child, ['subject' => null, 'title' => null, 'prompt' => 'Brüche', 'status' => LessonStatus::Failed]);
+        lessonFor($this->child, ['subject' => null, 'title' => null, 'prompt' => 'Atome', 'status' => LessonStatus::Generating]);
+        lessonFor($this->child, ['subject' => 'Biologie', 'status' => LessonStatus::Review]);
+
+        $this->actingAs($this->user)->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('children.0.subjects.0.name', 'Fach unbekannt')
+                ->where('children.0.subjects.0.lessons.0.title', 'Brüche')
+                ->where('children.0.subjects.1.name', 'Fach wird erkannt …')
+                ->where('children.0.subjects.1.lessons.0.title', 'Atome')
+                ->where('children.0.subjects.2.name', 'Biologie')
+            );
+        $this->actingAs($this->user)->get(route('lessons.show', $failed))
+            ->assertInertia(fn (Assert $page) => $page->where('lesson.subject', 'Fach unbekannt'));
     });
 
     it('shows lessons without a subject in the library, the costs and the lesson', function () {

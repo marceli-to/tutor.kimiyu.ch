@@ -8,6 +8,9 @@ Regeln für den Textteil (`seite`):
 
 - 1–4 Abschnitte mit je 1–4 Bausteinen. Spalten haben 2–3 Einträge mit Kategorie cat1–cat3.
 - `probieren` hat 1–3 Experimente oder ist null.
+- Bausteine `grafik` nur für geplante Grafiken mit Nummer 2 oder 3 (siehe «Geplante Grafiken»), je höchstens einmal. Grafik 1 steht immer oben und hat nie einen Baustein.
+- Ein Baustein `grafik` steht nie allein in einem Abschnitt, sondern neben dem Text, den die Grafik zeigt.
+- Bestehende Bausteine `grafik` behältst du mit ihrer `nr`, ausser ein Fehler betrifft genau sie.
 
 Regeln für die Module (`module`):
 

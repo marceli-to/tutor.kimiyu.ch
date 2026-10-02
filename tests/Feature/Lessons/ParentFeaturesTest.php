@@ -192,8 +192,13 @@ describe('publishing and sharing', function () {
                 ->where('parent.canPublish', true)
                 ->where('parent.shareUrl', null)
                 ->where('parent.canRegenerate', ['quiz' => true])
+                ->where('parent.quizCount', 5)
                 ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
             );
+
+        $this->lesson->update(['scope' => 'ausfuehrlich']);
+        $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page->where('parent.quizCount', 8));
 
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);
 
@@ -422,9 +427,8 @@ describe('regenerating', function () {
     });
 
     it('clears the running regeneration after an unexpected error', function (string $job) {
-        $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now(), 'step' => 'neu-grafik']);
         $step = $job === RegenerateQuiz::class ? 'neu-quiz' : 'neu-grafik';
-        $this->lesson->update(['step' => $step]);
+        $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now(), 'step' => $step]);
 
         (new $job($this->lesson, 1))->failed(new RuntimeException('Timeout'));
 

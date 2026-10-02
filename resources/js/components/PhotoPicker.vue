@@ -61,6 +61,8 @@ const dropTarget = ref<{ index: number; side: 'before' | 'after' } | null>(
 );
 
 let nextId = 1;
+// Resizing is async; afterwards the component may already be gone
+let unmounted = false;
 
 const preparing = computed(() => pending.value > 0);
 const canAddMore = computed(() => items.value.length < props.maxImages);
@@ -117,45 +119,52 @@ async function addFiles(files: File[]) {
 
     pending.value++;
 
-    for (const file of images) {
-        // Pro Foto prüfen, weil mehrere Quellen gleichzeitig Fotos liefern können
-        if (items.value.length >= props.maxImages) {
-            imageError.value = `Höchstens ${props.maxImages} Fotos pro Lernseite.`;
-            break;
-        }
-
-        try {
-            const resized = await resizeImage(file, props.maxEdge);
-
+    try {
+        for (const file of images) {
+            // Pro Foto prüfen, weil mehrere Quellen gleichzeitig Fotos liefern können
             if (items.value.length >= props.maxImages) {
                 imageError.value = `Höchstens ${props.maxImages} Fotos pro Lernseite.`;
                 break;
             }
 
-            const item: Item = {
-                id: nextId++,
-                file: resized,
-                url: URL.createObjectURL(resized),
-                quality: null,
-            };
+            try {
+                const resized = await resizeImage(file, props.maxEdge);
 
-            items.value.push(item);
-            emitFiles();
-
-            // Läuft im Hintergrund, das Hochladen wartet nicht darauf
-            void checkImageQuality(resized).then((quality) => {
-                const current = items.value.find((i) => i.id === item.id);
-
-                if (current) {
-                    current.quality = quality;
+                // The form is gone (e.g. sent or left): no preview, no object URL to leak
+                if (unmounted) {
+                    break;
                 }
-            });
-        } catch (e) {
-            imageError.value = (e as Error).message;
-        }
-    }
 
-    pending.value--;
+                if (items.value.length >= props.maxImages) {
+                    imageError.value = `Höchstens ${props.maxImages} Fotos pro Lernseite.`;
+                    break;
+                }
+
+                const item: Item = {
+                    id: nextId++,
+                    file: resized,
+                    url: URL.createObjectURL(resized),
+                    quality: null,
+                };
+
+                items.value.push(item);
+                emitFiles();
+
+                // Läuft im Hintergrund, das Hochladen wartet nicht darauf
+                void checkImageQuality(resized).then((quality) => {
+                    const current = items.value.find((i) => i.id === item.id);
+
+                    if (current) {
+                        current.quality = quality;
+                    }
+                });
+            } catch (e) {
+                imageError.value = (e as Error).message;
+            }
+        }
+    } finally {
+        pending.value--;
+    }
 }
 
 function onFileInput(event: Event) {
@@ -355,6 +364,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    unmounted = true;
     window.removeEventListener('dragover', onWindowDragOver);
     window.removeEventListener('drop', onWindowDrop);
     window.removeEventListener('paste', onPaste);

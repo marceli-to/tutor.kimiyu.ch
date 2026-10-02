@@ -27,11 +27,11 @@ class DashboardController extends Controller
                 'level' => $child->level,
                 'shareUrl' => route('shared.index', $child->share_token),
                 'subjects' => $child->lessons
-                    // Ohne Fach (noch nicht erkannt) als leerer Schlüssel, damit zuoberst
-                    ->groupBy(fn (Lesson $lesson) => (string) $lesson->subject)
-                    ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
+                    ->groupBy(fn (Lesson $lesson) => $lesson->subjectLabel())
+                    // Without a subject (failed before the detection, or not detected yet) at the top
+                    ->sortKeysUsing(fn (string $a, string $b) => self::placeholderOrder($a) <=> self::placeholderOrder($b) ?: strnatcasecmp($a, $b))
                     ->map(fn ($lessons, string $subject) => [
-                        'name' => $subject !== '' ? $subject : Lesson::SUBJECT_PENDING,
+                        'name' => $subject,
                         'lessons' => $lessons->map(fn (Lesson $lesson) => [
                             'id' => $lesson->id,
                             'title' => $lesson->displayTitle(),
@@ -44,5 +44,17 @@ class DashboardController extends Controller
                     ->values(),
             ]),
         ]);
+    }
+
+    /**
+     * Placeholders sort before the real subjects: «Fach unbekannt» first, then «Fach wird erkannt …».
+     */
+    private static function placeholderOrder(string $subject): int
+    {
+        return match ($subject) {
+            Lesson::SUBJECT_UNKNOWN => 0,
+            Lesson::SUBJECT_PENDING => 1,
+            default => 2,
+        };
     }
 }

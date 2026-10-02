@@ -48,6 +48,11 @@ class LessonGenerator
             throw new GenerationFailed('Es sind keine Fotos mehr vorhanden. Bitte die Lernseite neu erstellen.');
         }
 
+        // A fresh analysis detects the subject again, unless the parents gave it
+        if ($lesson->subject_detected) {
+            $lesson->update(['subject' => null, 'subject_detected' => false]);
+        }
+
         $data = $this->call($lesson, Prompts::analysis($lesson, $images))->data;
 
         if (! ($data['quelle']['lesbar'] ?? false)) {
@@ -64,6 +69,7 @@ class LessonGenerator
         // Zuerst Fach, Zusammenfassung und Pläne speichern, die nächsten Aufrufe brauchen sie.
         // Das Fach nur, wenn die Eltern keines angegeben haben.
         $lesson->update([
+            'subject_detected' => $lesson->subject === null,
             'subject' => $lesson->subject ?? self::detectedSubject($data['fach'] ?? null),
             'source_summary' => (string) ($data['zusammenfassung'] ?? ''),
             // Ohne Fotos ist alles ergänzt, eine Liste wäre bedeutungslos
@@ -164,6 +170,9 @@ class LessonGenerator
                 'plan' => null,
                 'error' => 'Für diese Grafik hat die KI keinen Plan erstellt.',
             ]);
+        } else {
+            // A plan from an earlier attempt that the new analysis dropped must not be built; finished graphics stay
+            $lesson->graphics()->whereNotIn('position', array_keys($planned))->whereNull('graphic')->delete();
         }
     }
 

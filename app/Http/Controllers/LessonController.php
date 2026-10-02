@@ -349,6 +349,8 @@ class LessonController extends Controller
                 'canRegenerate' => [
                     'quiz' => GenerationPipeline::canRegenerate($lesson, 'quiz'),
                 ],
+                // How many questions a new quiz gets, for the confirm dialog
+                'quizCount' => config('lessons.scope')[$lesson->scope]['quiz'],
                 // Fehler der Grafiken sehen nur die Eltern
                 'graphics' => $lesson->graphics->map(fn (LessonGraphic $graphic) => [
                     'nr' => $graphic->position,

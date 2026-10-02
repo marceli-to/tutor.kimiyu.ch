@@ -297,6 +297,16 @@ watch(
     () => {
         if (!advanced.value && !presetByHand) {
             selectPreset(defaultChoice(), false);
+        } else if (!advanced.value && preset.value === 'letztes') {
+            // «Wie letztes Mal» means the new child's last settings, never the previous child's.
+            // Without them (or when they match a card) fall back to that card or «Normal».
+            selectPreset(
+                lastCard.value
+                    ? 'letztes'
+                    : (lastForChild.value && matchPreset(lastForChild.value)) ||
+                          'normal',
+                true,
+            );
         }
     },
 );

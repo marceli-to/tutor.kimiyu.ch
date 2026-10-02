@@ -187,12 +187,14 @@ class Prompts
         return new ModelRequest(
             step: "reparatur-{$part}",
             system: self::load('reparatur'),
-            prompt: implode("\n\n", [
+            prompt: implode("\n\n", array_filter([
                 self::context($lesson),
+                // The text part places the graphic blocks, so it needs the plans
+                $part === 'seite' ? self::heroPlanText($lesson, $content) : null,
                 "Gib diesen Teil korrigiert zurück: {$part}",
                 "Diese Fehler müssen behoben werden:\n- ".implode("\n- ", $errors),
                 "Ganze Lernseite:\n".self::json($content),
-            ]),
+            ])),
             schema: Schemas::part($part),
             maxTokens: config('lessons.max_tokens.reparatur'),
         );
@@ -330,7 +332,7 @@ class Prompts
     }
 
     /**
-     * Die geplanten Grafiken mit ihrem Platz auf der Seite, für die Module.
+     * Die geplanten Grafiken mit ihrem Platz auf der Seite, für die Module (and the repair of the text part).
      *
      * @param  array<string, mixed>  $page
      */

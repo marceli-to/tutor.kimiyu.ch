@@ -199,6 +199,24 @@ describe('display', function () {
             );
     });
 
+    it('drops a section that only held an unfinished graphic', function () {
+        $content = $this->lesson->content;
+        $content['abschnitte'][] = ['titel' => 'Der Kreislauf', 'bloecke' => [['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto']]];
+        $this->lesson->update(['content' => $content]);
+        $this->lesson->graphic(2)->update(['hidden' => true]);
+
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.content.abschnitte', function ($sections) use ($content) {
+                    $titles = array_column($sections->toArray(), 'titel');
+
+                    // «Die Nahrungskette» keeps its text, only the hidden graphic is gone
+                    return $titles === array_column(array_slice($content['abschnitte'], 0, -1), 'titel')
+                        && collect($sections)->every(fn ($section) => count($section['bloecke']) > 0);
+                })
+            );
+    });
+
     it('appends a finished graphic without a block to the last section', function () {
         $content = LessonFactory::fixture('oekosystem');
         $this->lesson->update(['content' => $content]);

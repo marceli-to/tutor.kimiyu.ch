@@ -20,6 +20,7 @@ const props = defineProps<{
         shareUrl: string | null;
         canPublish: boolean;
         canRegenerate: { quiz: boolean };
+        quizCount: number;
         graphics: GraphicState[];
         additions: string[];
     } | null;
@@ -91,6 +92,7 @@ watch(generating, (active) => (active ? start() : stop()));
             :share-url="parent.shareUrl"
             :can-publish="parent.canPublish"
             :can-regenerate="parent.canRegenerate"
+            :quiz-count="parent.quizCount"
             :graphics="parent.graphics"
         />
 

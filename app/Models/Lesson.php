@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
  * @property string|null $step
  * @property string|null $title
  * @property string|null $subject Leer, bis die KI das Fach erkannt hat
+ * @property bool $subject_detected The AI detected the subject; the parents did not give one
  * @property string $level
  * @property string|null $topic
  * @property string|null $notes
@@ -40,7 +41,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at Weich gelöscht: Fotos sind weg, die Kosten bleiben erhalten
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
@@ -48,6 +49,9 @@ class Lesson extends Model
 
     /** Anzeige, solange die KI das Fach noch nicht erkannt hat */
     public const SUBJECT_PENDING = 'Fach wird erkannt …';
+
+    /** Shown when the generation failed before the AI detected the subject */
+    public const SUBJECT_UNKNOWN = 'Fach unbekannt';
 
     public const PURPOSES = ['neu', 'pruefung'];
 
@@ -62,6 +66,7 @@ class Lesson extends Model
      */
     protected $attributes = [
         'photo_count' => 0,
+        'subject_detected' => false,
         'graphics_mode' => 'auto',
         'purpose' => 'neu',
         'scope' => 'normal',
@@ -72,6 +77,7 @@ class Lesson extends Model
         return [
             'status' => LessonStatus::class,
             'photo_count' => 'integer',
+            'subject_detected' => 'boolean',
             'content' => 'array',
             'check_notes' => 'array',
             'additions' => 'array',
@@ -104,6 +110,14 @@ class Lesson extends Model
     public function isRegenerating(): bool
     {
         return $this->step !== null && str_starts_with($this->step, 'neu-');
+    }
+
+    /**
+     * The subject for display, also before (or without) the detection.
+     */
+    public function subjectLabel(): string
+    {
+        return $this->subject ?? ($this->status === LessonStatus::Failed ? self::SUBJECT_UNKNOWN : self::SUBJECT_PENDING);
     }
 
     /**

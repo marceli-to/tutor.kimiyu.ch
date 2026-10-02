@@ -39,6 +39,7 @@ const props = defineProps<{
     shareUrl: string | null;
     canPublish: boolean;
     canRegenerate: { quiz: boolean };
+    quizCount: number;
     graphics: GraphicState[];
 }>();
 
@@ -65,14 +66,13 @@ function confirmGraphic(nr: number) {
 const texts = {
     quiz: {
         title: 'Neues Quiz erstellen?',
-        description:
-            'Die KI schreibt 5 neue Fragen. Das dauert etwa eine Minute. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.',
+        description: `Die KI schreibt ${props.quizCount} neue Fragen. Das dauert etwa eine Minute. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.`,
         action: 'Neues Quiz erstellen',
     },
     grafik: {
         title: 'Grafik neu erstellen?',
         description:
-            'Die KI zeichnet die interaktive Grafik neu. Das dauert ein bis zwei Minuten. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.',
+            'Die KI zeichnet die interaktive Grafik neu. Das dauert einige Minuten. Klappt es, prüfst du die Seite nochmals und gibst sie wieder frei. Klappt es nicht, bleibt alles wie es ist.',
         action: 'Grafik neu erstellen',
     },
     delete: {

@@ -31,7 +31,7 @@ class LessonView
 
         return [
             'id' => $lesson->id,
-            'subject' => $lesson->subject ?? Lesson::SUBJECT_PENDING,
+            'subject' => $lesson->subjectLabel(),
             'level' => $lesson->level,
             'content' => $content,
             'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,
@@ -65,7 +65,7 @@ class LessonView
 
     /**
      * Blöcke von Grafiken, die nicht fertig sind, entfernen. Eine fertige Grafik 2 oder 3 ohne Block
-     * kommt ans Ende des letzten Abschnitts, damit sie nie verloren geht.
+     * kommt ans Ende des letzten Abschnitts, damit sie nie verloren geht. Sections left empty are dropped.
      *
      * @param  array<string, mixed>  $content
      * @param  list<int>  $finished
@@ -94,6 +94,14 @@ class LessonView
 
                     return true;
                 },
+            ));
+        }
+
+        // Without its graphic a section may be empty: the child never sees an empty heading
+        if (isset($content['abschnitte'])) {
+            $content['abschnitte'] = array_values(array_filter(
+                $content['abschnitte'],
+                fn (array $section) => ($section['bloecke'] ?? []) !== [],
             ));
         }
 

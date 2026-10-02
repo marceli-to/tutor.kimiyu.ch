@@ -6,7 +6,7 @@ Stand: 2026-10-02. Wird laufend ergänzt; weitere Teile folgen.
 
 - Quelle ist entweder Fotos (max. 4) **oder** ein Thema (max. 120 Zeichen). Daneben ein Feld «Hinweise» (500 Zeichen).
 - Die Hinweise erreichen nur den Analyse-Schritt. Module, Prüfung und Grafik sehen nur Fach, Stufe und die Zusammenfassung.
-- Die interaktive Grafik plant die Analyse selbst (`hero_plan`: Muster + Idee). Eltern können sie nur an- oder abwählen. Genau eine Grafik pro Seite (`lessons.hero`).
+- ~~Die interaktive Grafik plant die Analyse selbst (`hero_plan`: Muster + Idee). Eltern können sie nur an- oder abwählen. Genau eine Grafik pro Seite (`lessons.hero`).~~ Überholt durch Teil 2: bis zu drei Grafiken in `lesson_graphics`, Modus `lessons.graphics_mode`.
 
 ## Reihenfolge der Umsetzung
 
@@ -159,6 +159,9 @@ Umgesetzt (2026-10-02), Plan: `docs/plans/2026-10-02-teil-2-grafiken.md`. Abweic
 - **Alte URL entfernt:** Die frühere Route ohne Nummer (`lernseiten/{lesson}/neu/grafik`) gibt es nicht mehr; nur noch `lernseiten/{lesson}/grafik/{nr}/neu`.
 - **Kein Modus, kein Upload:** Ein Upload ohne `graphics_mode` wird abgelehnt (kein stiller Standard).
 - **Kein Menüpunkt ohne Grafik:** «Grafik neu erstellen» gibt es nur für Grafiken, die als Zeile existieren und einen Plan haben.
+- **Neu erstellen ohne Offline:** Quiz oder eine Grafik neu erstellen lässt Status und Freigabe stehen; der Fortschritt steht nur in `step` (`neu-quiz`, `neu-grafik`), das Kind sieht die Seite weiter. Klappt es, geht die Seite zur Prüfung (Freigabe aufgehoben); klappt es nicht, bleibt alles, wie es war (Fehler bei der Grafik bzw. bei der Lernseite). Währenddessen sind Freigeben, Bearbeiten und weiteres Neu-Erstellen gesperrt.
+- **Gelöschte Lernseiten:** Nach jedem API-Call prüft `LessonGenerator`, ob die Lernseite noch existiert; sonst endet der Schritt ohne zu schreiben (`LessonGone`). Die Kosten des Calls bleiben im Log.
+- **Bekannte Grenzen beim Ausblenden** (aus dem Review, bewusst offen): Grafik 1 hat keinen Baustein und lässt sich nicht ausblenden. Haben alle Abschnitte schon 4 Bausteine, bekommt eine Grafik ohne Baustein in der Bearbeiten-Ansicht keinen und lässt sich dort nicht ausblenden. Einen entfernten Baustein können die Eltern in der Bearbeiten-Ansicht nicht wieder einfügen; sichtbar wird die Grafik dann nur durch Neu-Erstellen.
 - **Alte Spalten entfernt:** `lessons.hero`, `hero_plan`, `hero_error` und `with_hero` sind weg (Migration `2026_10_02_150000`). Beim Rollback kommen sie zurück, mit Grafik 1; Grafiken 2–3, Wünsche und «ausgeblendet» kennen die alten Spalten nicht. `LessonView` liefert weiterhin `hero` (= Grafik 1) für den Kopf der Seite.
 
 ---

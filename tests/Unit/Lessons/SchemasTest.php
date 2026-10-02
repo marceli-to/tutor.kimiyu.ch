@@ -45,6 +45,18 @@ it('keeps the schemas small enough for the api', function () {
         ->and(strlen(json_encode(Schemas::part('seite'))))->toBeLessThan(4500);
 });
 
+it('keeps every other schema below the measured limit as well', function (array $schema) {
+    // Same limit for every structured answer: each one is compiled to a grammar, and 4409 bytes
+    // is the largest schema measured to go through (see above)
+    expect(strlen(json_encode($schema)))->toBeLessThan(4500);
+})->with([
+    'modules' => fn () => Schemas::modulesResult(),
+    'module part' => fn () => Schemas::part('module'),
+    'quiz' => fn () => Schemas::quizResult(),
+    'check' => fn () => Schemas::checkResult(),
+    'graphic' => fn () => Schemas::hero(),
+]);
+
 it('has a list of additions in the analysis and an origin on every item', function () {
     $analysis = Schemas::analysis()['properties'];
     $page = Schemas::page()['properties'];
