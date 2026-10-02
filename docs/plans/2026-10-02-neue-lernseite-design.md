@@ -85,10 +85,11 @@ Teil 3a (Plan bestätigen) und 3c (Umfang «Kurz») senken die Kosten zusätzlic
 
 ### Daten
 
-- Neue Spalte `lessons.prompt` (text, nullable).
-- `topic` und `notes` bleiben für bestehende Lernseiten und werden für neue nicht mehr befüllt.
-- `isFromTopic()` → «keine Fotos und Auftrag oder Thema vorhanden».
-- Titel-Fallback (Dashboard, Kosten): `title` → `topic` → Anfang des Auftrags.
+- Neue Spalten `lessons.prompt` (text, nullable), `lessons.photo_count` (Anzahl hochgeladener Fotos; bleibt, auch wenn die Fotos gelöscht sind) und `lessons.additions` (json, Liste der Ergänzungen aus der Analyse).
+- `topic` und `notes` bleiben für bestehende Lernseiten und werden für neue nicht mehr befüllt. Beim Neu-Erstellen alter Seiten gehen sie weiter an die KI («zum Thema …», «Hinweise der Eltern»).
+- `isFromTopic()` → `photo_count === 0` und Auftrag oder Thema vorhanden.
+- Titel-Fallback (Dashboard, Kosten) über `Lesson::displayTitle()`: `title` → `topic` → Anfang des Auftrags → «Neue Lernseite».
+- Umgesetzt (2026-10-02): Die Prüfung kann `herkunft` und IDs nicht ändern (Guard in `Corrections`). Der Banner «… Teile stammen nicht aus den Fotos» steht im Review-Hinweis und ist darum nur vor dem Freigeben sichtbar; die Badges bleiben für Eltern auch danach. Bausteine im Auftrag sind deaktiviert, wenn sie den Auftrag über 1000 Zeichen schieben würden.
 
 ### KI-Anfragen (`app/Lessons/Ai/Prompts.php`, `resources/prompts/*.md`)
 
