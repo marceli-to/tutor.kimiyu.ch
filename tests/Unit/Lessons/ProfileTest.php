@@ -28,9 +28,32 @@ it('has a german label, a prompt file and an example for every profile', functio
 })->with(Profile::cases());
 
 it('allows the base blocks and modules for every profile', function (Profile $profile) {
-	expect($profile->blocks())->toBe(['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic'])
+	expect(array_slice($profile->blocks(), 0, 6))->toBe(['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic'])
 		->and($profile->modules())->toBe(['quiz', 'sorting', 'flashcards', 'cloze']);
 })->with(Profile::cases());
+
+it('adds vocabulary and conjugation for languages only', function (Profile $profile) {
+	$extra = array_values(array_diff($profile->blocks(), ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic']));
+
+	expect($extra)->toBe($profile === Profile::Languages ? ['vocabulary', 'conjugation'] : []);
+})->with(Profile::cases());
+
+it('uses its own fixture as the example for languages', function () {
+	expect(Profile::Languages->fixture())->toBe('passe-compose')
+		->and(LessonFactory::PROFILE_FIXTURES)->toContain('passe-compose');
+});
+
+it('knows the speech language of a foreign language lesson', function (Profile $profile, ?string $subject, ?string $lang) {
+	expect($profile->speechLang($subject))->toBe($lang);
+})->with([
+	[Profile::Languages, 'Französisch', 'fr-FR'],
+	[Profile::Languages, ' englisch ', 'en-GB'],
+	[Profile::Languages, 'Italienisch', 'it-IT'],
+	[Profile::Languages, 'Latein', null],
+	[Profile::Languages, null, null],
+	[Profile::German, 'Deutsch', null],
+	[Profile::General, 'Französisch', null],
+]);
 
 it('allows experiments only for science', function () {
 	expect(array_values(array_filter(Profile::cases(), fn (Profile $profile) => $profile->allowsExperiments())))

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Progress\RecordAnswer;
 use App\Enums\LessonStatus;
 use App\Http\PageData\SharedLessonIndex;
+use App\Lessons\AnswerResult;
 use App\Lessons\LessonView;
 use App\Models\Child;
 use App\Models\Lesson;
@@ -53,11 +54,11 @@ class SharedLessonController extends Controller
 			'answer' => ['present', 'nullable'],
 		]);
 
-		$correct = $recordAnswer->handle($child, $lesson, $data['module'], $data['item_id'], $data['answer']);
+		$result = $recordAnswer->handle($child, $lesson, $data['module'], $data['item_id'], $data['answer']);
 
-		abort_if($correct === null, 422, 'Diese Aufgabe gibt es nicht.');
+		abort_if($result === null, 422, 'Diese Aufgabe gibt es nicht.');
 
-		return response()->json(['correct' => $correct]);
+		return response()->json(['correct' => $result->isCorrect(), 'almost' => $result === AnswerResult::Almost]);
 	}
 
 	private function child(string $token): Child

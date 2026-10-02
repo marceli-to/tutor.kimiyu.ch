@@ -1,5 +1,6 @@
 <?php
 
+use App\Lessons\AnswerResult;
 use App\Lessons\ClozeParser;
 
 it('splits text and gaps into segments', function () {
@@ -58,3 +59,19 @@ it('accepts answers regardless of case and extra spaces', function () {
 		->and(ClozeParser::isCorrect('Sauerstoff', $solutions))->toBeFalse()
 		->and(ClozeParser::normalize("Rote   \n Blutkörperchen"))->toBe('rote blutkörperchen');
 });
+
+it('tells an answer with a missing or wrong accent apart from a wrong one', function (string $answer, array $solutions, AnswerResult $result) {
+	expect(ClozeParser::check($answer, $solutions))->toBe($result)
+		->and(ClozeParser::isCorrect($answer, $solutions))->toBe($result === AnswerResult::Correct);
+})->with([
+	'exact' => ['été', ['été'], AnswerResult::Correct],
+	'case' => ['ÉTÉ', ['été'], AnswerResult::Correct],
+	'missing accents' => ['ete', ['été'], AnswerResult::Almost],
+	'wrong accent' => ['èté', ['été'], AnswerResult::Almost],
+	'grave' => ['a', ['à'], AnswerResult::Almost],
+	'umlaut' => ['Uber', ['über'], AnswerResult::Almost],
+	'accent too many' => ['allée', ['allee'], AnswerResult::Almost],
+	'other alternative exact' => ['co2', ['CO₂', 'CO2'], AnswerResult::Correct],
+	'wrong' => ['parle', ['mangé'], AnswerResult::Wrong],
+	'empty' => ['', ['été'], AnswerResult::Wrong],
+]);

@@ -29,9 +29,14 @@ class LessonView
 			$content = self::withoutOrigin($content);
 		}
 
+		$profile = $lesson->resolvedProfile();
+
 		return [
 			'id' => $lesson->id,
 			'subject' => $lesson->subjectLabel(),
+			'profile' => $profile->value,
+			// Read-aloud button for foreign words; null: no button
+			'speechLang' => $profile->speechLang($lesson->subject),
 			'level' => $lesson->level,
 			'content' => $content,
 			'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,

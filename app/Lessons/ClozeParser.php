@@ -3,6 +3,7 @@
 namespace App\Lessons;
 
 use InvalidArgumentException;
+use Normalizer;
 
 /**
  * Converts cloze markup («Die Pflanze nimmt [CO₂|CO2] auf.») into segments and back.
@@ -84,18 +85,43 @@ class ClozeParser
 	}
 
 	/**
+	 * Correct as in normalize(); almost if it only matches without accents (é/e, à/a, ü/u).
+	 *
+	 * @param  list<string>  $solutions
+	 */
+	public static function check(string $answer, array $solutions): AnswerResult
+	{
+		$normalized = self::normalize($answer);
+		$solutions = array_map(self::normalize(...), $solutions);
+
+		if (in_array($normalized, $solutions, true)) {
+			return AnswerResult::Correct;
+		}
+
+		$withoutAccents = self::withoutAccents($normalized);
+
+		foreach ($solutions as $solution) {
+			if ($withoutAccents !== '' && self::withoutAccents($solution) === $withoutAccents) {
+				return AnswerResult::Almost;
+			}
+		}
+
+		return AnswerResult::Wrong;
+	}
+
+	/**
 	 * @param  list<string>  $solutions
 	 */
 	public static function isCorrect(string $answer, array $solutions): bool
 	{
-		$normalized = self::normalize($answer);
+		return self::check($answer, $solutions)->isCorrect();
+	}
 
-		foreach ($solutions as $solution) {
-			if (self::normalize($solution) === $normalized) {
-				return true;
-			}
-		}
-
-		return false;
+	/**
+	 * Same as in the frontend: decompose (NFD) and drop the combining marks. Not NFKD, so «CO₂» stays apart from «CO2».
+	 */
+	private static function withoutAccents(string $value): string
+	{
+		return (string) preg_replace('/\p{Mn}/u', '', (string) Normalizer::normalize($value, Normalizer::FORM_D));
 	}
 }

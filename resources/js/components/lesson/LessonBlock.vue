@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
+import SpeakButton from '@/components/lesson/SpeakButton.vue';
 import { categoryClasses } from '@/lib/lesson';
 import type { LessonBlock, LessonGraphics } from '@/types';
 
 defineProps<{
 	block: LessonBlock;
 	graphics: LessonGraphics;
+	// Languages lesson: read-aloud button for the foreign words
+	speechLang?: string | null;
 }>();
 </script>
 
@@ -99,5 +102,75 @@ defineProps<{
 		>
 			{{ paragraph }}
 		</p>
+	</div>
+
+	<div
+		v-else-if="block.type === 'vocabulary'"
+		class="mt-4 overflow-hidden rounded-2xl border border-ls-line bg-ls-card"
+	>
+		<h3 v-if="block.title" class="px-5 pt-4 text-[1.15rem] font-medium">
+			{{ block.title }}
+		</h3>
+		<table class="w-full border-collapse text-left">
+			<thead class="sr-only">
+				<tr>
+					<th scope="col">Fremdsprache</th>
+					<th scope="col">Deutsch</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr
+					v-for="(entry, k) in block.entries"
+					:key="k"
+					class="border-t border-ls-line first:border-t-0"
+				>
+					<td class="py-2.5 pr-3 pl-5 align-top">
+						<span class="flex items-start gap-1">
+							<span class="pt-0.5 font-medium">{{
+								entry.foreign
+							}}</span>
+							<SpeakButton
+								v-if="speechLang"
+								:text="entry.foreign"
+								:lang="speechLang"
+								class="-my-1"
+							/>
+						</span>
+					</td>
+					<td class="py-2.5 pr-5 pl-3 align-top">
+						{{ entry.german }}
+						<small
+							v-if="entry.info"
+							class="block text-[0.95rem] text-ls-muted"
+						>
+							{{ entry.info }}
+						</small>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div
+		v-else-if="block.type === 'conjugation'"
+		class="mt-4 max-w-md rounded-2xl border border-ls-line bg-ls-card px-5 py-4"
+	>
+		<h3 class="mb-2 text-[1.15rem] font-medium">
+			{{ block.verb }}
+			<span class="font-normal text-ls-muted">· {{ block.tense }}</span>
+		</h3>
+		<table class="w-full border-collapse text-left">
+			<tbody>
+				<tr v-for="(row, k) in block.forms" :key="k">
+					<th
+						scope="row"
+						class="w-[45%] py-1 pr-4 align-top font-normal text-ls-muted"
+					>
+						{{ row.person }}
+					</th>
+					<td class="py-1 align-top font-medium">{{ row.form }}</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 </template>

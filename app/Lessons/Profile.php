@@ -49,7 +49,10 @@ enum Profile: string
 	 */
 	public function blocks(): array
 	{
-		return self::BASE_BLOCKS;
+		return match ($this) {
+			self::Languages => [...self::BASE_BLOCKS, 'vocabulary', 'conjugation'],
+			default => self::BASE_BLOCKS,
+		};
 	}
 
 	/**
@@ -71,24 +74,28 @@ enum Profile: string
 	}
 
 	/**
-	 * Fixture used as the example in the page and modules prompts, until a profile has its own.
+	 * Fixture used as the example in the page and modules prompts; «fotosynthese» until a profile has its own.
 	 */
 	public function fixture(): string
 	{
-		return 'fotosynthese';
+		return match ($this) {
+			self::Languages => 'passe-compose',
+			default => 'fotosynthese',
+		};
 	}
 
 	/**
-	 * Graphics mode suggested for the profile: vocabulary and spelling rarely need a graphic.
-	 *
-	 * @return 'none'|'auto'
+	 * Language for reading foreign words aloud (BCP 47), only in a languages lesson with a known subject.
 	 */
-	public function defaultGraphicsMode(): string
+	public function speechLang(?string $subject): ?string
 	{
-		return match ($this) {
-			self::Languages, self::German => 'none',
-			default => 'auto',
-		};
+		if ($this !== self::Languages) {
+			return null;
+		}
+
+		$lang = config('lessons.speech_langs')[mb_strtolower(trim((string) $subject))] ?? null;
+
+		return is_string($lang) ? $lang : null;
 	}
 
 	/**

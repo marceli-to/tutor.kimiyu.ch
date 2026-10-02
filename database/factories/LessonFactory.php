@@ -16,6 +16,9 @@ class LessonFactory extends Factory
 {
 	public const FIXTURES = ['fotosynthese', 'oekosystem'];
 
+	// Hand-written examples of the subject profiles, without graphics
+	public const PROFILE_FIXTURES = ['passe-compose'];
+
 	/**
 	 * @return array<string, mixed>
 	 */
@@ -30,7 +33,7 @@ class LessonFactory extends Factory
 	}
 
 	/**
-	 * Published page with content and graphic 1 from database/fixtures/lessons.
+	 * Published page with content and (if the fixture has one) graphic 1 from database/fixtures/lessons.
 	 */
 	public function fromFixture(string $name = 'fotosynthese'): static
 	{
@@ -43,6 +46,10 @@ class LessonFactory extends Factory
 			'content' => $content,
 			'published_at' => now(),
 		])->afterCreating(function (Lesson $lesson) use ($name) {
+			if (! File::exists(database_path("fixtures/lessons/$name.graphic.json"))) {
+				return;
+			}
+
 			$graphic = self::fixture("$name.graphic");
 
 			$lesson->graphics()->create([

@@ -17,8 +17,9 @@ class ContentValidator
 {
 	public const SCHEMA_VERSION = 1;
 
-	// «graphic» places graphic 2 or 3 in a section; graphic 1 is always at the top
-	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic'];
+	// «graphic» places graphic 2 or 3 in a section; graphic 1 is always at the top.
+	// The blocks after it belong to subject profiles (see Profile::blocks()).
+	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation'];
 
 	public const CATEGORIES = ['cat1', 'cat2', 'cat3'];
 
@@ -253,6 +254,14 @@ class ContentValidator
 					'columns' => $this->isList($block['entries'] ?? null, 2, 3, fn ($e) => $this->isText($e['title'] ?? null)
 						&& in_array($e['category'] ?? null, self::CATEGORIES, true)
 						&& $this->isTextList($e['paragraphs'] ?? null)),
+					'vocabulary' => $this->isOptionalText($block['title'] ?? null)
+						&& $this->isList($block['entries'] ?? null, 4, 30, fn ($e) => $this->isText($e['foreign'] ?? null)
+							&& $this->isText($e['german'] ?? null)
+							&& $this->isOptionalText($e['info'] ?? null)),
+					// One row per person: je, tu, il/elle, nous, vous, ils/elles
+					'conjugation' => $this->isText($block['verb'] ?? null)
+						&& $this->isText($block['tense'] ?? null)
+						&& $this->isList($block['forms'] ?? null, 6, 6, fn ($f) => $this->isText($f['person'] ?? null) && $this->isText($f['form'] ?? null)),
 					default => false,
 				};
 
@@ -425,6 +434,11 @@ class ContentValidator
 	private function isText(mixed $value): bool
 	{
 		return is_string($value) && trim($value) !== '';
+	}
+
+	private function isOptionalText(mixed $value): bool
+	{
+		return $value === null || is_string($value);
 	}
 
 	private function isTextList(mixed $value): bool

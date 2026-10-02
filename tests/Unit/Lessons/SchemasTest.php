@@ -2,6 +2,7 @@
 
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\Schemas;
+use App\Lessons\ContentValidator;
 use App\Lessons\Profile;
 use Database\Factories\LessonFactory;
 use Tests\Support\JsonSchema;
@@ -38,12 +39,14 @@ it('keeps the schemas small enough for the api', function () {
 	// The API compiles every schema to a grammar and rejects ones that are too large
 	// («The compiled grammar is too large»). The limit isn't documented; measured with real
 	// calls: the earlier analysis with the text part (5261 bytes JSON) was too large; the analysis without
-	// text part (1586) and {page: page()} (3721; with the English keys 1677 and 3692, checked 2026-10-02) go through, as does a schema of 4409 bytes.
+	// text part (1586) and {page: page()} (3721; with the English keys 1677 and 3692, checked 2026-10-02) go through,
+	// as do a schema of 4409 bytes and the languages text part (4499); the full text part with
+	// vocabulary and conjugation (4781) is too large (checked 2026-10-02).
 	// The JSON length is only a rule of thumb for the grammar size (anyOf and enum count
 	// more than text). If this test fails, check the schema with a real call before raising
-	// the limit.
+	// the limit. The full set without a profile is never sent; the text part of every profile is checked below.
 	expect(strlen(json_encode(Schemas::analysis())))->toBeLessThan(2500)
-		->and(strlen(json_encode(Schemas::part('page'))))->toBeLessThan(4500);
+		->and(strlen(json_encode(Schemas::part('page', Profile::Science))))->toBeLessThan(4500);
 });
 
 it('keeps every other schema below the measured limit as well', function (array $schema) {
@@ -149,7 +152,27 @@ describe('per profile', function () {
 	})->with(Profile::cases());
 
 	it('keeps the full set without a profile', function () {
+		$blocks = Schemas::page()['properties']['sections']['items']['properties']['blocks']['items']['anyOf'];
+
 		expect(Schemas::page()['properties'])->toHaveKey('try_it')
-			->and(Schemas::part('page'))->toBe(Schemas::part('page', Profile::Science));
+			->and(array_map(fn (array $block) => $block['properties']['type']['const'], $blocks))->toBe(ContentValidator::BLOCK_TYPES);
 	});
+
+	it('has vocabulary and conjugation only in the languages schema', function (Profile $profile) {
+		$json = json_encode(Schemas::part('page', $profile));
+
+		expect(str_contains($json, '"vocabulary"'))->toBe($profile === Profile::Languages)
+			->and(str_contains($json, '"conjugation"'))->toBe($profile === Profile::Languages);
+	})->with(Profile::cases());
+
+	it('accepts the profile fixtures as content and as the text part of their profile', function (string $fixture) {
+		$content = LessonFactory::fixture($fixture);
+		$profile = collect(Profile::cases())->first(fn (Profile $profile) => $profile->fixture() === $fixture);
+		$page = $content;
+		unset($page['modules'], $page['try_it']);
+
+		expect(JsonSchema::errors($content, Schemas::content()))->toBe([])
+			->and(JsonSchema::errors(['page' => $page], Schemas::part('page', $profile)))->toBe([])
+			->and(JsonSchema::errors(['modules' => $content['modules']], Schemas::modulesResult($profile)))->toBe([]);
+	})->with(LessonFactory::PROFILE_FIXTURES);
 });

@@ -21,6 +21,22 @@ export type LessonBlock = Origin &
 		| { type: 'box'; title: string; paragraphs: string[] }
 		// Graphic 2 or 3 at this place; graphic 1 is at the top
 		| { type: 'graphic'; number: number }
+		// Languages profile: word list and verb table
+		| {
+				type: 'vocabulary';
+				title?: string | null;
+				entries: {
+					foreign: string;
+					german: string;
+					info?: string | null;
+				}[];
+		  }
+		| {
+				type: 'conjugation';
+				verb: string;
+				tense: string;
+				forms: { person: string; form: string }[];
+		  }
 	);
 
 export type QuizQuestion = Origin & {
@@ -123,3 +139,12 @@ export type ModuleAnswer = {
 	answer: number | string;
 	correct: boolean;
 };
+
+// Subject profile of a lesson (see app/Lessons/Profile.php)
+export type LessonProfile =
+	| 'science'
+	| 'general'
+	| 'languages'
+	| 'math'
+	| 'geometry'
+	| 'german';

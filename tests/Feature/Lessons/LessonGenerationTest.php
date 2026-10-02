@@ -22,6 +22,7 @@ use App\Models\Lesson;
 use App\Models\User;
 use Database\Factories\LessonFactory;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
@@ -410,7 +411,7 @@ it('writes the page in a second call with the photos, the summary, the additions
 
 	$request = $this->fake->requestsFor('page')[0];
 	expect($request->images)->toHaveCount(1)
-		->and($request->schema)->toBe(Schemas::part('page'))
+		->and($request->schema)->toBe(Schemas::part('page', Profile::Science))
 		->and($request->prompt)->toContain('Fach: Biologie')
 		->toContain('Stufe: 2. Sek')
 		->toContain('Zweck: Neuer Stoff')
@@ -1649,6 +1650,25 @@ describe('subject profiles', function () {
 
 		expect($this->fake->requestsFor('page')[1]->prompt)->toContain('Fachprofil: Allgemein')
 			->and($lesson->fresh()->resolvedProfile())->toBe(Profile::General);
+	});
+
+	it('builds a languages page with vocabulary and conjugation from its own example', function () {
+		$french = LessonFactory::fixture('passe-compose');
+		$this->fake->push('analysis', analysis(['subject' => 'Französisch', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => Arr::except(Prompts::page($french), 'try_it')]);
+		$this->fake->push('modules', ['modules' => $french['modules']]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto']);
+
+		$lesson = Lesson::sole();
+		$page = $this->fake->requestsFor('page')[0];
+		expect($lesson->status)->toBe(LessonStatus::Review)
+			->and($lesson->resolvedProfile())->toBe(Profile::Languages)
+			->and($lesson->content['sections'][1]['blocks'][1]['type'])->toBe('vocabulary')
+			->and($page->prompt)->toContain('Fachprofil: Sprachen')
+			->and($page->system)->toContain('"conjugation"')->not->toContain('Chloroplasten')
+			->and(json_encode($page->schema))->toContain('"vocabulary"')
+			->and($this->fake->requestsFor('modules')[0]->system)->toContain('nous avons fini');
 	});
 
 	it('treats old lessons without a profile like an automatic one', function () {

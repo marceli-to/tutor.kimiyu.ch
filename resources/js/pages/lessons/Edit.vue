@@ -7,6 +7,7 @@ import InputError from '@/components/InputError.vue';
 import EditField from '@/components/lesson/EditField.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes';
@@ -275,6 +276,97 @@ function save() {
 								block.paragraphs = splitParagraphs($event)
 							"
 						/>
+					</template>
+
+					<template v-else-if="block.type === 'vocabulary'">
+						<EditField
+							v-model="block.title"
+							label="Wortliste: Titel (optional)"
+						/>
+						<div class="space-y-2">
+							<div
+								class="hidden gap-2 text-sm font-medium sm:grid sm:grid-cols-[1fr_1fr_1fr_auto]"
+							>
+								<span>Fremdsprache</span>
+								<span>Deutsch</span>
+								<span>Zusatz (optional)</span>
+								<span class="w-9" />
+							</div>
+							<div
+								v-for="(entry, k) in block.entries"
+								:key="k"
+								class="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]"
+							>
+								<Input
+									v-model="entry.foreign"
+									:aria-label="`Wort ${k + 1}: Fremdsprache`"
+									placeholder="Fremdsprache"
+								/>
+								<Input
+									v-model="entry.german"
+									:aria-label="`Wort ${k + 1}: Deutsch`"
+									placeholder="Deutsch"
+								/>
+								<Input
+									:model-value="entry.info ?? ''"
+									:aria-label="`Wort ${k + 1}: Zusatz`"
+									placeholder="z. B. m., Verb"
+									@update:model-value="
+										entry.info = String($event) || null
+									"
+								/>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									class="text-destructive"
+									:aria-label="`Wort ${k + 1} entfernen`"
+									:disabled="block.entries.length <= 4"
+									@click="block.entries.splice(k, 1)"
+								>
+									<Trash2 class="size-4" aria-hidden="true" />
+								</Button>
+							</div>
+						</div>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							:disabled="block.entries.length >= 30"
+							@click="
+								block.entries.push({
+									foreign: '',
+									german: '',
+									info: null,
+								})
+							"
+						>
+							<Plus class="size-4" aria-hidden="true" />
+							Wort hinzufügen
+						</Button>
+					</template>
+
+					<template v-else-if="block.type === 'conjugation'">
+						<div class="grid gap-2 sm:grid-cols-2">
+							<EditField v-model="block.verb" label="Verb" />
+							<EditField v-model="block.tense" label="Zeitform" />
+						</div>
+						<div class="space-y-2">
+							<div
+								v-for="(row, k) in block.forms"
+								:key="k"
+								class="grid grid-cols-[8rem_1fr] gap-2"
+							>
+								<Input
+									v-model="row.person"
+									:aria-label="`Zeile ${k + 1}: Person`"
+								/>
+								<Input
+									v-model="row.form"
+									:aria-label="`Zeile ${k + 1}: Form`"
+								/>
+							</div>
+						</div>
 					</template>
 
 					<div v-else-if="block.type === 'graphic'" class="space-y-1">

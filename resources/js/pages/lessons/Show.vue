@@ -9,6 +9,7 @@ import type {
 	GraphicState,
 	LessonContent,
 	LessonGraphics,
+	LessonProfile,
 	Palette,
 } from '@/types';
 
@@ -33,6 +34,8 @@ const props = defineProps<{
 		// Positions of the graphics being built (for the progress display)
 		plannedGraphics: number[];
 		subject: string;
+		profile: LessonProfile;
+		speechLang: string | null;
 		level: string;
 		content: LessonContent | null;
 		palette: Palette | null;
@@ -99,6 +102,8 @@ watch(generating, (active) => (active ? start() : stop()));
 			:palette="lesson.palette"
 			:graphics="lesson.graphics"
 			:subject="lesson.subject"
+			:profile="lesson.profile"
+			:speech-lang="lesson.speechLang"
 			:level="lesson.level"
 		>
 			<template v-if="lesson.status === 'review' || lesson.error" #before>

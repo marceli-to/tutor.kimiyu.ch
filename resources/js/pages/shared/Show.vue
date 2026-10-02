@@ -7,6 +7,7 @@ import { answer as answerRoute, index } from '@/routes/shared';
 import type {
 	LessonContent,
 	LessonGraphics,
+	LessonProfile,
 	ModuleAnswer,
 	Palette,
 } from '@/types';
@@ -16,6 +17,8 @@ const props = defineProps<{
 	lesson: {
 		id: number;
 		subject: string;
+		profile: LessonProfile;
+		speechLang: string | null;
 		level: string;
 		content: LessonContent;
 		palette: Palette;
@@ -38,6 +41,8 @@ function onAnswer(answer: ModuleAnswer) {
 		:palette="lesson.palette"
 		:graphics="lesson.graphics"
 		:subject="lesson.subject"
+		:profile="lesson.profile"
+		:speech-lang="lesson.speechLang"
 		:level="lesson.level"
 		@answer="onAnswer"
 	>

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Progress;
 
+use App\Lessons\AnswerResult;
 use App\Lessons\Progress;
 use App\Models\Child;
 use App\Models\Lesson;
@@ -12,21 +13,21 @@ use App\Models\Lesson;
 class RecordAnswer
 {
 	/**
-	 * @return bool|null whether the answer is correct; null when the item does not exist (nothing is stored)
+	 * @return AnswerResult|null null when the item does not exist (nothing is stored); «almost» is stored as not correct
 	 */
-	public function handle(Child $child, Lesson $lesson, string $module, string $itemId, mixed $answer): ?bool
+	public function handle(Child $child, Lesson $lesson, string $module, string $itemId, mixed $answer): ?AnswerResult
 	{
-		$correct = Progress::check($lesson, $module, $itemId, is_scalar($answer) ? $answer : null);
+		$result = Progress::check($lesson, $module, $itemId, is_scalar($answer) ? $answer : null);
 
-		if ($correct !== null) {
+		if ($result !== null) {
 			$child->attempts()->create([
 				'lesson_id' => $lesson->id,
 				'module' => $module,
 				'item_id' => $itemId,
-				'correct' => $correct,
+				'correct' => $result->isCorrect(),
 			]);
 		}
 
-		return $correct;
+		return $result;
 	}
 }

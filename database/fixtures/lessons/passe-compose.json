@@ -1,0 +1,339 @@
+{
+    "meta": {
+        "title": "J'ai mangé, je suis allé: Wie erzählt man, was passiert ist?",
+        "instructions": "Lerne, wie man auf Französisch über Vergangenes spricht: mit avoir oder être und dem Partizip.",
+        "topic": "Passé composé",
+        "key_idea": "Das passé composé bildet man mit der Präsensform von avoir oder être und dem participe passé; bei être passt sich das Partizip dem Subjekt an.",
+        "emoji": "🥐",
+        "palette": "blue"
+    },
+    "sections": [
+        {
+            "title": "So wird es gebildet",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": "Mit dem passé composé erzählst du, was passiert ist: gestern, letzte Woche, in den Ferien. Es besteht aus zwei Teilen: einer Form von avoir (oder être) und dem participe passé des Verbs. Wie im Deutschen: «ich habe gegessen».",
+                    "origin": "photo"
+                },
+                {
+                    "type": "conjugation",
+                    "verb": "parler",
+                    "tense": "passé composé",
+                    "forms": [
+                        { "person": "j'", "form": "ai parlé" },
+                        { "person": "tu", "form": "as parlé" },
+                        { "person": "il / elle / on", "form": "a parlé" },
+                        { "person": "nous", "form": "avons parlé" },
+                        { "person": "vous", "form": "avez parlé" },
+                        { "person": "ils / elles", "form": "ont parlé" }
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "box",
+                    "title": "Die Regel",
+                    "paragraphs": [
+                        "Präsens von avoir + participe passé. Die meisten Verben bilden das passé composé so.",
+                        "Hier, j'ai regardé un film. – Gestern habe ich einen Film geschaut.",
+                        "Nous avons fini nos devoirs. – Wir haben unsere Hausaufgaben beendet.",
+                        "Tu as vendu ton vélo? – Hast du dein Velo verkauft?"
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Die Partizipien",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": "Regelmässige Verben bilden das Partizip nach ihrer Endung: -er wird zu -é, -ir zu -i, -re zu -u. Die wichtigsten unregelmässigen Partizipien lernst du am besten auswendig.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "vocabulary",
+                    "title": "Wichtige Partizipien",
+                    "entries": [
+                        {
+                            "foreign": "parlé (parler)",
+                            "german": "gesprochen (sprechen)",
+                            "info": "regelmässig: -er → -é"
+                        },
+                        {
+                            "foreign": "fini (finir)",
+                            "german": "beendet (beenden)",
+                            "info": "regelmässig: -ir → -i"
+                        },
+                        {
+                            "foreign": "vendu (vendre)",
+                            "german": "verkauft (verkaufen)",
+                            "info": "regelmässig: -re → -u"
+                        },
+                        {
+                            "foreign": "eu (avoir)",
+                            "german": "gehabt (haben)",
+                            "info": "unregelmässig"
+                        },
+                        {
+                            "foreign": "été (être)",
+                            "german": "gewesen (sein)",
+                            "info": "unregelmässig, mit avoir: j'ai été"
+                        },
+                        {
+                            "foreign": "fait (faire)",
+                            "german": "gemacht (machen)",
+                            "info": "unregelmässig"
+                        },
+                        {
+                            "foreign": "pris (prendre)",
+                            "german": "genommen (nehmen)",
+                            "info": "unregelmässig"
+                        },
+                        {
+                            "foreign": "vu (voir)",
+                            "german": "gesehen (sehen)",
+                            "info": "unregelmässig"
+                        },
+                        {
+                            "foreign": "mis (mettre)",
+                            "german": "gelegt, gesetzt (legen, setzen)",
+                            "info": "unregelmässig"
+                        },
+                        {
+                            "foreign": "dit (dire)",
+                            "german": "gesagt (sagen)",
+                            "info": "unregelmässig"
+                        }
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Verben mit être",
+            "blocks": [
+                {
+                    "type": "box",
+                    "title": "Bewegung und Veränderung",
+                    "paragraphs": [
+                        "Einige Verben der Bewegung und Veränderung bilden das passé composé mit être. Dann passt sich das Partizip dem Subjekt an: weiblich + e, Mehrzahl + s.",
+                        "Elle est arrivée à huit heures. – Sie ist um acht Uhr angekommen.",
+                        "Nous sommes allés à la plage. – Wir sind an den Strand gegangen."
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "conjugation",
+                    "verb": "aller",
+                    "tense": "passé composé",
+                    "forms": [
+                        { "person": "je", "form": "suis allé(e)" },
+                        { "person": "tu", "form": "es allé(e)" },
+                        {
+                            "person": "il / elle / on",
+                            "form": "est allé / allée"
+                        },
+                        { "person": "nous", "form": "sommes allé(e)s" },
+                        { "person": "vous", "form": "êtes allé(e)(s)" },
+                        {
+                            "person": "ils / elles",
+                            "form": "sont allés / allées"
+                        }
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "vocabulary",
+                    "title": "Verben mit être",
+                    "entries": [
+                        {
+                            "foreign": "aller – allé",
+                            "german": "gehen – gegangen",
+                            "info": null
+                        },
+                        {
+                            "foreign": "venir – venu",
+                            "german": "kommen – gekommen",
+                            "info": null
+                        },
+                        {
+                            "foreign": "arriver – arrivé",
+                            "german": "ankommen – angekommen",
+                            "info": null
+                        },
+                        {
+                            "foreign": "partir – parti",
+                            "german": "weggehen – weggegangen",
+                            "info": null
+                        },
+                        {
+                            "foreign": "entrer – entré",
+                            "german": "hineingehen – hineingegangen",
+                            "info": null
+                        },
+                        {
+                            "foreign": "sortir – sorti",
+                            "german": "hinausgehen – hinausgegangen",
+                            "info": null
+                        },
+                        {
+                            "foreign": "rester – resté",
+                            "german": "bleiben – geblieben",
+                            "info": null
+                        },
+                        {
+                            "foreign": "tomber – tombé",
+                            "german": "fallen – gefallen",
+                            "info": null
+                        }
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        }
+    ],
+    "try_it": null,
+    "modules": {
+        "quiz": [
+            {
+                "id": "q1",
+                "question": "Woraus besteht das passé composé?",
+                "options": [
+                    "Aus dem Infinitiv und einer Endung",
+                    "Aus einer Präsensform von avoir oder être und dem participe passé",
+                    "Aus einer Form von aller und dem Infinitiv",
+                    "Nur aus dem participe passé"
+                ],
+                "answer": 1,
+                "hint": "Es hat zwei Teile, wie «ich habe gegessen».",
+                "explanation": "Das passé composé hat zwei Teile: avoir oder être im Präsens und das Partizip, z. B. j'ai mangé.",
+                "origin": "photo"
+            },
+            {
+                "id": "q2",
+                "question": "Wie heisst das Partizip von «finir»?",
+                "options": ["finé", "finu", "fini", "finit"],
+                "answer": 2,
+                "hint": "Verben auf -ir verlieren das r.",
+                "explanation": "Regelmässige Verben auf -ir bilden das Partizip auf -i: finir → fini.",
+                "origin": "photo"
+            },
+            {
+                "id": "q3",
+                "question": "Welcher Satz ist richtig?",
+                "options": [
+                    "Elle est arrivée à huit heures.",
+                    "Elle a arrivé à huit heures.",
+                    "Elle est arrivé à huit heures.",
+                    "Elle a arrivée à huit heures."
+                ],
+                "answer": 0,
+                "hint": "arriver ist ein Verb der Bewegung.",
+                "explanation": "arriver bildet das passé composé mit être, und bei être passt sich das Partizip an: elle → arrivée.",
+                "origin": "photo"
+            },
+            {
+                "id": "q4",
+                "question": "Welches Verb bildet das passé composé mit être?",
+                "options": ["regarder", "prendre", "faire", "tomber"],
+                "answer": 3,
+                "hint": "Es geht um eine Bewegung nach unten.",
+                "explanation": "tomber (fallen) ist ein Verb der Bewegung: je suis tombé. Die anderen bilden das passé composé mit avoir.",
+                "origin": "photo"
+            },
+            {
+                "id": "q5",
+                "question": "Wie sagt man «Wir haben einen Film gesehen»?",
+                "options": [
+                    "Nous sommes vu un film.",
+                    "Nous avons vu un film.",
+                    "Nous avons voir un film.",
+                    "Nous avez vu un film."
+                ],
+                "answer": 1,
+                "hint": "voir hat ein unregelmässiges Partizip.",
+                "explanation": "voir bildet das passé composé mit avoir, das Partizip ist vu: nous avons vu.",
+                "origin": "photo"
+            }
+        ],
+        "sorting": null,
+        "flashcards": {
+            "instructions": "Tippe auf eine Karte, um die Übersetzung zu sehen.",
+            "entries": [
+                {
+                    "id": "k1",
+                    "front": "j'ai parlé",
+                    "back": "ich habe gesprochen – J'ai parlé avec mon frère.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k2",
+                    "front": "nous avons fini",
+                    "back": "wir haben beendet – Nous avons fini le repas.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k3",
+                    "front": "j'ai été",
+                    "back": "ich bin gewesen – J'ai été malade.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k4",
+                    "front": "il a fait",
+                    "back": "er hat gemacht – Il a fait ses devoirs.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k5",
+                    "front": "tu as pris",
+                    "back": "du hast genommen – Tu as pris le bus?",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k6",
+                    "front": "elle est allée",
+                    "back": "sie ist gegangen – Elle est allée à l'école.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k7",
+                    "front": "ils sont venus",
+                    "back": "sie sind gekommen – Ils sont venus en train.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k8",
+                    "front": "je suis resté",
+                    "back": "ich bin geblieben – Je suis resté à la maison.",
+                    "origin": "photo"
+                }
+            ]
+        },
+        "cloze": {
+            "instructions": "Setz die richtige Form ein. Achte auf die Akzente.",
+            "segments": [
+                { "text": "Hier, j'" },
+                { "id": "g1", "answers": ["ai"] },
+                { "text": " " },
+                { "id": "g2", "answers": ["mangé"] },
+                { "text": " une pizza (manger). Ensuite, nous " },
+                { "id": "g3", "answers": ["sommes"] },
+                { "text": " " },
+                { "id": "g4", "answers": ["allés"] },
+                { "text": " au cinéma (aller). Le film a " },
+                { "id": "g5", "answers": ["été"] },
+                { "text": " super (être). Ma sœur est " },
+                { "id": "g6", "answers": ["arrivée"] },
+                { "text": " en retard (arriver), et mes parents ont " },
+                { "id": "g7", "answers": ["pris"] },
+                { "text": " un taxi (prendre)." }
+            ],
+            "origin": "photo"
+        }
+    },
+    "reflect": {
+        "question": "Erzähl auf Französisch in drei Sätzen, was du letztes Wochenende gemacht hast. Welche Verben brauchen être?"
+    }
+}

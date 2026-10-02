@@ -49,6 +49,13 @@ return [
 		'italienisch' => 'languages',
 	],
 
+	// Language for the read-aloud button (browser speech synthesis) in a languages lesson, by subject
+	'speech_langs' => [
+		'französisch' => 'fr-FR',
+		'englisch' => 'en-GB',
+		'italienisch' => 'it-IT',
+	],
+
 	'max_tokens' => [
 		'analysis' => 32000,
 		'page' => 32000,

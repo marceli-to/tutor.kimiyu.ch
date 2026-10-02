@@ -86,3 +86,27 @@ describe('graphic document', function () {
 		$this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))->assertNotFound();
 	});
 });
+
+it('passes the speech language and the profile only for a foreign language lesson', function (string $subject, ?string $lang, string $profile) {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create(['subject' => $subject]);
+
+	$this->get(route('shared.show', [$this->child->share_token, $lesson]))
+		->assertOk()
+		->assertInertia(fn (Assert $page) => $page
+			->where('lesson.speechLang', $lang)
+			->where('lesson.profile', $profile)
+		);
+
+	$this->actingAs($this->user)->get(route('lessons.show', $lesson))
+		->assertInertia(fn (Assert $page) => $page->where('lesson.speechLang', $lang));
+})->with([
+	['Französisch', 'fr-FR', 'languages'],
+	['Deutsch', null, 'german'],
+	['Biologie', null, 'science'],
+]);
+
+it('shows a lesson without a graphic fixture', function () {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create(['subject' => 'Französisch']);
+
+	expect($lesson->graphics()->count())->toBe(0);
+});

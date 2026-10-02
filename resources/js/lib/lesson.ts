@@ -23,8 +23,38 @@ export function resultMessage(score: number, total: number): string {
 }
 
 // Must match App\Lessons\ClozeParser::normalize
-export function normalizeAnswer(value: string): string {
+function normalizeAnswer(value: string): string {
 	return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// Must match App\Lessons\ClozeParser::check: correct as normalized, almost if only the accents differ
+export function checkAnswer(
+	value: string,
+	solutions: string[],
+): { result: 'right' | 'almost' | 'wrong'; solution: string } {
+	const answer = normalizeAnswer(value);
+	const exact = solutions.find((s) => normalizeAnswer(s) === answer);
+
+	if (exact !== undefined) {
+		return { result: 'right', solution: exact };
+	}
+
+	const bare = withoutAccents(answer);
+	const almost =
+		bare === ''
+			? undefined
+			: solutions.find(
+					(s) => withoutAccents(normalizeAnswer(s)) === bare,
+				);
+
+	return almost !== undefined
+		? { result: 'almost', solution: almost }
+		: { result: 'wrong', solution: solutions[0] ?? '' };
+}
+
+// NFD, then drop the combining marks (not NFKD, so «CO₂» stays apart from «CO2»)
+function withoutAccents(value: string): string {
+	return value.normalize('NFD').replace(/\p{Mn}/gu, '');
 }
 
 // Static class names per category, so Tailwind finds them

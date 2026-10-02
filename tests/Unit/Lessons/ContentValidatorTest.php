@@ -264,4 +264,51 @@ describe('profiles', function () {
 	it('accepts the fixtures with their profile', function (string $name) {
 		expect(ContentValidator::errors(lessonFixture($name), strict: true, profile: Profile::Science))->toBe([]);
 	})->with(LessonFactory::FIXTURES);
+
+	it('accepts the languages fixture strictly with its profile', function () {
+		expect(ContentValidator::errors(lessonFixture('passe-compose'), strict: true, profile: Profile::Languages))->toBe([]);
+	});
+
+	it('rejects vocabulary and conjugation on a fresh page of another profile', function () {
+		$content = lessonFixture('passe-compose');
+
+		expect(ContentValidator::errors($content, strict: true, profile: Profile::General))
+			->toContain('Das Fachprofil «Allgemein» hat keine Bausteine vom Typ «vocabulary».')
+			->toContain('Das Fachprofil «Allgemein» hat keine Bausteine vom Typ «conjugation».')
+			->and(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('checks the vocabulary block', function (Closure $change) {
+		$content = lessonFixture('passe-compose');
+		$content['sections'][1]['blocks'][1] = $change($content['sections'][1]['blocks'][1]);
+
+		expect(ContentValidator::make($content)->errors()->has('sections.1.blocks.1'))->toBeTrue();
+	})->with([
+		'too few entries' => fn (array $block) => [...$block, 'entries' => array_slice($block['entries'], 0, 3)],
+		'too many entries' => fn (array $block) => [...$block, 'entries' => array_fill(0, 31, $block['entries'][0])],
+		'empty german' => fn (array $block) => [...$block, 'entries' => [['foreign' => 'vu', 'german' => ' ', 'info' => null], ...array_slice($block['entries'], 1)]],
+		'info not text' => fn (array $block) => [...$block, 'entries' => [['foreign' => 'vu', 'german' => 'gesehen', 'info' => 3], ...array_slice($block['entries'], 1)]],
+		'title not text' => fn (array $block) => [...$block, 'title' => ['x']],
+	]);
+
+	it('accepts vocabulary without title and info', function () {
+		$content = lessonFixture('passe-compose');
+		$content['sections'][1]['blocks'][1]['title'] = null;
+		unset($content['sections'][1]['blocks'][1]['entries'][0]['info']);
+
+		expect(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('checks the conjugation block', function (Closure $change) {
+		$content = lessonFixture('passe-compose');
+		$content['sections'][0]['blocks'][1] = $change($content['sections'][0]['blocks'][1]);
+
+		expect(ContentValidator::make($content)->errors()->has('sections.0.blocks.1'))->toBeTrue();
+	})->with([
+		'five forms' => fn (array $block) => [...$block, 'forms' => array_slice($block['forms'], 0, 5)],
+		'seven forms' => fn (array $block) => [...$block, 'forms' => [...$block['forms'], $block['forms'][0]]],
+		'empty form' => fn (array $block) => [...$block, 'forms' => [['person' => 'je', 'form' => ''], ...array_slice($block['forms'], 1)]],
+		'no verb' => fn (array $block) => array_diff_key($block, ['verb' => true]),
+		'no tense' => fn (array $block) => [...$block, 'tense' => ''],
+	]);
 });

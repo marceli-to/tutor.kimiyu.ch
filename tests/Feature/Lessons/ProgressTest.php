@@ -62,6 +62,17 @@ describe('answers', function () {
 		answer(['module' => 'cloze', 'item_id' => 'g1', 'answer' => 'Sauerstoff'])->assertJson(['correct' => false]);
 	});
 
+	it('reports an answer with a missing accent as almost and counts it as not correct', function () {
+		$french = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create(['subject' => 'Französisch']);
+
+		// g2: «mangé»
+		answer(['module' => 'cloze', 'item_id' => 'g2', 'answer' => 'mange'], $french)->assertOk()->assertExactJson(['correct' => false, 'almost' => true]);
+		answer(['module' => 'cloze', 'item_id' => 'g2', 'answer' => 'Mangé'], $french)->assertExactJson(['correct' => true, 'almost' => false]);
+		answer(['module' => 'cloze', 'item_id' => 'g2', 'answer' => 'parlé'], $french)->assertExactJson(['correct' => false, 'almost' => false]);
+
+		expect(Attempt::orderBy('id')->pluck('correct')->all())->toBe([false, true, false]);
+	});
+
 	it('rejects items that do not exist', function () {
 		answer(['module' => 'quiz', 'item_id' => 'q99', 'answer' => 0])->assertStatus(422);
 		answer(['module' => 'sorting', 'item_id' => 's1', 'answer' => 'cat1'])->assertStatus(422);

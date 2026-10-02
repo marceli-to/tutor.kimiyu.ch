@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { normalizeAnswer } from '@/lib/lesson';
+import { checkAnswer } from '@/lib/lesson';
 import type { ClozeModuleData, ModuleAnswer } from '@/types';
 
 const props = defineProps<{
@@ -16,7 +16,11 @@ const gaps = computed(() =>
 );
 
 const values = reactive<Record<string, string>>({});
-const states = reactive<Record<string, 'right' | 'wrong' | undefined>>({});
+const states = reactive<
+	Record<string, 'right' | 'almost' | 'wrong' | undefined>
+>({});
+// Gaps right except for the accents, with the expected spelling
+const almost = ref<{ id: string; solution: string }[]>([]);
 const error = ref('');
 const result = ref<number | null>(null);
 
@@ -26,6 +30,7 @@ function gapNumber(id: string): number {
 
 function edited(id: string) {
 	states[id] = undefined;
+	almost.value = almost.value.filter((a) => a.id !== id);
 	error.value = '';
 }
 
@@ -37,23 +42,29 @@ function check() {
 	}
 
 	let right = 0;
+	almost.value = [];
 
 	for (const gap of gaps.value) {
-		const value = normalizeAnswer(values[gap.id] ?? '');
-		const correct = gap.answers.some((a) => normalizeAnswer(a) === value);
+		const value = values[gap.id] ?? '';
+		const { result, solution } = checkAnswer(value, gap.answers);
 
-		states[gap.id] = correct ? 'right' : 'wrong';
+		states[gap.id] = result;
 
-		if (correct) {
+		if (result === 'right') {
 			right++;
 		}
 
-		if (value !== '') {
+		if (result === 'almost') {
+			almost.value.push({ id: gap.id, solution });
+		}
+
+		if (value.trim() !== '') {
 			emit('answer', {
 				module: 'cloze',
 				itemId: gap.id,
-				answer: values[gap.id] ?? '',
-				correct,
+				answer: value,
+				// The server decides and counts «almost» as not correct
+				correct: result === 'right',
 			});
 		}
 	}
@@ -67,6 +78,7 @@ function showSolution() {
 		states[gap.id] = 'right';
 	}
 
+	almost.value = [];
 	result.value = null;
 }
 
@@ -76,12 +88,14 @@ function clear() {
 		states[gap.id] = undefined;
 	}
 
+	almost.value = [];
 	result.value = null;
 }
 
 function inputClass(id: string): string {
 	return {
 		right: 'border-ls-ok bg-ls-ok-bg',
+		almost: 'border-ls-accent bg-ls-accent-bg',
 		wrong: 'border-ls-bad bg-ls-bad-bg',
 		none: 'border-ls-line bg-ls-bg',
 	}[states[id] ?? 'none'];
@@ -99,7 +113,11 @@ function inputClass(id: string): string {
 					class="w-[9em] rounded-lg border-[1.5px] px-2 py-0.5 text-base text-ls-ink"
 					:class="inputClass(segment.id)"
 					:aria-label="`Lücke ${gapNumber(segment.id)}`"
-					:aria-invalid="states[segment.id] === 'wrong' || undefined"
+					:aria-invalid="
+						(states[segment.id] &&
+							states[segment.id] !== 'right') ||
+						undefined
+					"
 					autocomplete="off"
 					autocapitalize="off"
 					spellcheck="false"
@@ -135,8 +153,12 @@ function inputClass(id: string): string {
 				{{
 					result === gaps.length
 						? 'Super!'
-						: 'Rot markierte Lücken nochmals versuchen.'
+						: 'Markierte Lücken nochmals versuchen.'
 				}}
+				<p v-for="gap in almost" :key="gap.id" class="mt-1.5 mb-0">
+					Lücke {{ gapNumber(gap.id) }}: Fast – achte auf den Akzent:
+					<strong>{{ gap.solution }}</strong>
+				</p>
 			</div>
 		</div>
 	</div>

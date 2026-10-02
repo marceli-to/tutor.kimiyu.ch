@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Progress\RecordAnswer;
+use App\Lessons\AnswerResult;
 use App\Models\Child;
 use App\Models\Lesson;
 
@@ -10,11 +11,11 @@ beforeEach(function () {
 	$this->quiz = $this->lesson->content['modules']['quiz'][0];
 });
 
-it('stores a checked answer and returns whether it was correct', function () {
+it('stores a checked answer and returns the result', function () {
 	$record = app(RecordAnswer::class);
 
-	expect($record->handle($this->child, $this->lesson, 'quiz', $this->quiz['id'], $this->quiz['answer']))->toBeTrue()
-		->and($record->handle($this->child, $this->lesson, 'quiz', $this->quiz['id'], $this->quiz['answer'] + 1))->toBeFalse()
+	expect($record->handle($this->child, $this->lesson, 'quiz', $this->quiz['id'], $this->quiz['answer']))->toBe(AnswerResult::Correct)
+		->and($record->handle($this->child, $this->lesson, 'quiz', $this->quiz['id'], $this->quiz['answer'] + 1))->toBe(AnswerResult::Wrong)
 		->and($this->child->attempts()->pluck('correct')->all())->toBe([true, false]);
 });
 
@@ -24,5 +25,12 @@ it('stores nothing for an item that does not exist', function () {
 });
 
 it('treats a non-scalar answer as no answer', function () {
-	expect(app(RecordAnswer::class)->handle($this->child, $this->lesson, 'quiz', $this->quiz['id'], [$this->quiz['answer']]))->toBeFalse();
+	expect(app(RecordAnswer::class)->handle($this->child, $this->lesson, 'quiz', $this->quiz['id'], [$this->quiz['answer']]))->toBe(AnswerResult::Wrong);
+});
+
+it('stores an almost right cloze answer as not correct', function () {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create();
+
+	expect(app(RecordAnswer::class)->handle($this->child, $lesson, 'cloze', 'g5', 'ete'))->toBe(AnswerResult::Almost)
+		->and($this->child->attempts()->sole()->correct)->toBeFalse();
 });

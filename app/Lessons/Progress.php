@@ -48,10 +48,11 @@ class Progress
 
 	/**
 	 * Checks an answer against the content. Correctness never comes from the browser.
+	 * Only a gap can be «almost» right (accents); the progress counts that as wrong.
 	 *
-	 * @return bool|null null if the item doesn't exist (any more)
+	 * @return AnswerResult|null null if the item doesn't exist (any more)
 	 */
-	public static function check(Lesson $lesson, string $module, string $itemId, mixed $answer): ?bool
+	public static function check(Lesson $lesson, string $module, string $itemId, mixed $answer): ?AnswerResult
 	{
 		$content = $lesson->content['modules'] ?? [];
 
@@ -66,11 +67,15 @@ class Progress
 			return null;
 		}
 
-		return match ($module) {
-			'quiz' => is_int($answer) && $answer === $item['answer'],
-			'sorting' => $answer === $item['category'],
-			default => is_string($answer) && ClozeParser::isCorrect($answer, $item['answers']),
-		};
+		if ($module === 'cloze') {
+			return is_string($answer) ? ClozeParser::check($answer, $item['answers']) : AnswerResult::Wrong;
+		}
+
+		$correct = $module === 'quiz'
+			? is_int($answer) && $answer === $item['answer']
+			: $answer === $item['category'];
+
+		return $correct ? AnswerResult::Correct : AnswerResult::Wrong;
 	}
 
 	/**

@@ -13,6 +13,7 @@ import { useIsDark } from '@/composables/useIsDark';
 import type {
 	LessonContent,
 	LessonGraphics,
+	LessonProfile,
 	ModuleAnswer,
 	Palette,
 } from '@/types';
@@ -22,6 +23,9 @@ const props = defineProps<{
 	palette: Palette;
 	graphics: LessonGraphics;
 	subject: string;
+	profile: LessonProfile;
+	// Languages lesson with a known language: foreign words can be read aloud
+	speechLang: string | null;
 	level: string;
 }>();
 
@@ -89,6 +93,7 @@ function toggleTheme() {
 					:key="n"
 					:block="block"
 					:graphics="graphics"
+					:speech-lang="speechLang"
 				/>
 			</section>
 
@@ -128,7 +133,11 @@ function toggleTheme() {
 				<p v-if="modules.flashcards.instructions" class="mb-4">
 					{{ modules.flashcards.instructions }}
 				</p>
-				<FlashcardModule :data="modules.flashcards" />
+				<FlashcardModule
+					:data="modules.flashcards"
+					:reversible="profile === 'languages'"
+					:speech-lang="speechLang"
+				/>
 			</section>
 
 			<section v-if="modules.cloze">

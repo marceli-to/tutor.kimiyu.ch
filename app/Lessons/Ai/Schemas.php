@@ -157,6 +157,15 @@ class Schemas
 			])]]),
 			'box' => $block('box', ['title' => $text, 'paragraphs' => $texts]),
 			'graphic' => $block('graphic', ['number' => ['type' => 'integer']]),
+			'vocabulary' => $block('vocabulary', [
+				'title' => self::nullable($text),
+				'entries' => ['type' => 'array', 'items' => self::object(['foreign' => $text, 'german' => $text, 'info' => self::nullable($text)])],
+			]),
+			'conjugation' => $block('conjugation', [
+				'verb' => $text,
+				'tense' => $text,
+				'forms' => ['type' => 'array', 'items' => self::object(['person' => $text, 'form' => $text])],
+			]),
 		];
 
 		if ($profile !== null) {
