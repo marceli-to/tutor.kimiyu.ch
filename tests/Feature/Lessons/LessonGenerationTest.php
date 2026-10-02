@@ -266,6 +266,15 @@ it('shows a clear message when the api fails', function () {
         ->and($lesson->generations()->value('error'))->toBe('invalid x-api-key');
 });
 
+it('logs the model of the step when a call fails without a response', function () {
+    config()->set('lessons.models.analyse', ['model' => 'claude-test-analyse', 'effort' => 'high']);
+    $this->fake->push('analyse', new ModelException('Die KI war nicht erreichbar.'));
+
+    upload();
+
+    expect(Lesson::sole()->generations()->where('step', 'analyse')->value('model'))->toBe('claude-test-analyse');
+});
+
 it('publishes the page without a graphic when the hero stays broken', function () {
     $broken = [...LessonFactory::fixture('fotosynthese.hero'), 'markup' => '<button onclick="x()">Los</button>'];
 

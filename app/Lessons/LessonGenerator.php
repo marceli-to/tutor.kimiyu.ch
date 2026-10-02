@@ -248,7 +248,7 @@ class LessonGenerator
         $started = hrtime(true);
         $log = fn (string $status, ?ModelResponse $response, ?string $error = null) => $lesson->generations()->create([
             'step' => $request->step,
-            'model' => $response->model ?? config('services.anthropic.model'),
+            'model' => $response->model ?? $request->model(),
             'status' => $status,
             'input_tokens' => $response->inputTokens ?? 0,
             'output_tokens' => $response->outputTokens ?? 0,

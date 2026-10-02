@@ -29,8 +29,6 @@ class AppServiceProvider extends ServiceProvider
 
             return new ClaudeLanguageModel(
                 client: new Client(apiKey: (string) config('services.anthropic.key')),
-                model: config('services.anthropic.model'),
-                effort: config('services.anthropic.effort'),
                 fallbacks: config('services.anthropic.fallbacks'),
                 timeout: config('services.anthropic.timeout'),
             );

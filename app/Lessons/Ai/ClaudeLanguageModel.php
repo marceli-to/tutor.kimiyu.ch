@@ -23,6 +23,7 @@ use Anthropic\Lib\Streaming\MessageAccumulator;
  * Claude API über das offizielle PHP-SDK.
  *
  * - Strukturierte Ausgabe per JSON-Schema (output_config.format)
+ * - Modell und Effort kommen pro Schritt aus dem ModelRequest (config/lessons.php)
  * - Streaming, weil Antworten gross sein können und sonst HTTP-Timeouts drohen
  * - Kein Prompt-Caching: Lernseiten entstehen zu selten, der Cache (5 Min.) wurde nie gelesen
  *   und das Schreiben kostet 25 % mehr als normaler Input
@@ -34,8 +35,6 @@ class ClaudeLanguageModel implements LanguageModel
 
     public function __construct(
         private Client $client,
-        private string $model,
-        private string $effort,
         private bool $fallbacks,
         private int $timeout,
     ) {}
@@ -45,13 +44,13 @@ class ClaudeLanguageModel implements LanguageModel
         try {
             $stream = $this->client->beta->messages->createStream(
                 maxTokens: $request->maxTokens,
-                model: $this->model,
+                model: $request->model(),
                 system: $request->system,
                 messages: [
                     BetaMessageParam::with(content: $this->content($request), role: 'user'),
                 ],
                 outputConfig: BetaOutputConfig::with(
-                    effort: Effort::from($this->effort),
+                    effort: Effort::from($request->effort()),
                     format: BetaJSONOutputFormat::with(schema: $request->schema),
                 ),
                 fallbacks: $this->fallbacks ? 'default' : null,
