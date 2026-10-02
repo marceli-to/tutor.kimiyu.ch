@@ -1,6 +1,6 @@
 export type ImageQuality = { dark: boolean; blurry: boolean };
 
-// Schwellen von Hand an Handyfotos von Buchseiten abgestimmt; lieber zu selten warnen als zu oft
+// Startwerte, noch an echten Handyfotos von Buchseiten abzustimmen; lieber zu selten warnen als zu oft
 const DARK_BELOW = 70; // mittlere Helligkeit 0–255
 const BLURRY_BELOW = 60; // Varianz des Laplace-Filters
 const SAMPLE_EDGE = 400;
