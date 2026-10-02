@@ -61,6 +61,9 @@ function upload(array $data = []): TestResponse
         'prompt' => 'Prüfung am Freitag',
         'images' => [photo()],
         'graphics_mode' => 'auto',
+        'purpose' => 'neu',
+        'scope' => 'normal',
+        'modules' => ['quiz', 'sortieren', 'karten', 'lueckentext'],
         ...$data,
     ]);
 }
@@ -1040,5 +1043,57 @@ describe('graphic generation', function () {
 
         expect(collect($this->fake->requestsFor('grafik'))->map->model()->unique()->all())->toBe(['claude-test-grafik'])
             ->and($this->fake->requestsFor('grafik'))->toHaveCount(3);
+    });
+});
+
+describe('purpose, scope and modules', function () {
+    beforeEach(fn () => Bus::fake());
+
+    it('stores purpose, scope and allowed modules', function () {
+        upload(['purpose' => 'pruefung', 'scope' => 'kurz', 'modules' => ['karten', 'quiz']])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::sole();
+        expect($lesson->purpose)->toBe('pruefung')
+            ->and($lesson->scope)->toBe('kurz')
+            ->and($lesson->modules)->toBe(['karten', 'quiz']);
+    });
+
+    it('has defaults for lessons without settings', function () {
+        $lesson = Lesson::factory()->create()->fresh();
+
+        expect($lesson->purpose)->toBe('neu')
+            ->and($lesson->scope)->toBe('normal')
+            ->and($lesson->modules)->toBeNull();
+    });
+
+    it('rejects invalid settings', function (array $data, string $field, ?string $message = null) {
+        upload($data)->assertSessionHasErrors($message ? [$field => $message] : $field);
+
+        expect(Lesson::count())->toBe(0);
+    })->with([
+        'no purpose' => [['purpose' => null], 'purpose', 'Wähle den Zweck der Lernseite.'],
+        'unknown purpose' => [['purpose' => 'spass'], 'purpose', 'Wähle den Zweck der Lernseite.'],
+        'no scope' => [['scope' => null], 'scope', 'Wähle den Umfang der Lernseite.'],
+        'unknown scope' => [['scope' => 'riesig'], 'scope', 'Wähle den Umfang der Lernseite.'],
+        'no modules' => [['modules' => []], 'modules', 'Wähle mindestens ein Lernmodul.'],
+        'modules not a list' => [['modules' => 'quiz'], 'modules'],
+        'unknown module' => [['modules' => ['quiz', 'memory']], 'modules.1', 'Wähle die Lernmodule aus der Liste.'],
+        'duplicate module' => [['modules' => ['quiz', 'quiz']], 'modules.1'],
+    ]);
+
+    // Übergang bis Teil 3c, Task 4: das Formular schickt die Felder noch nicht
+    it('fills defaults when the form does not send the settings', function () {
+        $this->actingAs($this->user)->post(route('lessons.store'), [
+            'child_id' => $this->child->id,
+            'subject' => 'Biologie',
+            'level' => '2. Sek',
+            'prompt' => 'Prüfung am Freitag',
+            'graphics_mode' => 'auto',
+        ])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::sole();
+        expect($lesson->purpose)->toBe('neu')
+            ->and($lesson->scope)->toBe('normal')
+            ->and($lesson->modules)->toBe(['quiz', 'sortieren', 'karten', 'lueckentext']);
     });
 });

@@ -71,6 +71,9 @@ class LessonController extends Controller
                 'prompt' => $request->string('prompt')->trim()->value() ?: null,
                 'photo_count' => count($images),
                 'graphics_mode' => $request->validated('graphics_mode'),
+                'purpose' => $request->validated('purpose'),
+                'scope' => $request->validated('scope'),
+                'modules' => array_values($request->validated('modules')),
             ]);
 
             // Wünsche der Eltern als Grafik 1 bis 3

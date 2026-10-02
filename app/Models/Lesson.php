@@ -26,6 +26,9 @@ use Illuminate\Support\Str;
  * @property string|null $prompt Auftrag der Eltern, frei formuliert
  * @property int $photo_count
  * @property 'none'|'auto'|'custom' $graphics_mode Keine Grafik, die KI entscheidet oder nach Wunsch der Eltern
+ * @property 'neu'|'pruefung' $purpose Neuer Stoff oder Prüfungsvorbereitung
+ * @property 'kurz'|'normal'|'ausfuehrlich' $scope Umfang der Seite
+ * @property list<'quiz'|'sortieren'|'karten'|'lueckentext'>|null $modules Erlaubte Lernmodule, null bei alten Lernseiten: alle
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
  * @property list<array{bereich: string, aenderung: string}>|null $check_notes
@@ -37,11 +40,17 @@ use Illuminate\Support\Str;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at Weich gelöscht: Fotos sind weg, die Kosten bleiben erhalten
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
     use HasFactory, SoftDeletes;
+
+    public const PURPOSES = ['neu', 'pruefung'];
+
+    public const SCOPES = ['kurz', 'normal', 'ausfuehrlich'];
+
+    public const MODULES = ['quiz', 'sortieren', 'karten', 'lueckentext'];
 
     /**
      * Wie der Standardwert in der Datenbank, damit auch ungespeicherte Lernseiten ihn haben.
@@ -51,6 +60,8 @@ class Lesson extends Model
     protected $attributes = [
         'photo_count' => 0,
         'graphics_mode' => 'auto',
+        'purpose' => 'neu',
+        'scope' => 'normal',
     ];
 
     protected function casts(): array
@@ -61,6 +72,7 @@ class Lesson extends Model
             'content' => 'array',
             'check_notes' => 'array',
             'additions' => 'array',
+            'modules' => 'array',
             'published_at' => 'datetime',
         ];
     }
