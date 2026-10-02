@@ -209,6 +209,31 @@ Heute läuft alles in einem Durchgang; Fehllesungen oder schwache Grafik-Ideen f
 
 ---
 
+## Formular Einfach | Erweitert
+
+Plan: `2026-10-02-einfach-erweitert.md`. Entscheide (Auftraggeber, 2026-10-02): Die KI erkennt das Fach; drei Voreinstellungen «Kurz & schnell», «Normal», «Prüfung».
+
+- **Einfach** (Standard): Fotos, Auftrag, Kind, Voreinstellung. Die Stufe kommt vom Kind; das Feld erscheint nur, wenn das Kind keine Stufe hat oder es das erste Kind ist. Fach und Stufe werden im einfachen Modus nicht mitgeschickt.
+- **Erweitert**: alles offen, ohne «Mehr Optionen»: Fotos, Auftrag, Kind, Fach (optional) und Stufe, Grafiken, Zweck, Umfang, Lernmodule. Das Merken pro Kind und Fach (`lastSettings`) gilt nur hier.
+- Umschalten mit «Alle Einstellungen» / «Weniger Einstellungen» neben dem Absenden, gemerkt in `localStorage` (`lernseite.formMode`, ohne Speicher gilt «einfach»). Fehler in Feldern, die nur der erweiterte Modus zeigt, schalten auf «erweitert».
+
+| Voreinstellung | Zweck | Umfang | Grafik | Module |
+|---|---|---|---|---|
+| Kurz & schnell | neu | kurz | keine | Quiz, Karteikarten |
+| Normal | neu | normal | KI entscheidet | alle vier |
+| Prüfung | pruefung | normal | KI entscheidet | alle vier |
+
+- «Wie letztes Mal» erscheint, wenn die letzte Lernseite des Kindes (`lastByChild`, egal welches Fach) zu keiner Voreinstellung passt; eigene Grafikwünsche werden zu «KI entscheidet».
+- Vorauswahl: passende Voreinstellung der letzten Lernseite, sonst «Wie letztes Mal», ohne Lernseite «Normal». Beim Wechsel des Kindes gilt dieselbe Regel, ausser es wurde schon eine Karte von Hand gewählt.
+- Zurück von «erweitert» nach «einfach»: passende Karte, sonst die Karte «Eigene Einstellungen» (samt Grafikwünschen), damit nichts stillschweigend überschrieben wird.
+
+### Fach erkennen
+
+- `lessons.subject` ist nullable. Ohne Fach steht im ersten Aufruf der Analyse «Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag».
+- Das Schema der Analyse hat `fach`; `analyse.md` nennt die bevorzugten Namen (Lehrplan 21) und verlangt, ein angegebenes Fach unverändert zu übernehmen.
+- `LessonGenerator::analyze()` speichert `fach` direkt nach dem ersten Aufruf (getrimmt, höchstens 60 Zeichen, leer → «Allgemein»), nur wenn die Eltern kein Fach angegeben haben. Ab dem zweiten Aufruf hat jede Anfrage ein Fach.
+- Bis dahin zeigen Bibliothek, Lernstand und Lernseite «Fach wird erkannt …» (`Lesson::SUBJECT_PENDING`).
+
 ## Teil 5 – Fachprofile
 
 Das System ist heute auf Naturwissenschaften zugeschnitten (Referenzen Fotosynthese/Ökosystem, «probieren/Experimente», Sortieren nach Kategorien, Grafik-Muster). Statt eigener Templates gibt es **Fachprofile**: gleicher Seitenaufbau, gleiche Bausteine, aber pro Profil:
