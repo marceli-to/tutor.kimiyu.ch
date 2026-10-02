@@ -156,6 +156,14 @@ it('checks the whole page in one call', function () {
         ->and($request[0]->prompt)->toContain('"abschnitte"');
 });
 
+it('sends one example graphic to the graphic step', function () {
+    upload();
+
+    $system = $this->fake->requestsFor('grafik')[0]->system;
+    expect($system)->toContain(LessonFactory::fixture('fotosynthese')['meta']['titel'])
+        ->and($system)->not->toContain(LessonFactory::fixture('oekosystem')['meta']['titel']);
+});
+
 it('applies the corrections of the check and lists them for the parents', function () {
     $this->fake->push('pruefung', ['korrekturen' => [
         ['pfad' => '/module/quiz/0/tipp', 'wert' => 'Denk an die Zutaten, nicht an das Ergebnis.', 'bereich' => 'Quiz, Frage 1', 'aenderung' => 'Tipp präzisiert.'],

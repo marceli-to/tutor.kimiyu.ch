@@ -87,6 +87,6 @@ Deutsch, Schweizer Rechtschreibung (ss statt ß, «…»), Du-Form, kurze Sätze
 
 ## Beispiele
 
-Zwei gelungene Grafiken als Qualitätsmassstab. Übernimm Qualität und Machart, nicht den Inhalt.
+Eine gelungene Grafik als Qualitätsmassstab. Übernimm Qualität und Machart, nicht den Inhalt.
 
 {{BEISPIELE}}

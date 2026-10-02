@@ -160,13 +160,12 @@ class Prompts
 
     public static function hero(Lesson $lesson): ModelRequest
     {
-        $examples = collect(LessonFactory::FIXTURES)
-            ->map(fn (string $name) => '### '.LessonFactory::fixture($name)['meta']['titel']."\n\n```json\n".self::json(LessonFactory::fixture("$name.hero"))."\n```")
-            ->implode("\n\n");
+        // Ein Beispiel reicht als Massstab; jedes weitere kostet nur Input
+        $example = '### '.LessonFactory::fixture('fotosynthese')['meta']['titel']."\n\n```json\n".self::json(LessonFactory::fixture('fotosynthese.hero'))."\n```";
 
         return new ModelRequest(
             step: 'grafik',
-            system: strtr(self::load('grafik'), ['{{BEISPIELE}}' => $examples]),
+            system: strtr(self::load('grafik'), ['{{BEISPIELE}}' => $example]),
             prompt: implode("\n\n", [
                 "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}",
                 self::context($lesson),
