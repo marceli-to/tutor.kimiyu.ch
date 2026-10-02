@@ -18,18 +18,23 @@ use Illuminate\Support\Carbon;
  * @property array{muster: string, idee: string}|null $plan null: (noch) kein Plan, z. B. weil der Wunsch nicht zum Stoff passt
  * @property array{muster: string, beschreibung: string, css: string, markup: string, script: string}|null $graphic
  * @property string|null $error Hinweis für die Eltern, warum die Grafik fehlt
+ * @property bool $hidden Von den Eltern ausgeblendet (Baustein entfernt); kommt mit «Grafik neu erstellen» zurück
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['position', 'request', 'pattern', 'plan', 'graphic', 'error'])]
+#[Fillable(['position', 'request', 'pattern', 'plan', 'graphic', 'error', 'hidden'])]
 class LessonGraphic extends Model
 {
+    /** @var array<string, mixed> */
+    protected $attributes = ['hidden' => false];
+
     protected function casts(): array
     {
         return [
             'position' => 'integer',
             'plan' => 'array',
             'graphic' => 'array',
+            'hidden' => 'boolean',
         ];
     }
 

@@ -24,6 +24,8 @@ const props = defineProps<{
     // Nur bei Lernseiten mit Fotos: was die KI ergänzt hat, ist markiert
     showOrigin: boolean;
     palettes: { value: string; label: string; accent: string }[];
+    // Kurzer Text pro Grafik (Beschreibung, Idee oder Wunsch), nach Nummer
+    graphicLabels: Partial<Record<number, string>>;
 }>();
 
 setLayoutProps({
@@ -276,6 +278,19 @@ function save() {
                             "
                         />
                     </template>
+
+                    <div v-else-if="block.typ === 'grafik'" class="space-y-1">
+                        <p class="text-sm font-medium">
+                            Grafik {{ block.nr
+                            }}<template v-if="graphicLabels[block.nr]"
+                                >: {{ graphicLabels[block.nr] }}</template
+                            >
+                        </p>
+                        <p class="text-sm text-muted-foreground">
+                            Entfernen blendet die Grafik aus. Mit «Grafik neu
+                            erstellen» kommt sie zurück.
+                        </p>
+                    </div>
 
                     <Button
                         type="button"

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\LessonStatus;
+use App\Lessons\Ai\FakeLanguageModel;
 use App\Models\Child;
 use App\Models\Lesson;
 use App\Models\LessonGraphic;
@@ -82,7 +83,10 @@ describe('display', function () {
 
         // Grafik 2 im zweiten Abschnitt; Grafik 3 ist fehlgeschlagen, hat aber einen Platz
         $content = LessonFactory::fixture('oekosystem');
-        $content['abschnitte'][1]['bloecke'][] = ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'];
+        $content['abschnitte'][] = ['titel' => 'Die Nahrungskette', 'bloecke' => [
+            ['typ' => 'absatz', 'text' => 'Pflanzen werden von Tieren gefressen.', 'herkunft' => 'foto'],
+            ['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'],
+        ]];
         $content['abschnitte'][0]['bloecke'][] = ['typ' => 'grafik', 'nr' => 3, 'herkunft' => 'foto'];
 
         $this->lesson = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create([
@@ -122,9 +126,9 @@ describe('display', function () {
                 ->missing('lesson.graphics.3')
                 ->where('lesson.hero', fn ($hero) => $hero['url'] === $page->toArray()['props']['lesson']['graphics'][1]['url'])
                 ->where('parent.graphics', [
-                    ['nr' => 1, 'error' => null, 'canRegenerate' => true],
-                    ['nr' => 2, 'error' => null, 'canRegenerate' => true],
-                    ['nr' => 3, 'error' => 'Die KI war nicht erreichbar.', 'canRegenerate' => true],
+                    ['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
+                    ['nr' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => false],
+                    ['nr' => 3, 'error' => 'Die KI war nicht erreichbar.', 'canRegenerate' => true, 'hidden' => false],
                 ])
                 ->where('parent.canRegenerate', ['quiz' => true])
                 ->where('lesson.plannedGraphics', [1, 2, 3])
@@ -196,7 +200,7 @@ describe('display', function () {
 
         $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('parent.graphics.2', ['nr' => 3, 'error' => 'Passt nicht zum Stoff.', 'canRegenerate' => false])
+                ->where('parent.graphics.2', ['nr' => 3, 'error' => 'Passt nicht zum Stoff.', 'canRegenerate' => false, 'hidden' => false])
                 ->where('lesson.plannedGraphics', [1, 2])
             );
     });
@@ -215,5 +219,111 @@ describe('display', function () {
             ->assertInertia(fn (Assert $page) => $page->where('lesson.plannedGraphics', [1]));
         $this->actingAs($this->user)->get(route('lessons.show', $none))
             ->assertInertia(fn (Assert $page) => $page->where('lesson.plannedGraphics', []));
+    });
+
+    function withoutGraphicBlock(array $content, int $nr): array
+    {
+        foreach ($content['abschnitte'] as $k => $section) {
+            $content['abschnitte'][$k]['bloecke'] = array_values(array_filter(
+                $section['bloecke'],
+                fn (array $block) => $block['typ'] !== 'grafik' || $block['nr'] !== $nr,
+            ));
+        }
+
+        return $content;
+    }
+
+    it('shows a short label for each graphic in the edit view', function () {
+        $this->actingAs($this->user)->get(route('lessons.edit', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('graphicLabels.2', 'Die Nahrungskette')
+                ->where('graphicLabels.3', 'Kreislauf')
+            );
+
+        $this->lesson->graphic(3)->update(['plan' => null, 'request' => str_repeat('Lang ', 40)]);
+
+        $this->actingAs($this->user)->get(route('lessons.edit', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('graphicLabels.3', fn (string $label) => mb_strlen($label) <= 121 && str_ends_with($label, '…'))
+            );
+    });
+
+    it('saves the content with its graphic blocks', function () {
+        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $this->lesson->content])
+            ->assertSessionHasNoErrors();
+
+        expect($this->lesson->fresh()->content['abschnitte'][1]['bloecke'])->toContain(['typ' => 'grafik', 'nr' => 2, 'herkunft' => 'foto'])
+            ->and($this->lesson->graphics()->where('hidden', true)->count())->toBe(0);
+    });
+
+    it('hides a graphic whose block the parent removed', function () {
+        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), [
+            'content' => withoutGraphicBlock($this->lesson->content, 2),
+        ])->assertSessionHasNoErrors();
+
+        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeTrue()
+            ->and($this->lesson->graphic(1)->fresh()->hidden)->toBeFalse()
+            ->and($this->lesson->graphic(3)->fresh()->hidden)->toBeFalse();
+
+        $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lesson.graphics', 1)
+                ->has('lesson.hero.url')
+                ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'grafik') === [])
+                ->where('parent.graphics.1', ['nr' => 2, 'error' => null, 'canRegenerate' => true, 'hidden' => true])
+            );
+
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lesson.graphics', 1)
+                ->where('lesson.content', fn ($content) => blocksOfType($content->toArray(), 'grafik') === [])
+            );
+
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 2]))->assertNotFound();
+    });
+
+    it('shows a hidden graphic again when its block comes back', function () {
+        $content = $this->lesson->content;
+        $this->lesson->graphic(2)->update(['hidden' => true]);
+        $this->lesson->update(['content' => withoutGraphicBlock($content, 2)]);
+
+        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $content])
+            ->assertSessionHasNoErrors();
+
+        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeFalse();
+        $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 2]))->assertOk();
+    });
+
+    it('keeps appending a finished graphic that never had a block', function () {
+        $this->lesson->update(['content' => withoutGraphicBlock($this->lesson->content, 2)]);
+
+        $this->actingAs($this->user)->put(route('lessons.update', $this->lesson), ['content' => $this->lesson->content])
+            ->assertSessionHasNoErrors();
+
+        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeFalse();
+        $this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('lesson.content', fn ($content) => array_column(blocksOfType($content->toArray(), 'grafik'), 'nr') === [2])
+            );
+    });
+
+    it('shows a hidden graphic again after drawing it anew', function () {
+        FakeLanguageModel::install();
+        $this->lesson->graphic(2)->update(['hidden' => true]);
+        $this->lesson->update(['content' => withoutGraphicBlock($this->lesson->content, 2)]);
+
+        $this->actingAs($this->user)->post(route('lessons.graphic.regenerate', [$this->lesson, 2]))
+            ->assertRedirect();
+
+        expect($this->lesson->graphic(2)->fresh()->hidden)->toBeFalse();
+        $this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('lesson.graphics.2.url')
+                ->where('lesson.content', function ($content) {
+                    $blocks = blocksOfType($content->toArray(), 'grafik');
+
+                    return count($blocks) === 1 && $blocks[0]['abschnitt'] === count($content['abschnitte']) - 1;
+                })
+            );
     });
 });

@@ -92,7 +92,7 @@ it('turns uploaded photos into a lesson ready for review', function () {
             ->where('lesson.status', 'review')
             ->where('lesson.content.meta.palette', 'gruen')
             ->has('lesson.hero.url')
-            ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true]])
+            ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
         );
 });
 

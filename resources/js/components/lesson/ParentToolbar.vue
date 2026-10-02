@@ -48,9 +48,13 @@ const confirm = ref<Confirm>(null);
 const graphicNr = ref(1);
 
 function graphicLabel(nr: number) {
-    return nr === 1 && props.graphics.length > 1
-        ? 'Grafik 1 (oben)'
-        : `Grafik ${nr}`;
+    const label =
+        nr === 1 && props.graphics.length > 1
+            ? 'Grafik 1 (oben)'
+            : `Grafik ${nr}`;
+    const hidden = props.graphics.find((graphic) => graphic.nr === nr)?.hidden;
+
+    return hidden ? `${label} (ausgeblendet)` : label;
 }
 
 function confirmGraphic(nr: number) {

@@ -7,9 +7,11 @@ use App\Lessons\ClozeParser;
 use App\Lessons\ContentValidator;
 use App\Lessons\Palettes;
 use App\Models\Lesson;
+use App\Models\LessonGraphic;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,6 +39,7 @@ class LessonContentController extends Controller
             ],
             'showOrigin' => ! $lesson->isFromTopic(),
             'clozeMarkup' => $cloze ? ClozeParser::toMarkup($cloze['segmente']) : null,
+            'graphicLabels' => $this->graphicLabels($lesson),
             'palettes' => collect(Palettes::all())
                 ->map(fn (array $palette, string $key) => ['value' => $key, 'label' => $palette['label'], 'accent' => $palette['light']['accent']])
                 ->values(),
@@ -81,6 +84,8 @@ class LessonContentController extends Controller
             );
         }
 
+        $this->hideRemovedGraphics($lesson, $lesson->content, $content);
+
         $lesson->update([
             'title' => $content['meta']['titel'],
             'content' => $content,
@@ -89,6 +94,65 @@ class LessonContentController extends Controller
         $this->toast('Gespeichert.');
 
         return back();
+    }
+
+    /**
+     * Kurzer Text pro Grafik für die Bearbeiten-Ansicht: Beschreibung der fertigen Grafik,
+     * sonst die Idee aus dem Plan, sonst der Wunsch der Eltern.
+     *
+     * @return array<int, string>
+     */
+    private function graphicLabels(Lesson $lesson): array
+    {
+        return $lesson->graphics
+            ->mapWithKeys(fn (LessonGraphic $graphic) => [$graphic->position => Str::limit(
+                (string) ($graphic->graphic['beschreibung'] ?? $graphic->plan['idee'] ?? $graphic->request ?? ''),
+                120,
+                '…',
+            )])
+            ->all();
+    }
+
+    /**
+     * Entfernt die Mutter oder der Vater den Baustein einer Grafik, wird sie ausgeblendet (sie bleibt
+     * gespeichert). Kommt der Baustein zurück, ist sie wieder sichtbar. Grafiken, die nie einen Baustein
+     * hatten (Grafik 1, Grafiken am Ende des letzten Abschnitts), bleiben, wie sie sind.
+     *
+     * @param  array<string, mixed>  $old
+     * @param  array<string, mixed>  $new
+     */
+    private function hideRemovedGraphics(Lesson $lesson, array $old, array $new): void
+    {
+        $before = $this->graphicBlocks($old);
+        $after = $this->graphicBlocks($new);
+
+        $removed = array_diff($before, $after);
+        if ($removed !== []) {
+            $lesson->graphics()->whereIn('position', $removed)->update(['hidden' => true]);
+        }
+
+        if ($after !== []) {
+            $lesson->graphics()->whereIn('position', $after)->update(['hidden' => false]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $content
+     * @return list<int>
+     */
+    private function graphicBlocks(array $content): array
+    {
+        $numbers = [];
+
+        foreach ($content['abschnitte'] ?? [] as $section) {
+            foreach ($section['bloecke'] ?? [] as $block) {
+                if (($block['typ'] ?? null) === 'grafik' && is_int($block['nr'] ?? null)) {
+                    $numbers[] = $block['nr'];
+                }
+            }
+        }
+
+        return array_values(array_unique($numbers));
     }
 
     private function editable(Lesson $lesson): bool

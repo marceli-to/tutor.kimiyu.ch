@@ -279,6 +279,8 @@ class LessonGenerator
                 'script' => $hero['script'],
             ],
             'error' => null,
+            // Eine neu erstellte Grafik ist wieder sichtbar (am Ende des letzten Abschnitts, ohne Baustein)
+            'hidden' => false,
         ]);
         $this->mirrorFirstGraphic($lesson, $graphic);
     }

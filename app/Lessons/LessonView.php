@@ -42,14 +42,15 @@ class LessonView
     }
 
     /**
-     * Nur fertige Grafiken, nur URL und Beschreibung: Fehler, Wünsche und Pläne sehen nur die Eltern.
+     * Nur fertige, nicht ausgeblendete Grafiken, nur URL und Beschreibung: Fehler, Wünsche und Pläne sehen nur die Eltern.
      *
      * @return array<int, array{url: string, beschreibung: string}>
      */
     private static function graphics(Lesson $lesson): array
     {
         return $lesson->graphics
-            ->filter(fn (LessonGraphic $graphic) => $graphic->graphic !== null)
+            // Ausgeblendete Grafiken zeigt die Seite gar nicht, auch nicht am Ende
+            ->filter(fn (LessonGraphic $graphic) => $graphic->graphic !== null && ! $graphic->hidden)
             ->mapWithKeys(fn (LessonGraphic $graphic) => [$graphic->position => [
                 // Signiert, weil das iframe ohne eigenen Origin keine Session hat
                 'url' => URL::signedRoute('lessons.graphic', [

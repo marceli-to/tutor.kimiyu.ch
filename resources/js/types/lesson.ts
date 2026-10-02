@@ -111,6 +111,8 @@ export type GraphicState = {
     nr: number;
     error: string | null;
     canRegenerate: boolean;
+    // Von den Eltern in der Bearbeiten-Ansicht ausgeblendet
+    hidden: boolean;
 };
 
 // Ergebnis einer einzelnen Antwort, für den Lernstand (Phase 4)

@@ -191,7 +191,7 @@ describe('publishing and sharing', function () {
                 ->where('parent.canPublish', true)
                 ->where('parent.shareUrl', null)
                 ->where('parent.canRegenerate', ['quiz' => true])
-                ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true]])
+                ->where('parent.graphics', [['nr' => 1, 'error' => null, 'canRegenerate' => true, 'hidden' => false]])
             );
 
         $this->lesson->update(['status' => LessonStatus::Published, 'published_at' => now()]);

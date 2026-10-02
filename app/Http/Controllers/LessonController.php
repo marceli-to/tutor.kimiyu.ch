@@ -234,11 +234,12 @@ class LessonController extends Controller
      */
     public function graphic(Lesson $lesson, int $nr): HttpResponse
     {
-        $graphic = $lesson->graphic($nr)?->graphic;
+        $graphic = $lesson->graphic($nr);
 
-        abort_unless($graphic !== null, 404);
+        // Ausgeblendete Grafiken sind auch über die signierte URL nicht erreichbar
+        abort_unless($graphic?->graphic !== null && ! $graphic->hidden, 404);
 
-        return HeroDocument::response($lesson, $graphic);
+        return HeroDocument::response($lesson, $graphic->graphic);
     }
 
     /**
@@ -282,6 +283,7 @@ class LessonController extends Controller
                     'nr' => $graphic->position,
                     'error' => $graphic->error,
                     'canRegenerate' => GenerationPipeline::canRegenerate($lesson, 'grafik', $graphic->position),
+                    'hidden' => $graphic->hidden,
                 ])->values()->all(),
                 'additions' => $lesson->isFromTopic() ? [] : ($lesson->additions ?? []),
             ] : null,
