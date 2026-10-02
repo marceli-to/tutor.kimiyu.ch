@@ -15,7 +15,7 @@
 
 **Design:** `docs/plans/2026-10-02-neue-lernseite-design.md`, section «Teil 5».
 
-**Conventions:** as in the earlier plans (German UI/comments/prompts, Swiss spelling, English test names, pint, full suite, phpstan 0, `npm run types:check`, `npm run check`, commits German with `Co-Authored-By`, stage by name, never commit `public/build`/`package-lock.json` — except `package.json` + the lockfile change for `katex` in Task 3, which must be committed —, never migrate `database/database.sqlite`).
+**Conventions:** as in the earlier plans (German UI/comments/prompts, Swiss spelling, English test names, `composer format` (PHP-CS-Fixer, tabs), full suite, phpstan 0, `npm run types:check`, `npm run check`, commits German with `Co-Authored-By`, stage by name, never commit `public/build`/`package-lock.json` — except `package.json` + the lockfile change for `katex` in Task 3, which must be committed —, never migrate `database/database.sqlite`).
 
 **Fixtures:** each profile task adds its own hand-written fixture (`passe-compose`, `dreisatz`, `winkel-parallelen`, `das-dass`) under `database/fixtures/lessons/`, listed in a new `LessonFactory::PROFILE_FIXTURES` (keep `FIXTURES` = the two science fixtures for existing datasets). Same quality and Swiss spelling as the existing fixtures, `herkunft: "foto"` everywhere. The profile uses its fixture as the example in the page prompt.
 

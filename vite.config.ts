@@ -67,6 +67,7 @@ export default defineConfig({
     fmt: {
         printWidth: 80,
         tabWidth: 4,
+        useTabs: true,
         singleQuote: true,
         semi: true,
         singleAttributePerLine: false,
@@ -79,6 +80,13 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
+        ],
+        // JSON, YAML and Markdown keep spaces (YAML cannot use tabs).
+        overrides: [
+            {
+                files: ['**/*.json', '**/*.yaml', '**/*.yml', '**/*.md'],
+                options: { useTabs: false },
+            },
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],
