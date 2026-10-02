@@ -183,6 +183,7 @@ Heute läuft alles in einem Durchgang; Fehllesungen oder schwache Grafik-Ideen f
 - **Reihenfolge** per Ziehen ändern (Maus und Touch, plus Pfeil-Buttons für Tastatur). Die Reihenfolge wird als `position` gespeichert und so an die KI geschickt («Seite 1 von 3»).
 - **Kamera direkt** auf dem Handy: zusätzlicher Button «Foto aufnehmen» (`capture="environment"`).
 - **Qualitätscheck im Browser** nach dem Verkleinern: Helligkeit und Schärfe (Varianz des Laplace-Filters auf Canvas). Bei schlechtem Wert ein Hinweis am Foto («Wirkt unscharf – nochmals aufnehmen?»), Upload bleibt möglich.
+- Umgesetzt (2026-10-02): Die Fotoauswahl ist eine eigene Komponente (`PhotoPicker.vue`), alle Quellen laufen über `addFiles()`. Reihenfolge per nativem HTML5-Drag-&-drop für die Maus, dazu Pfeil-Buttons für Touch und Tastatur (natives Ziehen geht auf Touchscreens nicht); jedes Foto zeigt seine Nummer. Die KI bekommt bei 2+ Fotos den Satz «Die Fotos sind in der Reihenfolge der Seiten: Foto 1 ist die erste Seite.» Die Kachel «Foto aufnehmen» erscheint nur auf Touch-Geräten (`pointer: coarse`), weil Desktop-Browser `capture` ignorieren. Beim Einfügen in ein Textfeld gewinnt Text, wenn die Zwischenablage welchen enthält. Qualitätscheck in `lib/imageQuality.ts`; die Schwellen (Helligkeit < 70, Laplace-Varianz < 60) sind noch nicht an echten Fotos geprüft.
 
 ### 3c Umfang und Zweck
 
