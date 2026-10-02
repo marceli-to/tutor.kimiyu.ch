@@ -147,6 +147,42 @@ it('stores no additions when nothing was added', function () {
         ->and($this->fake->requestsFor('module')[0]->prompt)->not->toContain('Ergänzt (nicht auf den Fotos)');
 });
 
+it('keeps parent-only information out of the graphic request', function () {
+    $this->fake->push('analyse', analysis([
+        'ergaenzungen' => ['Zellatmung ergänzt.'],
+        'zusammenfassung' => 'Pflanzen machen Zucker. Zellatmung (ergänzt) setzt Energie frei.',
+    ]));
+
+    upload();
+
+    $request = $this->fake->requestsFor('grafik')[0];
+    expect($request->prompt)
+        ->not->toContain('herkunft')
+        ->not->toContain('Ergänzt (nicht auf den Fotos)')
+        ->not->toContain('(ergänzt)')
+        ->toContain('Zellatmung setzt Energie frei.')
+        ->toContain('Auftrag der Eltern: Prüfung am Freitag')
+        ->and($request->system)->toContain('Den Auftrag der Eltern nie wörtlich in die Grafik übernehmen.');
+});
+
+it('tells the system prompts to keep the origin marker away from the child', function () {
+    upload();
+
+    expect($this->fake->requestsFor('analyse')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht')
+        ->and($this->fake->requestsFor('module')[0]->system)->toContain('«(ergänzt)» erscheint nie in Texten, die das Kind sieht');
+});
+
+it('tells the repair to keep origin and ids', function () {
+    $broken = LessonFactory::fixture('fotosynthese');
+    array_pop($broken['module']['quiz']);
+    $this->fake->push('module', ['module' => $broken['module']]);
+
+    upload();
+
+    expect($this->fake->requestsFor('reparatur-module')[0]->system)
+        ->toContain('`herkunft` und IDs bestehender Einträge übernimmst du unverändert');
+});
+
 it('re-encodes photos without metadata and scales them down', function () {
     $this->fake->push('analyse', function (ModelRequest $request) {
         $data = $request->images[0]['data'];
@@ -551,6 +587,23 @@ describe('from a prompt', function () {
 
         expect(Lesson::sole()->prompt)->toBeNull()
             ->and(Lesson::sole()->photo_count)->toBe(1);
+    });
+
+    it('tells the later steps that there are no photos', function () {
+        $this->fake->push('analyse', analysis(['ergaenzungen' => ['Alles ergänzt.']]));
+
+        uploadPrompt();
+
+        expect(Lesson::sole()->additions)->toBeNull()
+            ->and($this->fake->requestsFor('module')[0]->prompt)
+            ->toContain('Quelle: keine Fotos (Auftrag oder Thema)')
+            ->not->toContain('Ergänzt (nicht auf den Fotos)');
+    });
+
+    it('does not mention missing photos for a photo lesson', function () {
+        upload();
+
+        expect($this->fake->requestsFor('module')[0]->prompt)->not->toContain('Quelle: keine Fotos');
     });
 
     it('requires photos or a prompt', function () {

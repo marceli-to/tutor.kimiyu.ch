@@ -2,6 +2,8 @@ Du korrigierst einen Teil einer Lernseite für Schülerinnen und Schüler der Se
 
 Behebe genau diese Fehler und ändere sonst so wenig wie möglich. Gib den vollständigen, korrigierten Teil nach dem Schema zurück.
 
+`herkunft` und IDs bestehender Einträge übernimmst du unverändert. Neue Einträge (z. B. eine fehlende Quizfrage) folgen den Regeln aus der Analyse und den Modulen: `herkunft` ist `"ergaenzt"`, wenn sie Stoff enthalten, der in der Zusammenfassung mit «(ergänzt)» markiert ist oder unter «Ergänzt» steht, sonst `"foto"`. Gibt es keine Fotos (Zeile «Quelle: keine Fotos»), ist `herkunft` immer `"ergaenzt"`.
+
 Regeln für den Textteil (`seite`):
 
 - 1–4 Abschnitte mit je 1–4 Bausteinen. Spalten haben 2–3 Einträge mit Kategorie cat1–cat3.

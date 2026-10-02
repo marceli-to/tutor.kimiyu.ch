@@ -57,7 +57,10 @@ class LessonGenerator
         $lesson->update([
             'step' => 'module',
             'source_summary' => (string) ($data['zusammenfassung'] ?? ''),
-            'additions' => array_values(array_filter((array) ($data['ergaenzungen'] ?? []), 'is_string')) ?: null,
+            // Ohne Fotos ist alles ergänzt, eine Liste wäre bedeutungslos
+            'additions' => $lesson->isFromTopic()
+                ? null
+                : (array_values(array_filter((array) ($data['ergaenzungen'] ?? []), 'is_string')) ?: null),
             'hero_plan' => $data['hero_plan'] ?? null,
         ]);
 

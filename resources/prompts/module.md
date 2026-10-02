@@ -19,7 +19,8 @@ Nicht gewählte Module auf null setzen.
 - **Karten:** IDs `k1`, `k2` … Vorne der Begriff, hinten eine kurze Erklärung (ein bis zwei Sätze).
 - **Lückentext:** Segmente abwechselnd `{"text": …}` und `{"id": "g1", "loesungen": […]}`. Die erste Lösung ist die Musterlösung, dazu gängige Schreibvarianten als Alternativen (["Kohlenstoffdioxid", "CO₂", "CO2"]). Gross/Klein spielt keine Rolle. Lücken nur für Fachbegriffe, nicht für Füllwörter.
 - Alle IDs sind eindeutig.
-- **Herkunft:** Jede Quizfrage, jeder Sortier-Begriff, jede Karte und der Lückentext als Ganzes haben `herkunft`. `"ergaenzt"`, wenn sie nach etwas fragen, das in der Zusammenfassung mit «(ergänzt)» markiert ist oder unter «Ergänzt» steht, sonst `"foto"`. Gibt es keine Fotos (die Seite entstand nur aus dem Auftrag), ist `herkunft` immer `"ergaenzt"`.
+- **Herkunft:** Jede Quizfrage, jeder Sortier-Begriff, jede Karte und der Lückentext als Ganzes haben `herkunft`. `"ergaenzt"`, wenn sie nach etwas fragen, das in der Zusammenfassung mit «(ergänzt)» markiert ist oder unter «Ergänzt» steht, sonst `"foto"`. Gibt es keine Fotos (Zeile «Quelle: keine Fotos», die Seite entstand nur aus dem Auftrag oder einem Thema), ist `herkunft` immer `"ergaenzt"`.
+- Die Markierung «(ergänzt)» erscheint nie in Texten, die das Kind sieht (Fragen, Erklärungen, Karten, Lückentext). Die Herkunft steht allein im Feld `herkunft`.
 - Nur Stoff aus der Zusammenfassung abfragen, nichts darüber hinaus.
 
 ## Sprache

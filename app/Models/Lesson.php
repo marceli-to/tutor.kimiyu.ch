@@ -59,6 +59,7 @@ class Lesson extends Model
     {
         return [
             'status' => LessonStatus::class,
+            'photo_count' => 'integer',
             'with_hero' => 'boolean',
             'content' => 'array',
             'hero_plan' => 'array',

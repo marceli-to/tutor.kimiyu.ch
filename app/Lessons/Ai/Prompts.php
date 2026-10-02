@@ -2,6 +2,7 @@
 
 namespace App\Lessons\Ai;
 
+use App\Lessons\LessonView;
 use App\Lessons\Palettes;
 use App\Models\Lesson;
 use Database\Factories\LessonFactory;
@@ -174,8 +175,9 @@ class Prompts
             system: strtr(self::load('grafik'), ['{{BEISPIELE}}' => $example]),
             prompt: implode("\n\n", [
                 "Plan für die Grafik:\nMuster: {$lesson->hero_plan['muster']}\n{$lesson->hero_plan['idee']}",
-                self::context($lesson),
-                "Inhalt der Lernseite:\n".self::json($lesson->content),
+                // Die Grafik sieht das Kind: ohne Herkunft und ohne Liste der Ergänzungen
+                self::context($lesson, forChild: true),
+                "Inhalt der Lernseite:\n".self::json(LessonView::withoutOrigin($lesson->content ?? [])),
             ]),
             schema: Schemas::hero(),
             maxTokens: config('lessons.max_tokens.grafik'),
@@ -210,18 +212,25 @@ class Prompts
 
     /**
      * Gemeinsamer Teil aller Schritte nach der Analyse: Fach, Stufe, Auftrag, Zusammenfassung und Ergänzungen.
+     * Für Teile, die das Kind sieht ($forChild, z. B. die Grafik), ohne Ergänzungen und ohne Markierung «(ergänzt)».
      */
-    private static function context(Lesson $lesson): string
+    private static function context(Lesson $lesson, bool $forChild = false): string
     {
         $header = implode("\n", array_filter([
             "Fach: {$lesson->subject}",
             "Stufe: {$lesson->level}",
+            // Damit «keine Fotos → immer ergaenzt» in module.md greift
+            $lesson->isFromTopic() ? 'Quelle: keine Fotos (Auftrag oder Thema)' : null,
             self::parentInstruction($lesson),
         ], fn ($line) => $line !== null));
 
-        $parts = [$header, "Zusammenfassung des Stoffs:\n{$lesson->source_summary}"];
+        $summary = $forChild
+            ? (string) preg_replace('/\s*\(ergänzt\)/u', '', (string) $lesson->source_summary)
+            : $lesson->source_summary;
 
-        if ($lesson->additions) {
+        $parts = [$header, "Zusammenfassung des Stoffs:\n{$summary}"];
+
+        if ($lesson->additions && ! $forChild) {
             $parts[] = "Ergänzt (nicht auf den Fotos):\n- ".implode("\n- ", $lesson->additions);
         }
 

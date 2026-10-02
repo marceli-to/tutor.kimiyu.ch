@@ -21,6 +21,13 @@ describe('isFromTopic', function () {
         expect(makeLesson(['prompt' => 'Prüfung am Freitag', 'photo_count' => 2])->isFromTopic())->toBeFalse();
     });
 
+    it('treats a photo count from the database as a number', function () {
+        $lesson = makeLesson(['prompt' => 'Erkläre die Kommaregeln.', 'photo_count' => '0']);
+
+        expect($lesson->photo_count)->toBe(0)
+            ->and($lesson->isFromTopic())->toBeTrue();
+    });
+
     it('is false without topic and prompt', function () {
         expect(makeLesson()->isFromTopic())->toBeFalse();
     });

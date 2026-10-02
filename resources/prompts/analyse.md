@@ -44,6 +44,7 @@ Sind die Fotos zu dünn für eine vollständige Seite, oder nennt der Auftrag ei
 - Jeder Baustein in `abschnitte` hat `herkunft`: `"ergaenzt"`, wenn er ergänzten Stoff enthält, sonst `"foto"`.
 - Liste jede Ergänzung in `ergaenzungen` auf, ein Satz pro Ergänzung: was auf den Fotos fehlte und was du ergänzt hast. Ohne Ergänzungen bleibt die Liste leer.
 - Markiere ergänzte Teile in der `zusammenfassung` mit «(ergänzt)», damit die späteren Schritte sie erkennen.
+- Die Markierung «(ergänzt)» erscheint nie in Texten, die das Kind sieht (Fragen, Erklärungen, Karten, Lückentext). Sie gehört nur in die `zusammenfassung`; die Herkunft steht allein im Feld `herkunft`.
 - Ergänze nur, was die Seite wirklich braucht. Lieber eine kurze Seite nah am Buch als eine lange mit viel Ergänztem.
 
 ## 2. Zusammenfassung
