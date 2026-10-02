@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -22,6 +23,8 @@ use Illuminate\Support\Carbon;
  * @property string $level
  * @property string|null $topic
  * @property string|null $notes
+ * @property string|null $prompt Auftrag der Eltern, frei formuliert
+ * @property int $photo_count
  * @property bool $with_hero
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
@@ -30,17 +33,27 @@ use Illuminate\Support\Carbon;
  * @property string|null $hero_error
  * @property list<array{bereich: string, aenderung: string}>|null $check_notes
  * @property string|null $source_summary
+ * @property list<string>|null $additions Was die KI aus eigenem Wissen ergänzt hat
  * @property string|null $error
  * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at Weich gelöscht: Fotos sind weg, die Kosten bleiben erhalten
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'with_hero', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'with_hero', 'schema_version', 'content', 'hero_plan', 'hero', 'hero_error', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
     use HasFactory, SoftDeletes;
+
+    /**
+     * Wie der Standardwert in der Datenbank, damit auch ungespeicherte Lernseiten ihn haben.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'photo_count' => 0,
+    ];
 
     protected function casts(): array
     {
@@ -51,16 +64,25 @@ class Lesson extends Model
             'hero_plan' => 'array',
             'hero' => 'array',
             'check_notes' => 'array',
+            'additions' => 'array',
             'published_at' => 'datetime',
         ];
     }
 
     /**
-     * Ohne Fotos erstellt: Inhalt stammt aus dem Wissen der KI, nicht aus dem Schulbuch.
+     * Ohne Fotos erstellt (Thema oder Auftrag): Inhalt stammt aus dem Wissen der KI.
      */
     public function isFromTopic(): bool
     {
-        return $this->topic !== null;
+        return $this->photo_count === 0 && ($this->topic !== null || $this->prompt !== null);
+    }
+
+    /**
+     * Titel für Listen, auch bevor die KI einen Titel gesetzt hat.
+     */
+    public function displayTitle(): string
+    {
+        return $this->title ?? $this->topic ?? ($this->prompt ? Str::limit($this->prompt, 60) : 'Neue Lernseite');
     }
 
     /**

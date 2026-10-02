@@ -33,7 +33,7 @@ class DashboardController extends Controller
                         'name' => $subject,
                         'lessons' => $lessons->map(fn (Lesson $lesson) => [
                             'id' => $lesson->id,
-                            'title' => $lesson->title ?? ($lesson->topic ?? 'Neue Lernseite'),
+                            'title' => $lesson->displayTitle(),
                             'emoji' => $lesson->content['meta']['emoji'] ?? null,
                             'status' => $lesson->status->value,
                             'statusLabel' => $lesson->status->label(),

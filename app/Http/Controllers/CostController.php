@@ -19,7 +19,7 @@ class CostController extends Controller
         /** @var Collection<int, Generation> $generations */
         $generations = Generation::query()
             ->where('user_id', $request->user()->id)
-            ->with('lesson:id,title,topic,subject,child_id,deleted_at', 'lesson.child:id,name')
+            ->with('lesson:id,title,topic,prompt,subject,child_id,deleted_at', 'lesson.child:id,name')
             ->latest()
             ->get();
 
@@ -90,7 +90,7 @@ class CostController extends Controller
 
         return [
             'id' => $lesson->id,
-            'title' => $lesson->title ?? $lesson->topic ?? 'Ohne Titel',
+            'title' => $lesson->displayTitle(),
             'child' => $lesson->child->name,
             'deleted' => $lesson->trashed(),
         ];
