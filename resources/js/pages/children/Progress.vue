@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, setLayoutProps } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
+import MathText from '@/components/lesson/MathText.vue';
 import { index, progress } from '@/routes/children';
 import { show } from '@/routes/lessons';
 
@@ -14,6 +15,7 @@ const props = defineProps<{
 		subject: string;
 		emoji: string | null;
 		published: boolean;
+		math: boolean;
 		counts: Record<Status, number>;
 		total: number;
 		open: { module: string; id: string; text: string; status: Status }[];
@@ -118,9 +120,9 @@ const moduleLabel: Record<string, string> = {
 				}}</span>
 				<div class="min-w-0 flex-1">
 					<h2 :id="`lesson-${lesson.id}`" class="font-medium">
-						<Link :href="show(lesson.id)" class="hover:underline">{{
-							lesson.title
-						}}</Link>
+						<Link :href="show(lesson.id)" class="hover:underline"
+							><MathText :text="lesson.title" :math="lesson.math"
+						/></Link>
 					</h2>
 					<p class="text-sm text-muted-foreground">
 						{{ lesson.subject }}
@@ -179,7 +181,7 @@ const moduleLabel: Record<string, string> = {
 							aria-hidden="true"
 						/>
 						<span>
-							{{ item.text }}
+							<MathText :text="item.text" :math="lesson.math" />
 							<span class="text-muted-foreground">
 								({{ moduleLabel[item.module] }},
 								{{

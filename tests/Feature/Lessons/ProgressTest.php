@@ -208,6 +208,24 @@ describe('pages', function () {
 			);
 	});
 
+	it('tells both overviews which lessons render formulas', function () {
+		// Biology renders TeX, history doesn't: there a «$» stays a dollar sign
+		$this->eco->update(['subject' => 'Geschichte']);
+
+		$this->actingAs($this->user)->get(route('children.progress', $this->child))
+			->assertInertia(fn (Assert $page) => $page
+				->where('lessons.0.math', true)
+				->where('lessons.1.math', false)
+			);
+
+		$this->get(route('shared.index', $this->child->share_token))
+			->assertInertia(fn (Assert $page) => $page
+				->where('subjects.0.name', 'Biologie')
+				->where('subjects.0.lessons.0.math', true)
+				->where('subjects.1.lessons.0.math', false)
+			);
+	});
+
 	it('keeps the progress private to the parent', function () {
 		$this->actingAs(User::factory()->create())->get(route('children.progress', $this->child))->assertForbidden();
 	});

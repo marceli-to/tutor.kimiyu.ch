@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import MathText from '@/components/lesson/MathText.vue';
 import { show } from '@/routes/shared';
 
 defineProps<{
@@ -12,6 +13,7 @@ defineProps<{
 			title: string;
 			emoji: string | null;
 			key_idea: string | null;
+			math: boolean;
 			progress: { mastered: number; total: number };
 		}[];
 	}[];
@@ -67,13 +69,19 @@ defineProps<{
 								<span
 									class="block font-display text-[1.2rem] font-bold"
 								>
-									{{ lesson.title }}
+									<MathText
+										:text="lesson.title"
+										:math="lesson.math"
+									/>
 								</span>
 								<span
 									v-if="lesson.key_idea"
 									class="mt-1 block text-base text-ls-muted"
 								>
-									{{ lesson.key_idea }}
+									<MathText
+										:text="lesson.key_idea"
+										:math="lesson.math"
+									/>
 								</span>
 								<span
 									v-if="lesson.progress.total"

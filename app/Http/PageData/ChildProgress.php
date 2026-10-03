@@ -41,6 +41,8 @@ class ChildProgress
 				'subject' => $lesson->subjectLabel(),
 				'emoji' => $lesson->content['meta']['emoji'] ?? null,
 				'published' => $lesson->status === LessonStatus::Published,
+				// TeX in the item texts (e.g. a gap «$\frac34$») is rendered as in the lesson
+				'math' => $lesson->resolvedProfile()->rendersMath(),
 				...$summaries[$lesson->id],
 			])->values(),
 		];

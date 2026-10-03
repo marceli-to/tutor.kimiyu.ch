@@ -40,6 +40,8 @@ class SharedLessonIndex
 						'title' => $lesson->title,
 						'emoji' => $lesson->content['meta']['emoji'] ?? null,
 						'key_idea' => $lesson->content['meta']['key_idea'] ?? null,
+						// TeX in title and key idea is rendered as in the lesson
+						'math' => $lesson->resolvedProfile()->rendersMath(),
 						'progress' => [
 							'mastered' => $progress[$lesson->id]['counts']['mastered'],
 							'total' => $progress[$lesson->id]['total'],

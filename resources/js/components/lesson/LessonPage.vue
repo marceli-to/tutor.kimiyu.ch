@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Moon, Sun } from '@lucide/vue';
-import 'katex/dist/katex.min.css';
 import { computed, provide } from 'vue';
 import ClozeModule from '@/components/lesson/ClozeModule.vue';
 import ExerciseModule from '@/components/lesson/ExerciseModule.vue';
 import FlashcardModule from '@/components/lesson/FlashcardModule.vue';
 import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import LessonBlock from '@/components/lesson/LessonBlock.vue';
+import MathText from '@/components/lesson/MathText.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import QuizModule from '@/components/lesson/QuizModule.vue';
 import SortModule from '@/components/lesson/SortModule.vue';
@@ -86,17 +86,17 @@ function toggleTheme() {
 			<h1
 				class="text-[clamp(2rem,6vw,3rem)] font-bold tracking-[-0.02em] text-ls-accent"
 			>
-				{{ content.meta.title }}
+				<MathText :text="content.meta.title" />
 			</h1>
 			<p class="mt-3 mb-0 max-w-[66ch] text-[1.2rem] text-ls-muted">
-				{{ content.meta.instructions }}
+				<MathText :text="content.meta.instructions" />
 			</p>
 
 			<GraphicFrame v-if="graphics[1]" :graphic="graphics[1]" />
 
 			<section v-for="(section, k) in content.sections" :key="k">
 				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
-					{{ section.title }}
+					<MathText :text="section.title" />
 				</h2>
 				<LessonBlock
 					v-for="(block, n) in section.blocks"
@@ -117,10 +117,10 @@ function toggleTheme() {
 						:key="n"
 						class="mb-2.5"
 					>
-						{{ experiment }}
+						<MathText :text="experiment" />
 					</p>
 					<p v-if="content.try_it.everyday_comparison" class="m-0">
-						{{ content.try_it.everyday_comparison }}
+						<MathText :text="content.try_it.everyday_comparison" />
 					</p>
 				</div>
 			</section>
@@ -130,7 +130,7 @@ function toggleTheme() {
 					Sortier-Spiel
 				</h2>
 				<p v-if="modules.sorting.instructions" class="mb-4">
-					{{ modules.sorting.instructions }}
+					<MathText :text="modules.sorting.instructions" />
 				</p>
 				<SortModule
 					:data="modules.sorting"
@@ -141,7 +141,7 @@ function toggleTheme() {
 			<section v-if="modules.flashcards">
 				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">Karteikarten</h2>
 				<p v-if="modules.flashcards.instructions" class="mb-4">
-					{{ modules.flashcards.instructions }}
+					<MathText :text="modules.flashcards.instructions" />
 				</p>
 				<FlashcardModule
 					:data="modules.flashcards"
@@ -156,7 +156,7 @@ function toggleTheme() {
 					<OriginBadge :origin="modules.cloze.origin" class="ml-1" />
 				</h2>
 				<p v-if="modules.cloze.instructions" class="mb-4">
-					{{ modules.cloze.instructions }}
+					<MathText :text="modules.cloze.instructions" />
 				</p>
 				<ClozeModule
 					:data="modules.cloze"
@@ -169,7 +169,7 @@ function toggleTheme() {
 					Selbst rechnen
 				</h2>
 				<p v-if="modules.exercises.instructions" class="mb-4">
-					{{ modules.exercises.instructions }}
+					<MathText :text="modules.exercises.instructions" />
 				</p>
 				<ExerciseModule
 					:data="modules.exercises"
@@ -191,7 +191,9 @@ function toggleTheme() {
 				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
 					Zum Nachdenken
 				</h2>
-				<p class="max-w-[66ch]">{{ content.reflect.question }}</p>
+				<p class="max-w-[66ch]">
+					<MathText :text="content.reflect.question" />
+				</p>
 			</section>
 
 			<footer

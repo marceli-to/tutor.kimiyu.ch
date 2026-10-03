@@ -22,17 +22,15 @@ class AppServiceProvider extends ServiceProvider
 	 */
 	public function register(): void
 	{
-		$this->app->singleton(LanguageModel::class, function () {
-			if (config('lessons.fake_ai')) {
-				return new FakeLanguageModel;
-			}
+		$this->app->singleton(ClaudeLanguageModel::class, fn () => new ClaudeLanguageModel(
+			client: new Client(apiKey: (string) config('services.anthropic.key')),
+			fallbacks: config('services.anthropic.fallbacks'),
+			timeout: config('services.anthropic.timeout'),
+		));
 
-			return new ClaudeLanguageModel(
-				client: new Client(apiKey: (string) config('services.anthropic.key')),
-				fallbacks: config('services.anthropic.fallbacks'),
-				timeout: config('services.anthropic.timeout'),
-			);
-		});
+		$this->app->singleton(LanguageModel::class, fn ($app) => config('lessons.fake_ai')
+			? new FakeLanguageModel
+			: $app->make(ClaudeLanguageModel::class));
 	}
 
 	/**

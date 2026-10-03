@@ -27,7 +27,7 @@ class Prompts
 	 */
 	public static function analysis(Lesson $lesson, array $images): ModelRequest
 	{
-		$system = self::analysisSystem([
+		$system = self::analysisSystem('Fotosynthese', [
 			'source' => ['readable' => true, 'problem' => null],
 			'subject' => 'Biologie',
 			'summary' => '…',
@@ -70,7 +70,7 @@ class Prompts
 			unset($page['try_it']);
 		}
 
-		$system = self::analysisSystem(['page' => $page]);
+		$system = self::analysisSystem($page['meta']['topic'], ['page' => $page]);
 
 		$parts = [
 			'Schritt 2 von 2: Liefere nur `page`, den Textteil der Lernseite. Quelle, Zusammenfassung, Ergänzungen und die Pläne für die Grafiken stehen fest (unten), halte dich daran.',
@@ -100,10 +100,11 @@ class Prompts
 	 *
 	 * @param  array<string, mixed>  $example
 	 */
-	private static function analysisSystem(array $example): string
+	private static function analysisSystem(string $topic, array $example): string
 	{
 		return strtr(self::load('analysis'), [
 			'{{PALETTEN}}' => self::paletteList(),
+			'{{THEMA}}' => $topic,
 			'{{BEISPIEL}}' => self::json($example),
 		]);
 	}
@@ -188,10 +189,11 @@ class Prompts
 	 */
 	private static function modulesSystem(Profile $profile): string
 	{
-		$modules = LessonFactory::fixture($profile->fixture())['modules'];
+		$fixture = LessonFactory::fixture($profile->fixture());
 
 		return strtr(self::load('modules'), [
-			'{{BEISPIEL}}' => self::json(['modules' => array_intersect_key($modules, array_flip($profile->modules()))]),
+			'{{THEMA}}' => $fixture['meta']['topic'],
+			'{{BEISPIEL}}' => self::json(['modules' => array_intersect_key($fixture['modules'], array_flip($profile->modules()))]),
 		]);
 	}
 
@@ -263,8 +265,15 @@ class Prompts
 	 */
 	public static function graphic(Lesson $lesson, LessonGraphic $graphic): ModelRequest
 	{
-		// One example is enough as a benchmark; each further one only costs input
-		$example = '### '.LessonFactory::fixture('fotosynthese')['meta']['title']."\n\n```json\n".self::json(LessonFactory::fixture('fotosynthese.graphic'))."\n```";
+		// One example is enough as a benchmark; each further one only costs input.
+		// The profile's own graphic where its fixture has one, else photosynthesis.
+		$fixture = $lesson->resolvedProfile()->fixture();
+
+		if (! File::exists(database_path("fixtures/lessons/{$fixture}.graphic.json"))) {
+			$fixture = 'fotosynthese';
+		}
+
+		$example = '### '.LessonFactory::fixture($fixture)['meta']['title']."\n\n```json\n".self::json(LessonFactory::fixture("{$fixture}.graphic"))."\n```";
 
 		$place = null;
 

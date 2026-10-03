@@ -1,4 +1,5 @@
-import katex from 'katex';
+import type Katex from 'katex';
+import { shallowRef } from 'vue';
 import type { InjectionKey, Ref } from 'vue';
 
 // Provided by LessonPage: true for math, geometry and science lessons. Elsewhere a «$» stays a dollar sign.
@@ -57,14 +58,31 @@ function escapeHtml(text: string): string {
 		.replaceAll("'", '&#39;');
 }
 
+// KaTeX (with its CSS) is large: it is only loaded once a text with a formula is shown.
+// Until then MathText shows the plain text.
+export const katex = shallowRef<typeof Katex | null>(null);
+
+let loading: Promise<void> | null = null;
+
+export function loadKatex(): Promise<void> {
+	loading ??= Promise.all([
+		import('katex'),
+		import('katex/dist/katex.min.css'),
+	]).then(([module]) => {
+		katex.value = module.default;
+	});
+
+	return loading;
+}
+
 // HTML for a text with formulas: text parts escaped, only the KaTeX output is markup.
 // Broken TeX shows as red source instead of throwing.
-export function mathToHtml(text: string): string {
+export function mathToHtml(text: string, renderer: typeof Katex): string {
 	return splitMath(text)
 		.map((part) =>
 			part.kind === 'text'
 				? escapeHtml(part.value)
-				: katex.renderToString(part.value, {
+				: renderer.renderToString(part.value, {
 						displayMode: part.display,
 						throwOnError: false,
 						strict: 'ignore',

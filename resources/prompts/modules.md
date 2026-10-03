@@ -47,7 +47,7 @@ Die Zeile «Zweck» sagt, wofür die Seite da ist. Bei «Prüfungsvorbereitung»
 
 ## Beispiel
 
-So sehen gelungene Module aus (Thema Fotosynthese, 2. Sek). Übernimm Ton, Länge und Qualität, nicht den Inhalt.
+So sehen gelungene Module aus (Thema {{THEMA}}). Übernimm Ton, Länge und Qualität, nicht den Inhalt.
 
 ```json
 {{BEISPIEL}}

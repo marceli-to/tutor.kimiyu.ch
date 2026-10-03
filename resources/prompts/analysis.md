@@ -130,7 +130,7 @@ Die Zeile «Umfang» sagt, wie viele Abschnitte die Seite hat (z. B. «Umfang: k
 
 ## Beispiel
 
-So sieht eine gelungene Antwort für diesen Schritt aus (Thema Fotosynthese, 2. Sek). Übernimm Ton, Länge und Qualität, nicht den Inhalt.
+So sieht eine gelungene Antwort für diesen Schritt aus (Thema {{THEMA}}). Übernimm Ton, Länge und Qualität, nicht den Inhalt.
 
 ```json
 {{BEISPIEL}}

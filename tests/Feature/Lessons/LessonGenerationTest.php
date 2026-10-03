@@ -1634,6 +1634,27 @@ describe('subject profiles', function () {
 			->not->toContain(addendum(Profile::Science));
 	});
 
+	it('shows the graphic example of the profile, else the photosynthesis one', function (string $subject, string $fixture, string $other) {
+		$lesson = Lesson::factory()->fromFixture($fixture)->create(['subject' => $subject]);
+
+		expect(Prompts::graphic($lesson, $lesson->graphics()->sole())->system)
+			->toContain('### '.LessonFactory::fixture($fixture)['meta']['title'])
+			->toContain(json_encode(LessonFactory::fixture("{$fixture}.graphic")['pattern']))
+			->not->toContain(LessonFactory::fixture($other)['meta']['title']);
+	})->with([
+		'math' => ['Mathematik', 'dreisatz', 'fotosynthese'],
+		'science' => ['Biologie', 'fotosynthese', 'dreisatz'],
+		'languages without a graphic of its own' => ['Französisch', 'fotosynthese', 'dreisatz'],
+	]);
+
+	it('names the topic of the example the profile uses', function () {
+		$lesson = Lesson::factory()->fromFixture('dreisatz')->create(['subject' => 'Mathematik']);
+
+		expect(Prompts::pageRequest($lesson, [])->system)->toContain('(Thema Dreisatz)')->not->toContain('(Thema Fotosynthese)')
+			->and(Prompts::modules($lesson, Prompts::page($lesson->content))->system)->toContain('(Thema Dreisatz)')->not->toContain('(Thema Fotosynthese)')
+			->and(Prompts::analysis($lesson, [])->system)->toContain('(Thema Fotosynthese)');
+	});
+
 	it('tells the system prompts that the profile comes first', function () {
 		$rule = 'Halte dich an den Abschnitt «Fachprofil», er geht den allgemeinen Regeln vor.';
 
