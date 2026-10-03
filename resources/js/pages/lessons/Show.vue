@@ -5,6 +5,7 @@ import GenerationStatus from '@/components/lesson/GenerationStatus.vue';
 import LessonPage from '@/components/lesson/LessonPage.vue';
 import ParentToolbar from '@/components/lesson/ParentToolbar.vue';
 import ReviewNotice from '@/components/lesson/ReviewNotice.vue';
+import { mathToPlain } from '@/lib/math';
 import type {
 	GraphicState,
 	LessonContent,
@@ -46,6 +47,17 @@ const props = defineProps<{
 	};
 }>();
 
+// The browser tab can't show formulas
+const pageTitle = computed(() => {
+	const title = props.lesson.content?.meta.title;
+
+	if (title === undefined) {
+		return 'Lernseite entsteht';
+	}
+
+	return props.lesson.math ? mathToPlain(title) : title;
+});
+
 // A regenerated part keeps the status (the child still sees the page), only the step shows it
 const regenerating = computed(
 	() => props.lesson.step?.startsWith('regenerate-') ?? false,
@@ -69,7 +81,7 @@ watch(generating, (active) => (active ? start() : stop()));
 </script>
 
 <template>
-	<Head :title="lesson.content?.meta.title ?? 'Lernseite entsteht'" />
+	<Head :title="pageTitle" />
 
 	<GenerationStatus
 		v-if="

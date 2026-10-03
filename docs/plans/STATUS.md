@@ -4,8 +4,8 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** «Mathematik: Übungen wählbar, bis 20 Aufgaben»
-- **Checks:** 734 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Last commit:** «Formeln in Titeln, Abstand nach Bausteinen»
+- **Checks:** 735 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (6 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
@@ -56,7 +56,7 @@ Known smaller follow-ups (not blocking): `check.md` doesn't verify figure coordi
 
 - **Restart the queue worker** (`php artisan queue:restart`) — code changed a lot since the last restart.
 - **Browser check** (nothing has been seen in a browser yet): form in both modes, presets, drag & drop/paste/reorder, quality warning thresholds (`lib/imageQuality.ts`), graphics custom mode, edit view (hide graphic, remove block), Lernstand; profile pages from the fixtures (passé composé, Dreisatz, Winkel an Parallelen) in light and dark mode — `FigureBlock` especially.
-- **Übungen:** a detailed math lesson with 20 exercises — quality, increasing difficulty, cost of the modules and check steps.
+- **Übungen:** tested by Marcel 2026-10-03, works well. Layout fixes after his test (formulas in titles on Übersicht/Kosten/tab, space after a box): check again.
 - **Real API runs:** one lesson per profile; check costs per step on `/kosten` against the old ~$1.05 per lesson.
 - **Deploy:** `deploy.sh` runs migrations; stop the queue during deploy (data migrations to English keys), restart it after; run `php artisan lessons:check-schemas` on the server once. Env vars for per-step models are now `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` (+ `LESSON_EFFORT_*`), optional.
 

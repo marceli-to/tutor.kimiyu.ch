@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
+import MathText from '@/components/lesson/MathText.vue';
 import { costs } from '@/routes';
 import { show } from '@/routes/lessons';
 
@@ -31,6 +32,7 @@ defineProps<{
 	lessons: {
 		id: number | null;
 		title: string;
+		math: boolean;
 		child: string | null;
 		date: string;
 		deleted: boolean;
@@ -243,14 +245,14 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
 								<span
 									v-if="l.deleted || l.id === null"
 									class="font-medium"
-									>{{ l.title }}</span
-								>
+									><MathText :text="l.title" :math="l.math"
+								/></span>
 								<Link
 									v-else
 									:href="show(l.id)"
 									class="font-medium hover:underline"
-									>{{ l.title }}</Link
-								>
+									><MathText :text="l.title" :math="l.math"
+								/></Link>
 								<span
 									v-if="l.child"
 									class="block text-muted-foreground"

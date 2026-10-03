@@ -88,12 +88,14 @@ class CostOverview
 	private static function lesson(?Lesson $lesson): array
 	{
 		if ($lesson === null) {
-			return ['id' => null, 'title' => 'Gelöschte Lernseiten', 'child' => null, 'deleted' => true];
+			return ['id' => null, 'title' => 'Gelöschte Lernseiten', 'math' => false, 'child' => null, 'deleted' => true];
 		}
 
 		return [
 			'id' => $lesson->id,
 			'title' => $lesson->displayTitle(),
+			// TeX between $…$ in the title becomes a formula
+			'math' => $lesson->resolvedProfile()->rendersMath(),
 			'child' => $lesson->child->name,
 			'deleted' => $lesson->trashed(),
 		];

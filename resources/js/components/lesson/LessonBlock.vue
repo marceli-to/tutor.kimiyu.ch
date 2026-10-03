@@ -25,7 +25,7 @@ defineProps<{
 		<OriginBadge :origin="block.origin" />
 	</div>
 
-	<p v-if="block.type === 'paragraph'" class="mb-4 max-w-[66ch]">
+	<p v-if="block.type === 'paragraph'" class="my-4 max-w-[66ch]">
 		<MathText :text="block.text" />
 	</p>
 

@@ -1576,6 +1576,21 @@ describe('subject detected by the ai', function () {
 			->assertInertia(fn (Assert $page) => $page->where('lesson.subject', 'Fach unbekannt'));
 	});
 
+	it('renders formulas in the titles of math lessons only, in the library and the costs', function () {
+		$math = lessonFor($this->child, ['subject' => 'Mathematik', 'title' => 'Was ergibt $\\frac{1}{2}$?', 'status' => LessonStatus::Review]);
+		lessonFor($this->child, ['subject' => 'Geschichte', 'title' => 'Wer bezahlte 5 $?', 'status' => LessonStatus::Review]);
+		$math->generations()->create(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.1]);
+
+		$this->actingAs($this->user)->get(route('dashboard'))
+			->assertInertia(fn (Assert $page) => $page
+				->where('children.0.subjects.0.name', 'Geschichte')
+				->where('children.0.subjects.0.lessons.0.math', false)
+				->where('children.0.subjects.1.lessons.0.math', true)
+			);
+		$this->actingAs($this->user)->get(route('costs'))
+			->assertInertia(fn (Assert $page) => $page->where('lessons.0.math', true));
+	});
+
 	it('shows lessons without a subject in the library, the costs and the lesson', function () {
 		$lesson = lessonFor($this->child, ['subject' => null, 'title' => null, 'prompt' => 'Brüche', 'status' => LessonStatus::Generating]);
 		$lesson->generations()->create(['user_id' => $this->user->id, 'step' => 'analysis', 'model' => 'claude-opus-5-5', 'status' => 'ok', 'cost_usd' => 0.1]);

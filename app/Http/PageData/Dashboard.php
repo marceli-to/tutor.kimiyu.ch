@@ -38,6 +38,8 @@ class Dashboard
 						'lessons' => $lessons->map(fn (Lesson $lesson) => [
 							'id' => $lesson->id,
 							'title' => $lesson->displayTitle(),
+							// TeX between $…$ in the title becomes a formula
+							'math' => $lesson->resolvedProfile()->rendersMath(),
 							'emoji' => $lesson->content['meta']['emoji'] ?? null,
 							'status' => $lesson->status->value,
 							'statusLabel' => $lesson->status->label(),

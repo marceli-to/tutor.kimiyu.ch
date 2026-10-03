@@ -75,6 +75,38 @@ export function loadKatex(): Promise<void> {
 	return loading;
 }
 
+// «3x+1» needs brackets as part of a fraction written on one line
+function grouped(term: string): string {
+	return /[+\-−\s]/.test(term.trim()) ? `(${term.trim()})` : term.trim();
+}
+
+// A text with formulas as plain text, for places without HTML such as the browser tab:
+// «$\frac{2x}{4} \cdot 3$» becomes «2x/4 · 3». Rough on purpose; the page itself renders KaTeX.
+export function mathToPlain(text: string): string {
+	return splitMath(text)
+		.map((part) =>
+			part.kind === 'text'
+				? part.value
+				: part.value
+						.replace(
+							/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g,
+							(_, top: string, bottom: string) =>
+								`${grouped(top)}/${grouped(bottom)}`,
+						)
+						.replace(/\\[,;:! ]/g, ' ')
+						.replace(/\\cdot/g, '·')
+						.replace(/\\times/g, '×')
+						.replace(/\\neq/g, '≠')
+						.replace(/\\le(q)?\b/g, '≤')
+						.replace(/\\ge(q)?\b/g, '≥')
+						.replace(/\\[a-zA-Z]+/g, '')
+						.replace(/[{}]/g, '')
+						.replace(/\s+/g, ' ')
+						.trim(),
+		)
+		.join('');
+}
+
 // HTML for a text with formulas: text parts escaped, only the KaTeX output is markup.
 // Broken TeX shows as red source instead of throwing.
 export function mathToHtml(text: string, renderer: typeof Katex): string {

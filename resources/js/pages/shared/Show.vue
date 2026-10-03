@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import LessonPage from '@/components/lesson/LessonPage.vue';
+import { mathToPlain } from '@/lib/math';
 import { saveAnswer } from '@/lib/saveAnswer';
 import { answer as answerRoute, index } from '@/routes/shared';
 import type {
@@ -34,7 +35,13 @@ function onAnswer(answer: ModuleAnswer) {
 </script>
 
 <template>
-	<Head :title="lesson.content.meta.title">
+	<Head
+		:title="
+			lesson.math
+				? mathToPlain(lesson.content.meta.title)
+				: lesson.content.meta.title
+		"
+	>
 		<meta name="robots" content="noindex, nofollow" />
 	</Head>
 

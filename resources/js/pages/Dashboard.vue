@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ImagePlus } from '@lucide/vue';
 import CopyLink from '@/components/CopyLink.vue';
+import MathText from '@/components/lesson/MathText.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
@@ -17,6 +18,7 @@ defineOptions({
 type LessonItem = {
 	id: number;
 	title: string;
+	math: boolean;
 	emoji: string | null;
 	status: 'draft' | 'generating' | 'review' | 'published' | 'failed';
 	statusLabel: string;
@@ -119,7 +121,10 @@ const badgeVariant = {
 							</span>
 							<span class="min-w-0 flex-1">
 								<span class="block font-medium">
-									{{ lesson.title }}
+									<MathText
+										:text="lesson.title"
+										:math="lesson.math"
+									/>
 								</span>
 								<span
 									class="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
