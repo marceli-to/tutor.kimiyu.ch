@@ -1718,6 +1718,28 @@ describe('subject profiles', function () {
 			->and($modules->system)->toContain('solution_path');
 	});
 
+	it('builds a german page with find the mistake and a case sensitive cloze from its own example', function () {
+		$german = LessonFactory::fixture('das-dass');
+		$this->fake->push('analysis', analysis(['subject' => 'Deutsch', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => Arr::except(Prompts::page($german), 'try_it')]);
+		$this->fake->push('modules', ['modules' => Arr::except($german['modules'], 'exercises')]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto', 'modules' => ['quiz', 'cloze']]);
+
+		$lesson = Lesson::sole();
+		$modules = $this->fake->requestsFor('modules')[0];
+		expect($lesson->status)->toBe(LessonStatus::Review)
+			->and($lesson->resolvedProfile())->toBe(Profile::German)
+			// The parents can't choose find the mistake: it comes with the german profile
+			->and($lesson->content['modules']['find_the_mistake']['entries'])->toHaveCount(6)
+			->and($lesson->content['modules']['cloze']['case_sensitive'])->toBeTrue()
+			->and($lesson->content['modules']['sorting'])->toBeNull()
+			->and($lesson->content['modules']['exercises'])->toBeNull()
+			->and($modules->prompt)->toContain('Fehler finden (')
+			->and($modules->system)->toContain('mistake_word')->toContain('Ich hoffe, das du morgen kommst.')
+			->and(json_encode($modules->schema))->toContain('"case_sensitive"');
+	});
+
 	it('builds a geometry page with a figure from its own example', function () {
 		$geometry = LessonFactory::fixture('winkel-parallelen');
 		$this->fake->push('analysis', analysis(['subject' => 'Geometrie', 'graphic_plans' => []]));

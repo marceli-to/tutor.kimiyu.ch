@@ -128,6 +128,9 @@ class Schemas
 		$schema['properties']['modules'] = self::modules();
 		$schema['required'] = array_keys($schema['properties']);
 
+		// Only german pages have it, so it is optional here
+		$schema['properties']['modules']['properties']['cloze']['anyOf'][0]['properties']['case_sensitive'] = self::nullable(['type' => 'boolean']);
+
 		return $schema;
 	}
 
@@ -290,6 +293,8 @@ class Schemas
 					self::object(['id' => $text, 'answers' => $texts]),
 				]]],
 				'origin' => $origin,
+				// Upper and lower case count only in german spelling gaps
+				...($profile === Profile::German ? ['case_sensitive' => self::nullable(['type' => 'boolean'])] : []),
 			])),
 			'exercises' => self::nullable(self::object([
 				'instructions' => self::nullable($text),
@@ -302,6 +307,16 @@ class Schemas
 					'unit' => self::nullable($text),
 					'hint' => self::nullable($text),
 					'solution_path' => $text,
+				])],
+			])),
+			'find_the_mistake' => self::nullable(self::object([
+				'instructions' => self::nullable($text),
+				'entries' => ['type' => 'array', 'items' => self::object([
+					'id' => $text,
+					'sentence' => $text,
+					'mistake_word' => ['type' => 'integer', 'description' => 'Index des falschen Worts im Satz, 0-basiert, Wörter durch Leerzeichen getrennt'],
+					'correction' => $text,
+					'explanation' => $text,
 				])],
 			])),
 		];

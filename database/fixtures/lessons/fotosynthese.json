@@ -190,7 +190,8 @@
                 "origin": "photo"
             }
         ],
-        "exercises": null
+        "exercises": null,
+        "find_the_mistake": null
     },
     "reflect": {
         "question": "Warum bringt es nichts, eine Zimmerpflanze im dunklen Keller fleissig zu giessen, damit sie wächst?"

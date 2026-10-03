@@ -4,8 +4,8 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** `769e741` Formatierung: .claude-Dateien
-- **Checks:** 676 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Last commit:** «Fachprofil Deutsch: Fehler finden, Gross-/Kleinschreibung»
+- **Checks:** 724 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-02*` (5 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
@@ -26,12 +26,13 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- Languages: `vocabulary`, `conjugation`, speech via browser, «almost» for missing accents (`AnswerResult`).
 	- Math: KaTeX (lazy-loaded), `worked_solution`, `exercises` module with Swiss number/fraction/unit checking (`ExerciseAnswer`).
 	- Geometry: `figure` block rendered by `FigureBlock.vue` (points, lines, angles; no areas).
+	- German (Task 5): `find_the_mistake` module (tap the wrong word, write the correction; checked by `MistakeAnswer`, mirrored in `lib/mistake.ts`), `cloze.case_sensitive` (german schema only), fixture `das-dass`, editors in Edit.vue. German keeps all base blocks/modules; probe: modules (german) 3637 bytes OK.
 	- `php artisan lessons:check-schemas` probes every schema against the real API.
 - **Workflow:** `CLAUDE.md`, this file (loaded by a SessionStart hook in `.claude/settings.json`), `/handover` skill.
 
 ## Offen
 
-1. **Teil 5, Task 5 – Deutsch** (`teil-5-fachprofile.md` → «Task 5»): `find_the_mistake` module (needs `Progress::check()` / `RecordAnswer` to accept structured answers `{word, correction}`), `cloze.case_sensitive`, fixture `das-dass.json`. Probe all profiles with `lessons:check-schemas` — geometry is close to the limit; german currently has the base blocks.
+1. **Math «Übungen» (Marcel's request 2026-10-03):** a selectable module «Übungen» for math with ~20 exercises. Today `exercises` always comes with math, 3–8 per scope, validator max 8. Needs a decision (see the last session) before implementing; check schema/output size with the probe.
 2. **Teil 5, Task 6 – Docs:** mark Teil 5 implemented in the design doc, list per-profile blocks/modules and probe sizes.
 3. **Final review** of Teil 5 (code-reviewer subagent), fix findings.
 4. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).

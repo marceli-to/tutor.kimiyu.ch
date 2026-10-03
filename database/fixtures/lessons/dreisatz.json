@@ -239,7 +239,8 @@
                     "solution_path": "$\\frac{3}{4} : 2 = \\frac{3}{8}$. 2 Personen brauchen $\\frac{3}{8}$ Liter."
                 }
             ]
-        }
+        },
+        "find_the_mistake": null
     },
     "reflect": {
         "question": "Beim Taxi bezahlst du eine Grundgebühr und dann pro Kilometer. Kostet eine doppelt so lange Fahrt doppelt so viel? Darfst du hier mit dem Dreisatz rechnen?"

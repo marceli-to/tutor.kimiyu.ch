@@ -24,12 +24,12 @@ return [
 
 	/*
 	| Counts per scope, for the prompts. Keep within the limits of the ContentValidator:
-	| at most 4 sections, 3–8 quiz questions, 20 cards, 16 sorting terms, 3–8 exercises.
+	| at most 4 sections, 3–8 quiz questions, 20 cards, 16 sorting terms, 3–8 exercises, 4–8 sentences with a mistake.
 	*/
 	'scope' => [
-		'short' => ['sections' => '1–2', 'quiz' => 3, 'flashcards' => '4–6', 'terms' => '6–8', 'gaps' => '3–5', 'exercises' => '3'],
-		'normal' => ['sections' => '1–3', 'quiz' => 5, 'flashcards' => '5–10', 'terms' => '8–12', 'gaps' => '4–8', 'exercises' => '4–5'],
-		'detailed' => ['sections' => '2–4', 'quiz' => 8, 'flashcards' => '8–15', 'terms' => '10–16', 'gaps' => '6–10', 'exercises' => '6–8'],
+		'short' => ['sections' => '1–2', 'quiz' => 3, 'flashcards' => '4–6', 'terms' => '6–8', 'gaps' => '3–5', 'exercises' => '3', 'mistakes' => '4'],
+		'normal' => ['sections' => '1–3', 'quiz' => 5, 'flashcards' => '5–10', 'terms' => '8–12', 'gaps' => '4–8', 'exercises' => '4–5', 'mistakes' => '5–6'],
+		'detailed' => ['sections' => '2–4', 'quiz' => 8, 'flashcards' => '8–15', 'terms' => '10–16', 'gaps' => '6–10', 'exercises' => '6–8', 'mistakes' => '6–8'],
 	],
 
 	/*

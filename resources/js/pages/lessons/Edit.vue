@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { words } from '@/lib/mistake';
 import { dashboard } from '@/routes';
 import { edit, show, update } from '@/routes/lessons';
 import type { CategoryId, Exercise, LessonContent } from '@/types';
@@ -150,6 +151,16 @@ function setTolerance(exercise: Exercise, value: string | null | undefined) {
 
 	toleranceInputs[exercise.id] = value ?? '';
 	exercise.tolerance = input === '' || Number.isNaN(number) ? null : number;
+}
+
+function addMistake() {
+	c.value.modules.find_the_mistake?.entries.push({
+		id: newId('f'),
+		sentence: '',
+		mistake_word: 0,
+		correction: '',
+		explanation: '',
+	});
 }
 
 function addCard() {
@@ -844,6 +855,101 @@ function save() {
 			</Button>
 		</section>
 
+		<section v-if="c.modules.find_the_mistake" class="space-y-4">
+			<h2 class="text-lg font-semibold">Fehler finden</h2>
+			<p class="text-sm text-muted-foreground">
+				Pro Satz genau ein falsches Wort. Tippe im Satz das falsche Wort
+				an und schreib die Korrektur so, wie sie im Satz stehen muss.
+			</p>
+			<EditField
+				v-model="c.modules.find_the_mistake.instructions"
+				label="Anleitung (optional)"
+				:error="err('modules.find_the_mistake.instructions')"
+			/>
+			<InputError :message="err('modules.find_the_mistake.entries')" />
+			<div
+				v-for="(mistake, k) in c.modules.find_the_mistake.entries"
+				:key="mistake.id"
+				class="space-y-3 rounded-xl border p-3"
+			>
+				<EditField
+					v-model="mistake.sentence"
+					:label="`Satz ${k + 1}`"
+					:error="
+						err(`modules.find_the_mistake.entries.${k}.sentence`)
+					"
+				/>
+				<div class="grid gap-1.5">
+					<span class="text-sm font-medium">Falsches Wort</span>
+					<div
+						class="flex flex-wrap gap-1"
+						role="group"
+						:aria-label="`Falsches Wort in Satz ${k + 1}`"
+					>
+						<Button
+							v-for="(word, w) in words(mistake.sentence)"
+							:key="w"
+							type="button"
+							size="sm"
+							:variant="
+								mistake.mistake_word === w
+									? 'default'
+									: 'outline'
+							"
+							:aria-pressed="mistake.mistake_word === w"
+							@click="mistake.mistake_word = w"
+						>
+							{{ word }}
+						</Button>
+					</div>
+					<InputError
+						:message="
+							err(
+								`modules.find_the_mistake.entries.${k}.mistake_word`,
+							)
+						"
+					/>
+				</div>
+				<EditField
+					v-model="mistake.correction"
+					label="Korrektur"
+					:error="
+						err(`modules.find_the_mistake.entries.${k}.correction`)
+					"
+				/>
+				<EditField
+					v-model="mistake.explanation"
+					label="Erklärung"
+					multiline
+					:rows="2"
+					:error="
+						err(`modules.find_the_mistake.entries.${k}.explanation`)
+					"
+				/>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					class="text-destructive"
+					:disabled="c.modules.find_the_mistake.entries.length <= 4"
+					@click="c.modules.find_the_mistake.entries.splice(k, 1)"
+				>
+					<Trash2 class="size-4" aria-hidden="true" />
+					Satz entfernen
+				</Button>
+			</div>
+			<Button
+				type="button"
+				variant="outline"
+				size="sm"
+				:disabled="c.modules.find_the_mistake.entries.length >= 8"
+				@click="addMistake"
+			>
+				<Plus class="size-4" aria-hidden="true" />
+				Satz hinzufügen
+			</Button>
+		</section>
+
 		<section v-if="c.modules.cloze" class="space-y-4">
 			<h2 class="text-lg font-semibold">
 				Lückentext
@@ -862,6 +968,17 @@ function save() {
 				:rows="6"
 				:error="errors.clozeMarkup ?? err('modules.cloze.segments')"
 			/>
+			<label
+				v-if="'case_sensitive' in c.modules.cloze"
+				class="flex cursor-pointer items-center gap-3 text-sm"
+			>
+				<input
+					v-model="c.modules.cloze.case_sensitive"
+					type="checkbox"
+					class="size-4 accent-primary"
+				/>
+				Gross- und Kleinschreibung zählt
+			</label>
 		</section>
 
 		<section class="space-y-4">

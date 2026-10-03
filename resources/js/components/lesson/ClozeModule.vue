@@ -47,7 +47,11 @@ function check() {
 
 	for (const gap of gaps.value) {
 		const value = values[gap.id] ?? '';
-		const { result, solution } = checkAnswer(value, gap.answers);
+		const { result, solution } = checkAnswer(
+			value,
+			gap.answers,
+			props.data.case_sensitive === true,
+		);
 
 		states[gap.id] = result;
 
@@ -105,6 +109,9 @@ function inputClass(id: string): string {
 
 <template>
 	<div class="ls-panel">
+		<p v-if="data.case_sensitive" class="mb-2 text-[0.95rem] text-ls-muted">
+			Gross- und Kleinschreibung zählt.
+		</p>
 		<p class="leading-[2.3]">
 			<template v-for="(segment, k) in data.segments" :key="k">
 				<input

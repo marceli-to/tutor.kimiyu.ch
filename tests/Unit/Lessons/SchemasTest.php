@@ -181,6 +181,13 @@ describe('per profile', function () {
 			->and($json)->not->toContain('"areas"');
 	})->with(Profile::cases());
 
+	it('has find the mistake and case sensitive gaps only in the german schema', function (Profile $profile) {
+		$modules = Schemas::modules($profile)['properties'];
+
+		expect(array_key_exists('find_the_mistake', $modules))->toBe($profile === Profile::German)
+			->and(array_key_exists('case_sensitive', $modules['cloze']['anyOf'][0]['properties']))->toBe($profile === Profile::German);
+	})->with(Profile::cases());
+
 	it('accepts the profile fixtures as content and as the text part of their profile', function (string $fixture) {
 		$content = LessonFactory::fixture($fixture);
 		$profile = collect(Profile::cases())->first(fn (Profile $profile) => $profile->fixture() === $fixture);

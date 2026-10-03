@@ -8,6 +8,7 @@ Prüfe gründlich:
 2. **Sortieren:** Ist jeder Begriff eindeutig der richtigen Kategorie zugeordnet?
 3. **Lückentext:** Ergibt der Satz mit der Musterlösung Sinn? Fehlen gängige Schreibvarianten bei den Lösungen?
 4. **Rechnungen** (falls vorhanden): Rechne jede Aufgabe (`modules/exercises`) und jedes durchgerechnete Beispiel (`worked_solution`) selbst nach. Stimmen `answer`, Einheit, Rundung und Lösungsweg?
+   **Fehler finden** (falls vorhanden, `modules/find_the_mistake`): Hat jeder Satz genau einen Fehler? Zeigt `mistake_word` (0-basiert, Wörter durch Leerzeichen getrennt) auf das falsche Wort, und ist `correction` richtig geschrieben?
 5. **Fachliche Richtigkeit:** Stimmen alle Aussagen, Formeln und Beispiele? Passen sie zur Zusammenfassung des Buchs (die Prüfung fragt die Buchversion ab)?
 6. **Sprache:** Schweizer Rechtschreibung (ss statt ß, Anführungszeichen «…»), Du-Form, kurze Sätze, verständlich für 12- bis 15-Jährige.
 7. **Ergänzungen:** Teile mit `origin: "added"` stammen nicht aus dem Buch. Prüfe sie besonders streng und korrigiere, was der Zusammenfassung widerspricht.

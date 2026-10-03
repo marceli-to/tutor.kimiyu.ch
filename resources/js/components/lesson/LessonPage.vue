@@ -7,6 +7,7 @@ import FlashcardModule from '@/components/lesson/FlashcardModule.vue';
 import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import LessonBlock from '@/components/lesson/LessonBlock.vue';
 import MathText from '@/components/lesson/MathText.vue';
+import MistakeModule from '@/components/lesson/MistakeModule.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
 import QuizModule from '@/components/lesson/QuizModule.vue';
 import SortModule from '@/components/lesson/SortModule.vue';
@@ -173,6 +174,19 @@ function toggleTheme() {
 				</p>
 				<ExerciseModule
 					:data="modules.exercises"
+					@answer="emit('answer', $event)"
+				/>
+			</section>
+
+			<section v-if="modules.find_the_mistake">
+				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
+					Fehler finden
+				</h2>
+				<p v-if="modules.find_the_mistake.instructions" class="mb-4">
+					{{ modules.find_the_mistake.instructions }}
+				</p>
+				<MistakeModule
+					:data="modules.find_the_mistake"
 					@answer="emit('answer', $event)"
 				/>
 			</section>

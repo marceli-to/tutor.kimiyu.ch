@@ -214,7 +214,8 @@
                 "origin": "photo"
             }
         ],
-        "exercises": null
+        "exercises": null,
+        "find_the_mistake": null
     },
     "reflect": {
         "question": "Ist ein Aquarium im Wohnzimmer ein Ökosystem? Was spricht dafür, was dagegen?"

@@ -77,22 +77,25 @@ class ClozeParser
 	}
 
 	/**
-	 * Same normalisation as in the frontend: trim, lower case, collapse whitespace.
+	 * Same normalisation as in the frontend: trim, lower case (unless case counts), collapse whitespace.
 	 */
-	public static function normalize(string $answer): string
+	public static function normalize(string $answer, bool $caseSensitive = false): string
 	{
-		return preg_replace('/\s+/u', ' ', mb_strtolower(trim($answer)));
+		$answer = trim($answer);
+
+		return preg_replace('/\s+/u', ' ', $caseSensitive ? $answer : mb_strtolower($answer));
 	}
 
 	/**
 	 * Correct as in normalize(); almost if it only matches without accents (é/e, à/a, ü/u).
+	 * Case sensitive in German spelling gaps («cloze.case_sensitive»).
 	 *
 	 * @param  list<string>  $solutions
 	 */
-	public static function check(string $answer, array $solutions): AnswerResult
+	public static function check(string $answer, array $solutions, bool $caseSensitive = false): AnswerResult
 	{
-		$normalized = self::normalize($answer);
-		$solutions = array_map(self::normalize(...), $solutions);
+		$normalized = self::normalize($answer, $caseSensitive);
+		$solutions = array_map(fn (string $solution) => self::normalize($solution, $caseSensitive), $solutions);
 
 		if (in_array($normalized, $solutions, true)) {
 			return AnswerResult::Correct;

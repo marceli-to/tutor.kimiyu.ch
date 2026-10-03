@@ -72,6 +72,7 @@ enum Profile: string
 			// Exercises instead of the sorting game: with all five modules the API rejects the grammar as too large.
 			// Geometry calculates angles and lengths just like math.
 			self::Math, self::Geometry => ['quiz', 'flashcards', 'cloze', 'exercises'],
+			self::German => [...self::BASE_MODULES, 'find_the_mistake'],
 			default => self::BASE_MODULES,
 		};
 	}
@@ -93,6 +94,7 @@ enum Profile: string
 			self::Languages => 'passe-compose',
 			self::Math => 'dreisatz',
 			self::Geometry => 'winkel-parallelen',
+			self::German => 'das-dass',
 			default => 'fotosynthese',
 		};
 	}

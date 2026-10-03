@@ -23,17 +23,25 @@ export function resultMessage(score: number, total: number): string {
 }
 
 // Must match App\Lessons\ClozeParser::normalize
-function normalizeAnswer(value: string): string {
-	return value.trim().toLowerCase().replace(/\s+/g, ' ');
+function normalizeAnswer(value: string, caseSensitive = false): string {
+	const trimmed = value.trim();
+
+	return (caseSensitive ? trimmed : trimmed.toLowerCase()).replace(
+		/\s+/g,
+		' ',
+	);
 }
 
 // Must match App\Lessons\ClozeParser::check: correct as normalized, almost if only the accents differ
 export function checkAnswer(
 	value: string,
 	solutions: string[],
+	caseSensitive = false,
 ): { result: 'right' | 'almost' | 'wrong'; solution: string } {
-	const answer = normalizeAnswer(value);
-	const exact = solutions.find((s) => normalizeAnswer(s) === answer);
+	const answer = normalizeAnswer(value, caseSensitive);
+	const exact = solutions.find(
+		(s) => normalizeAnswer(s, caseSensitive) === answer,
+	);
 
 	if (exact !== undefined) {
 		return { result: 'right', solution: exact };
@@ -44,7 +52,9 @@ export function checkAnswer(
 		bare === ''
 			? undefined
 			: solutions.find(
-					(s) => withoutAccents(normalizeAnswer(s)) === bare,
+					(s) =>
+						withoutAccents(normalizeAnswer(s, caseSensitive)) ===
+						bare,
 				);
 
 	return almost !== undefined

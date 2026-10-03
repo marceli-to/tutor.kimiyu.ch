@@ -307,6 +307,33 @@ describe('editing', function () {
 		expect(array_column($lesson->fresh()->content['sections'][0]['blocks'], 'type'))->toBe(['paragraph', 'box']);
 	});
 
+	it('saves the sentences with a mistake and the case sensitivity of a german lesson', function () {
+		$lesson = Lesson::factory()->for($this->child)->fromFixture('das-dass')->create(['subject' => 'Deutsch']);
+		$content = $lesson->content;
+		$content['modules']['find_the_mistake']['entries'][0] = [...$content['modules']['find_the_mistake']['entries'][0], 'sentence' => 'Ich weiss, das du kommst.', 'mistake_word' => 2];
+		$content['modules']['cloze']['case_sensitive'] = false;
+
+		$this->actingAs($this->user)->put(route('lessons.update', $lesson), [
+			'content' => $content,
+			'clozeMarkup' => ClozeParser::toMarkup($content['modules']['cloze']['segments']),
+		])->assertSessionHasNoErrors();
+
+		$saved = $lesson->fresh()->content['modules'];
+		expect($saved['find_the_mistake']['entries'][0]['sentence'])->toBe('Ich weiss, das du kommst.')
+			->and($saved['cloze']['case_sensitive'])->toBeFalse();
+	});
+
+	it('rejects a mistake that points beyond its sentence', function () {
+		$lesson = Lesson::factory()->for($this->child)->fromFixture('das-dass')->create(['subject' => 'Deutsch']);
+		$content = $lesson->content;
+		$content['modules']['find_the_mistake']['entries'][0]['mistake_word'] = 9;
+
+		$this->actingAs($this->user)->put(route('lessons.update', $lesson), [
+			'content' => $content,
+			'clozeMarkup' => ClozeParser::toMarkup($content['modules']['cloze']['segments']),
+		])->assertSessionHasErrors(['content.modules.find_the_mistake.entries.0.mistake_word' => 'Fehler finden, Satz f1: Das falsche Wort zeigt auf ein Wort, das es im Satz nicht gibt.']);
+	});
+
 	it('rejects an exercise solution the app cannot check', function () {
 		$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => 'Mathematik']);
 		$content = $lesson->content;

@@ -8,7 +8,7 @@ use App\Models\Lesson;
 use Illuminate\Support\Collection;
 
 /**
- * Progress: per item (quiz question, sorting term, gap, exercise) a status from the latest answers.
+ * Progress: per item (quiz question, sorting term, gap, exercise, sentence with a mistake) a status from the latest answers.
  *
  * - mastered: the last two answers were correct
  * - almost: the last answer was correct, the one before wrong or only one attempt (in the quiz it may have been a guess)
@@ -20,7 +20,7 @@ class Progress
 	public const STATUSES = ['mastered', 'almost', 'practice', 'open'];
 
 	// Modules whose answers are checked and counted; flashcards are only flipped
-	public const MODULES = ['quiz', 'sorting', 'cloze', 'exercises'];
+	public const MODULES = ['quiz', 'sorting', 'cloze', 'exercises', 'find_the_mistake'];
 
 	/**
 	 * All items of a lesson that the progress tracks.
@@ -50,6 +50,10 @@ class Progress
 			$items[] = ['module' => 'exercises', 'id' => $entry['id'], 'text' => $entry['question']];
 		}
 
+		foreach ($module['find_the_mistake']['entries'] ?? [] as $entry) {
+			$items[] = ['module' => 'find_the_mistake', 'id' => $entry['id'], 'text' => $entry['sentence']];
+		}
+
 		return $items;
 	}
 
@@ -68,6 +72,7 @@ class Progress
 			'sorting' => self::find($content['sorting']['terms'] ?? [], $itemId),
 			'cloze' => self::find($content['cloze']['segments'] ?? [], $itemId),
 			'exercises' => self::find($content['exercises']['entries'] ?? [], $itemId),
+			'find_the_mistake' => self::find($content['find_the_mistake']['entries'] ?? [], $itemId),
 			default => null,
 		};
 
@@ -79,8 +84,14 @@ class Progress
 			return is_string($answer) || is_int($answer) || is_float($answer) ? ExerciseAnswer::check($item, (string) $answer) : AnswerResult::Wrong;
 		}
 
+		if ($module === 'find_the_mistake') {
+			return is_array($answer) ? MistakeAnswer::check($item, $answer) : AnswerResult::Wrong;
+		}
+
 		if ($module === 'cloze') {
-			return is_string($answer) ? ClozeParser::check($answer, $item['answers']) : AnswerResult::Wrong;
+			$caseSensitive = ($content['cloze']['case_sensitive'] ?? null) === true;
+
+			return is_string($answer) ? ClozeParser::check($answer, $item['answers'], $caseSensitive) : AnswerResult::Wrong;
 		}
 
 		$correct = $module === 'quiz'

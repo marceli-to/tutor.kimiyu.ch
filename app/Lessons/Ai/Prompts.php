@@ -469,13 +469,14 @@ class Prompts
 			'flashcards' => "Karteikarten ({$counts['flashcards']} Karten)",
 			'cloze' => "Lückentext ({$counts['gaps']} Lücken)",
 			'exercises' => "Aufgaben ({$counts['exercises']} Aufgaben)",
+			'find_the_mistake' => "Fehler finden ({$counts['mistakes']} Sätze)",
 		];
 
 		return 'Erlaubte Lernmodule: '.implode(', ', array_intersect_key($labels, array_flip($lesson->generatedModules())));
 	}
 
 	/**
-	 * @return array{sections: string, quiz: int, flashcards: string, terms: string, gaps: string, exercises: string}
+	 * @return array{sections: string, quiz: int, flashcards: string, terms: string, gaps: string, exercises: string, mistakes: string}
 	 */
 	private static function scopeCounts(Lesson $lesson): array
 	{

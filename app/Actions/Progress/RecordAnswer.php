@@ -17,7 +17,7 @@ class RecordAnswer
 	 */
 	public function handle(Child $child, Lesson $lesson, string $module, string $itemId, mixed $answer): ?AnswerResult
 	{
-		$result = Progress::check($lesson, $module, $itemId, is_scalar($answer) ? $answer : null);
+		$result = Progress::check($lesson, $module, $itemId, $answer);
 
 		if ($result !== null) {
 			$child->attempts()->create([

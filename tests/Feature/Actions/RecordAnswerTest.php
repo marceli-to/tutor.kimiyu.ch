@@ -43,3 +43,22 @@ it('checks and stores an exercise answer', function () {
 		->and(app(RecordAnswer::class)->handle($this->child, $lesson, 'exercises', 'a2', true))->toBe(AnswerResult::Wrong)
 		->and($this->child->attempts()->pluck('correct')->all())->toBe([true, true, false]);
 });
+
+it('checks and stores a corrected mistake', function () {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('das-dass')->create();
+	$record = app(RecordAnswer::class);
+
+	// f1: «Ich hoffe, das du morgen kommst.» – word 2 is «dass»
+	expect($record->handle($this->child, $lesson, 'find_the_mistake', 'f1', ['word' => 2, 'correction' => 'dass']))->toBe(AnswerResult::Correct)
+		->and($record->handle($this->child, $lesson, 'find_the_mistake', 'f1', ['word' => 1, 'correction' => 'dass']))->toBe(AnswerResult::Wrong)
+		->and($record->handle($this->child, $lesson, 'find_the_mistake', 'f1', 'dass'))->toBe(AnswerResult::Wrong)
+		->and($this->child->attempts()->pluck('correct')->all())->toBe([true, false, false]);
+});
+
+it('checks upper and lower case in a case sensitive cloze', function () {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('das-dass')->create();
+
+	// g2 is «Das» at the start of a sentence
+	expect(app(RecordAnswer::class)->handle($this->child, $lesson, 'cloze', 'g2', 'Das'))->toBe(AnswerResult::Correct)
+		->and(app(RecordAnswer::class)->handle($this->child, $lesson, 'cloze', 'g2', 'das'))->toBe(AnswerResult::Wrong);
+});

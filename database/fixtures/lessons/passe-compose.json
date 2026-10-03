@@ -332,7 +332,8 @@
             ],
             "origin": "photo"
         },
-        "exercises": null
+        "exercises": null,
+        "find_the_mistake": null
     },
     "reflect": {
         "question": "Erzähl auf Französisch in drei Sätzen, was du letztes Wochenende gemacht hast. Welche Verben brauchen être?"

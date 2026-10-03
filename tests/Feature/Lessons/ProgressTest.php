@@ -124,6 +124,29 @@ describe('exercises', function () {
 	});
 });
 
+describe('find the mistake', function () {
+	beforeEach(function () {
+		$this->german = Lesson::factory()->for($this->child)->fromFixture('das-dass')->create(['subject' => 'Deutsch']);
+	});
+
+	it('checks a corrected mistake on the server and stores the attempt', function () {
+		answer(['module' => 'find_the_mistake', 'item_id' => 'f5', 'answer' => ['word' => 0, 'correction' => 'Das']], $this->german)->assertOk()->assertExactJson(['correct' => true, 'almost' => false]);
+		answer(['module' => 'find_the_mistake', 'item_id' => 'f5', 'answer' => ['word' => 0, 'correction' => 'das']], $this->german)->assertExactJson(['correct' => false, 'almost' => false]);
+		answer(['module' => 'find_the_mistake', 'item_id' => 'nope', 'answer' => ['word' => 0, 'correction' => 'Das']], $this->german)->assertStatus(422);
+
+		expect(Attempt::orderBy('id')->pluck('correct')->all())->toBe([true, false]);
+	});
+
+	it('tracks the sentences in the progress', function () {
+		attempts($this->child, $this->german, 'find_the_mistake', 'f2', [false]);
+
+		$items = collect(Progress::forLesson($this->child, $this->german))->where('module', 'find_the_mistake');
+
+		expect($items->pluck('status', 'id')->all())->toBe(['f1' => 'open', 'f2' => 'practice', 'f3' => 'open', 'f4' => 'open', 'f5' => 'open', 'f6' => 'open'])
+			->and($items->firstWhere('id', 'f1')['text'])->toBe('Ich hoffe, das du morgen kommst.');
+	});
+});
+
 describe('status', function () {
 	it('derives the status from the last two answers', function () {
 		attempts($this->child, $this->lesson, 'quiz', 'q1', [true, true]);

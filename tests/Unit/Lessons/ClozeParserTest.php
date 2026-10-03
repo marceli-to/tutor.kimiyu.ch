@@ -75,3 +75,12 @@ it('tells an answer with a missing or wrong accent apart from a wrong one', func
 	'wrong' => ['parle', ['mangé'], AnswerResult::Wrong],
 	'empty' => ['', ['été'], AnswerResult::Wrong],
 ]);
+
+it('counts upper and lower case in a case sensitive cloze', function (string $answer, AnswerResult $result) {
+	expect(ClozeParser::check($answer, ['Das'], caseSensitive: true))->toBe($result)
+		->and(ClozeParser::check($answer, ['Das']))->toBe(AnswerResult::Correct);
+})->with([
+	'exact' => [' Das ', AnswerResult::Correct],
+	'lower case' => ['das', AnswerResult::Wrong],
+	'upper case' => ['DAS', AnswerResult::Wrong],
+]);

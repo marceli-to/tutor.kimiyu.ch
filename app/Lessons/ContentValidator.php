@@ -21,8 +21,8 @@ class ContentValidator
 	// The blocks after it belong to subject profiles (see Profile::blocks()).
 	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation', 'worked_solution', 'figure'];
 
-	// «exercises» belongs to the math profile and is missing on older pages
-	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'];
+	// «exercises» belongs to the math profile, «find_the_mistake» to german; both are missing on older pages
+	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises', 'find_the_mistake'];
 
 	public const CATEGORIES = ['cat1', 'cat2', 'cat3'];
 
@@ -138,6 +138,8 @@ class ContentValidator
 			'modules.cloze.instructions' => ['nullable', 'string', 'max:200'],
 			'modules.cloze.segments' => ['required_with:modules.cloze', 'array', 'min:1', 'max:60'],
 			'modules.cloze.origin' => ['sometimes', Rule::in(self::ORIGINS)],
+			// Only in the german profile: spelling gaps where upper and lower case count
+			'modules.cloze.case_sensitive' => ['sometimes', 'nullable', 'boolean:strict'],
 
 			'modules.exercises' => ['sometimes', 'nullable', 'array'],
 			'modules.exercises.instructions' => ['nullable', 'string', 'max:200'],
@@ -150,6 +152,15 @@ class ContentValidator
 			'modules.exercises.entries.*.unit' => ['nullable', 'string', 'max:20'],
 			'modules.exercises.entries.*.hint' => ['nullable', 'string', 'max:300'],
 			'modules.exercises.entries.*.solution_path' => ['required', 'string', 'max:600'],
+
+			'modules.find_the_mistake' => ['sometimes', 'nullable', 'array'],
+			'modules.find_the_mistake.instructions' => ['nullable', 'string', 'max:200'],
+			'modules.find_the_mistake.entries' => ['required_with:modules.find_the_mistake', 'array', 'min:4', 'max:8'],
+			'modules.find_the_mistake.entries.*.id' => ['required', 'string', 'max:20'],
+			'modules.find_the_mistake.entries.*.sentence' => ['required', 'string', 'max:300'],
+			'modules.find_the_mistake.entries.*.mistake_word' => ['required', 'integer:strict', 'min:0'],
+			'modules.find_the_mistake.entries.*.correction' => ['required', 'string', 'max:80'],
+			'modules.find_the_mistake.entries.*.explanation' => ['required', 'string', 'max:400'],
 
 			'reflect' => ['required', 'array'],
 			'reflect.question' => ['required', 'string', 'max:400'],
@@ -214,6 +225,7 @@ class ContentValidator
 			'modules.cloze.instructions' => 'Anleitung zum Lückentext',
 			'modules.cloze.segments' => 'Lückentext',
 			'modules.cloze.origin' => 'Herkunft des Lückentexts',
+			'modules.cloze.case_sensitive' => 'Gross- und Kleinschreibung im Lückentext',
 			'modules.exercises' => 'Aufgaben',
 			'modules.exercises.instructions' => 'Anleitung zu den Aufgaben',
 			'modules.exercises.entries' => 'Aufgaben',
@@ -225,6 +237,14 @@ class ContentValidator
 			'modules.exercises.entries.*.unit' => 'Einheit von Aufgabe :position',
 			'modules.exercises.entries.*.hint' => 'Tipp zu Aufgabe :position',
 			'modules.exercises.entries.*.solution_path' => 'Lösungsweg von Aufgabe :position',
+			'modules.find_the_mistake' => 'Fehler finden',
+			'modules.find_the_mistake.instructions' => 'Anleitung zu «Fehler finden»',
+			'modules.find_the_mistake.entries' => 'Sätze bei «Fehler finden»',
+			'modules.find_the_mistake.entries.*.id' => 'ID von Satz :position',
+			'modules.find_the_mistake.entries.*.sentence' => 'Satz :position',
+			'modules.find_the_mistake.entries.*.mistake_word' => 'Falsches Wort in Satz :position',
+			'modules.find_the_mistake.entries.*.correction' => 'Korrektur in Satz :position',
+			'modules.find_the_mistake.entries.*.explanation' => 'Erklärung zu Satz :position',
 			'reflect' => 'Nachdenken',
 			'reflect.question' => 'Frage zum Nachdenken',
 		];
@@ -248,6 +268,7 @@ class ContentValidator
 		$this->checkSort();
 		$this->checkCloze();
 		$this->checkExercises();
+		$this->checkMistakes();
 		$this->checkUniqueIds();
 		$this->checkSwissSpelling($this->content, '');
 
@@ -452,6 +473,22 @@ class ContentValidator
 		}
 	}
 
+	/**
+	 * The wrong word must exist, and its correction must differ from it, otherwise the child can never get it right.
+	 */
+	private function checkMistakes(): void
+	{
+		foreach ($this->content['modules']['find_the_mistake']['entries'] ?? [] as $i => $entry) {
+			$word = MistakeAnswer::words($entry['sentence'])[$entry['mistake_word']] ?? null;
+
+			if ($word === null) {
+				$this->fail("modules.find_the_mistake.entries.$i.mistake_word", "Fehler finden, Satz {$entry['id']}: Das falsche Wort zeigt auf ein Wort, das es im Satz nicht gibt.");
+			} elseif (trim($entry['correction']) === $word) {
+				$this->fail("modules.find_the_mistake.entries.$i.correction", "Fehler finden, Satz {$entry['id']}: Die Korrektur ist gleich wie das falsche Wort «{$word}».");
+			}
+		}
+	}
+
 	private function checkUniqueIds(): void
 	{
 		$module = $this->content['modules'];
@@ -462,6 +499,7 @@ class ContentValidator
 			...array_column($module['flashcards']['entries'] ?? [], 'id'),
 			...array_column(array_filter($module['cloze']['segments'] ?? [], fn ($s) => isset($s['id'])), 'id'),
 			...array_column($module['exercises']['entries'] ?? [], 'id'),
+			...array_column($module['find_the_mistake']['entries'] ?? [], 'id'),
 		];
 
 		$duplicates = array_keys(array_filter(array_count_values($ids), fn ($n) => $n > 1));

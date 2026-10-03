@@ -354,7 +354,8 @@
                     "solution_path": "$\\alpha = \\gamma = 47°$ (Wechselwinkel). Nebenwinkel: $180° - 47° = 133°$."
                 }
             ]
-        }
+        },
+        "find_the_mistake": null
     },
     "reflect": {
         "question": "Woran erkennst du auf einem Stadtplan, ob zwei Strassen parallel sind, wenn eine dritte Strasse beide kreuzt?"

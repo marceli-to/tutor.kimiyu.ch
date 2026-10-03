@@ -95,6 +95,8 @@ export type ClozeSegment = { text: string } | { id: string; answers: string[] };
 export type ClozeModuleData = Origin & {
 	instructions?: string | null;
 	segments: ClozeSegment[];
+	// German spelling gaps: upper and lower case count; missing elsewhere
+	case_sensitive?: boolean | null;
 };
 
 // Math profile: a task the child calculates; the server checks the answer (App\Lessons\ExerciseAnswer)
@@ -113,6 +115,24 @@ export type ExerciseModuleData = {
 	instructions?: string | null;
 	entries: Exercise[];
 };
+
+// German profile: a sentence with one wrong word; the server checks the answer (App\Lessons\MistakeAnswer)
+export type Mistake = {
+	id: string;
+	sentence: string;
+	// 0-based index of the wrong word, words split on spaces
+	mistake_word: number;
+	correction: string;
+	explanation: string;
+};
+
+export type MistakeModuleData = {
+	instructions?: string | null;
+	entries: Mistake[];
+};
+
+// Answer to a sentence of «find_the_mistake»: the tapped word and its correction
+export type MistakeAnswerValue = { word: number; correction: string };
 
 export type LessonContent = {
 	meta: {
@@ -136,6 +156,8 @@ export type LessonContent = {
 		cloze: ClozeModuleData | null;
 		// Only in the math profile; missing on older pages
 		exercises?: ExerciseModuleData | null;
+		// Only in the german profile; missing on older pages
+		find_the_mistake?: MistakeModuleData | null;
 	};
 	reflect: { question: string };
 };
@@ -177,11 +199,11 @@ export type GraphicState = {
 
 // Result of a single answer, for the progress (phase 4)
 export type ModuleAnswer = {
-	module: 'quiz' | 'sorting' | 'cloze' | 'exercises';
+	module: 'quiz' | 'sorting' | 'cloze' | 'exercises' | 'find_the_mistake';
 	itemId: string;
-	// Chosen option (quiz), chosen basket (sorting) or input (cloze, exercises);
-	// the server checks itself whether it is right
-	answer: number | string;
+	// Chosen option (quiz), chosen basket (sorting), input (cloze, exercises) or tapped word
+	// with its correction (find_the_mistake); the server checks itself whether it is right
+	answer: number | string | MistakeAnswerValue;
 	correct: boolean;
 };
 

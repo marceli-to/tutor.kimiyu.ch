@@ -470,3 +470,53 @@ describe('geometry', function () {
 		'title not text' => fn (array $figure) => [...$figure, 'title' => 5],
 	]);
 });
+
+describe('german', function () {
+	it('accepts the german fixture strictly with its profile', function () {
+		expect(ContentValidator::errors(lessonFixture('das-dass'), strict: true, profile: Profile::German))->toBe([]);
+	});
+
+	it('rejects find the mistake on a fresh page of another profile', function () {
+		$content = lessonFixture('das-dass');
+
+		expect(ContentValidator::errors($content, strict: true, profile: Profile::General))
+			->toContain('Das Fachprofil «Allgemein» hat kein Lernmodul «find_the_mistake».')
+			->and(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('counts find the mistake as a learning module', function () {
+		$content = lessonFixture('das-dass');
+		$content['modules'] = [...$content['modules'], 'quiz' => null, 'sorting' => null, 'flashcards' => null, 'cloze' => null];
+
+		expect(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('checks find the mistake', function (Closure $change, string $key) {
+		$content = lessonFixture('das-dass');
+		$content['modules']['find_the_mistake'] = $change($content['modules']['find_the_mistake']);
+
+		expect(ContentValidator::make($content)->errors()->keys())->toContain($key);
+	})->with([
+		'too few' => [fn (array $module) => [...$module, 'entries' => array_slice($module['entries'], 0, 3)], 'modules.find_the_mistake.entries'],
+		'too many' => [fn (array $module) => [...$module, 'entries' => [...$module['entries'], ...$module['entries']]], 'modules.find_the_mistake.entries'],
+		'word beyond the sentence' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => 6]]]), 'modules.find_the_mistake.entries.0.mistake_word'],
+		'negative word' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => -1]]]), 'modules.find_the_mistake.entries.0.mistake_word'],
+		'word as string' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => '2']]]), 'modules.find_the_mistake.entries.0.mistake_word'],
+		'correction same as the word' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['correction' => 'das']]]), 'modules.find_the_mistake.entries.0.correction'],
+		'no explanation' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['explanation' => '']]]), 'modules.find_the_mistake.entries.0.explanation'],
+		'duplicate id' => [fn (array $module) => array_replace_recursive($module, ['entries' => [1 => ['id' => 'q1']]]), 'modules'],
+	]);
+
+	it('accepts only a boolean or null as case sensitivity of the cloze', function (mixed $value, bool $valid) {
+		$content = lessonFixture('das-dass');
+		$content['modules']['cloze']['case_sensitive'] = $value;
+
+		expect(ContentValidator::make($content)->errors()->has('modules.cloze.case_sensitive'))->toBe(! $valid);
+	})->with([
+		[true, true],
+		[false, true],
+		[null, true],
+		['true', false],
+		[1, false],
+	]);
+});
