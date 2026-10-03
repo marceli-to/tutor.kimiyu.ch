@@ -4,7 +4,7 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** «Teil 5: Review-Befunde behoben»
+- **Last commit:** «Plan Teil 3a»
 - **Checks:** 741 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (6 files, gitignored) can be deleted once everything works.
 
@@ -35,7 +35,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 
 ## Offen
 
-1. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
+1. **Teil 3a – Plan bestätigen**: plan written (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`, Tasks 1–9), not started. Waiting for Marcel to confirm the approach (analysis call becomes the planning call, no extra call).
 2. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
 
 Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step); check corrections can't fill null fields (`tolerance`, `unit`) and a corrected mistake sentence keeps its old `mistake_word`; PHP/TS answer checkers have no shared parity tests (no JS test runner).
