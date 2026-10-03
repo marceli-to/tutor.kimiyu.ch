@@ -60,11 +60,17 @@ function escapeHtml(text: string): string {
 
 // KaTeX (with its CSS) is large: it is only loaded once a text with a formula is shown.
 // Until then MathText shows the plain text.
+// Never loaded during SSR: the SSR server keeps it between requests, so later pages would be
+// rendered with formulas while the browser hydrates with plain text (hydration mismatch).
 export const katex = shallowRef<typeof Katex | null>(null);
 
 let loading: Promise<void> | null = null;
 
 export function loadKatex(): Promise<void> {
+	if (import.meta.env.SSR) {
+		return Promise.resolve();
+	}
+
 	loading ??= Promise.all([
 		import('katex'),
 		import('katex/dist/katex.min.css'),
