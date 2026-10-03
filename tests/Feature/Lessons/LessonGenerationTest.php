@@ -1,13 +1,14 @@
 <?php
 
-use App\Actions\Generation\AnalyzeLesson as AnalyzeLessonAction;
+use App\Actions\Generation\PlanLesson as PlanLessonAction;
 use App\Enums\LessonStatus;
-use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
 use App\Jobs\FinishLesson;
 use App\Jobs\GenerateLessonGraphic;
+use App\Jobs\PlanLesson;
 use App\Jobs\RegenerateGraphic;
 use App\Jobs\RegenerateQuiz;
+use App\Jobs\WriteLesson;
 use App\Lessons\Ai\FakeLanguageModel;
 use App\Lessons\Ai\ModelException;
 use App\Lessons\Ai\ModelRequest;
@@ -545,12 +546,13 @@ it('does not allow another parent’s child', function () {
 	expect(Lesson::count())->toBe(0);
 });
 
-it('runs the steps as a chain', function () {
+it('queues the planning first', function () {
 	Bus::fake();
 
 	upload();
 
-	Bus::assertChained([AnalyzeLesson::class, CheckLesson::class, GenerateLessonGraphic::class, FinishLesson::class]);
+	// The planning job starts the rest (WriteLesson, CheckLesson, graphics, FinishLesson) itself
+	Bus::assertChained([PlanLesson::class]);
 
 	$lesson = Lesson::sole();
 	expect($lesson->status)->toBe(LessonStatus::Generating)
@@ -934,7 +936,8 @@ describe('deleted lessons', function () {
 		]);
 		$lesson->delete();
 
-		(new AnalyzeLesson($lesson))->handle();
+		(new PlanLesson($lesson))->handle();
+		(new WriteLesson($lesson))->handle();
 		(new GenerateLessonGraphic($lesson, 1))->handle();
 		(new FinishLesson($lesson))->handle();
 
@@ -1012,7 +1015,7 @@ describe('deleted lessons', function () {
 		$lesson = Lesson::factory()->for($this->child)->create(['prompt' => 'Fotosynthese']);
 		$lesson->setRelation('child', null);
 
-		expect(fn () => app(AnalyzeLessonAction::class)->handle($lesson))->toThrow(GenerationFailed::class);
+		expect(fn () => app(PlanLessonAction::class)->handle($lesson))->toThrow(GenerationFailed::class);
 		expect($this->fake->requests)->toBe([])
 			->and(Generation::count())->toBe(0);
 	});
@@ -1172,7 +1175,7 @@ describe('graphic plans', function () {
 			->and($this->fake->requestsFor('modules')[0]->prompt)->toContain("Grafik 1 (oben): Muster sliders\nDrei Regler");
 	});
 
-	it('forgets the plan of an earlier attempt when the ai now decides against a graphic', function () {
+	it('forgets the plan of an earlier attempt when a new plan has no graphic', function () {
 		$this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
 		upload(['graphics_mode' => 'auto']);
 		$lesson = Lesson::sole();
@@ -1180,7 +1183,7 @@ describe('graphic plans', function () {
 			->and($lesson->graphic(1)->plan)->not->toBeNull();
 
 		$this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
-		$this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+		GenerationPipeline::plan($lesson->fresh());
 
 		expect($lesson->fresh()->status)->toBe(LessonStatus::Review)
 			->and($lesson->graphics()->count())->toBe(0)
@@ -1191,7 +1194,7 @@ describe('graphic plans', function () {
 		$lesson = Lesson::factory()->for($this->child)->fromFixture()->create(['graphics_mode' => 'auto', 'prompt' => 'Fotosynthese']);
 		$this->fake->push('analysis', [...analysis(), 'graphic_plans' => []]);
 
-		app(AnalyzeLessonAction::class)->handle($lesson);
+		app(PlanLessonAction::class)->handle($lesson);
 
 		expect($lesson->graphic(1)->graphic)->toBe(LessonFactory::fixture('fotosynthese.graphic'));
 	});
@@ -1229,13 +1232,17 @@ describe('graphic generation', function () {
 		]];
 	}
 
-	it('queues one job per possible graphic', function (string $mode, int $jobs) {
+	it('queues one job per planned graphic', function (string $mode, int $jobs) {
+		$this->fake->push('analysis', threePlans());
+		upload(['graphics_mode' => $mode, ...($mode === 'custom' ? ['graphics' => wishes()['graphics']] : [])]);
+		$lesson = Lesson::sole();
+		$lesson->graphics()->update(['graphic' => null]);
 		Bus::fake();
 
-		upload(['graphics_mode' => $mode, ...($mode === 'custom' ? ['graphics' => wishes()['graphics']] : [])]);
+		GenerationPipeline::write($lesson);
 
 		Bus::assertChained([
-			AnalyzeLesson::class,
+			WriteLesson::class,
 			CheckLesson::class,
 			...array_fill(0, $jobs, GenerateLessonGraphic::class),
 			FinishLesson::class,
@@ -1531,7 +1538,7 @@ describe('subject detected by the ai', function () {
 		expect(Lesson::sole()->subject_detected)->toBeFalse();
 	});
 
-	it('detects the subject again on a retry', function () {
+	it('detects the subject again when it plans again', function () {
 		$this->fake->push('analysis', analysis(['subject' => 'Chemie']));
 		$this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
 		upload(['subject' => '']);
@@ -1539,20 +1546,20 @@ describe('subject detected by the ai', function () {
 		expect($lesson->subject)->toBe('Chemie');
 
 		$this->fake->push('analysis', analysis(['subject' => 'Biologie']));
-		$this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+		GenerationPipeline::plan($lesson->fresh());
 
 		expect($this->fake->requestsFor('analysis')[1]->prompt)->toContain('Fach: unbekannt, erkenne es aus den Fotos oder dem Auftrag')
 			->and($lesson->fresh()->subject)->toBe('Biologie')
 			->and($lesson->fresh()->subject_detected)->toBeTrue();
 	});
 
-	it('keeps the subject of the parents on a retry', function () {
+	it('keeps the subject of the parents when it plans again', function () {
 		$this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
 		upload(['subject' => 'Biologie']);
 		$lesson = Lesson::sole();
 
 		$this->fake->push('analysis', analysis(['subject' => 'Chemie']));
-		$this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+		GenerationPipeline::plan($lesson->fresh());
 
 		expect($this->fake->requestsFor('analysis')[1]->prompt)->toContain('Fach: Biologie')
 			->and($lesson->fresh()->subject)->toBe('Biologie')
@@ -1695,14 +1702,14 @@ describe('subject profiles', function () {
 			->and(file_get_contents(resource_path('prompts/modules.md')))->toContain($rule);
 	});
 
-	it('derives the profile again on a retry with a detected subject', function () {
+	it('derives the profile again when it plans again with a detected subject', function () {
 		$this->fake->push('analysis', analysis(['subject' => 'Chemie']));
 		$this->fake->push('page', new ModelException('Die KI war nicht erreichbar.'));
 		upload(['subject' => '']);
 		$lesson = Lesson::sole();
 
 		$this->fake->push('analysis', analysis(['subject' => 'Geschichte']));
-		$this->actingAs($this->user)->post(route('lessons.retry', $lesson));
+		GenerationPipeline::plan($lesson->fresh());
 
 		expect($this->fake->requestsFor('page')[1]->prompt)->toContain('Fachprofil: Allgemein')
 			->and($lesson->fresh()->resolvedProfile())->toBe(Profile::General);

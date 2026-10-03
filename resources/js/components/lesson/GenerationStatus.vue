@@ -18,7 +18,8 @@ const props = defineProps<{
 
 const fullSteps = [
 	{ key: 'queued', label: 'Wartet auf den Start' },
-	{ key: 'analysis', label: 'Stoff lesen und Erklärungen schreiben' },
+	{ key: 'analysis', label: 'Stoff lesen und planen' },
+	{ key: 'page', label: 'Erklärungen schreiben' },
 	{ key: 'modules', label: 'Quiz und Übungen erstellen' },
 	{ key: 'check', label: 'Inhalt nachprüfen' },
 ];

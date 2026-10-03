@@ -142,6 +142,16 @@ class Lesson extends Model
 	}
 
 	/**
+	 * Upper bound of the sections for the scope, e.g. 3 for «1–3».
+	 */
+	public function maxSections(): int
+	{
+		$range = (config("lessons.scope.{$this->scope}") ?? config('lessons.scope.normal'))['sections'];
+
+		return (int) last(preg_split('/\D+/', $range) ?: [$range]);
+	}
+
+	/**
 	 * Waiting for the parents to confirm the plan.
 	 */
 	public function isPlanned(): bool

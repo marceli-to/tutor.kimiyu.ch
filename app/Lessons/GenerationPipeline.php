@@ -3,50 +3,81 @@
 namespace App\Lessons;
 
 use App\Enums\LessonStatus;
-use App\Jobs\AnalyzeLesson;
 use App\Jobs\CheckLesson;
 use App\Jobs\FinishLesson;
 use App\Jobs\GenerateLessonGraphic;
+use App\Jobs\LessonStep;
+use App\Jobs\PlanLesson;
 use App\Jobs\RegenerateGraphic;
 use App\Jobs\RegenerateQuiz;
+use App\Jobs\WriteLesson;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Bus;
 use InvalidArgumentException;
 
 /**
- * Starts the job chain. On a retry finished steps are skipped.
+ * Starts the job chains: planning (stops for the parents' review) and writing. On a retry finished steps are skipped.
  */
 class GenerationPipeline
 {
+	/**
+	 * Create and retry: graphics only if the content exists, writing if the plan is confirmed, else planning.
+	 */
 	public static function start(Lesson $lesson): void
 	{
-		$jobs = [];
-
-		if ($lesson->content === null) {
-			$jobs[] = new AnalyzeLesson($lesson);
-
-			if (config('lessons.check_enabled')) {
-				$jobs[] = new CheckLesson($lesson);
-			}
-		}
-
-		// One job per possible graphic; which ones have a plan is only known after the analysis
-		$positions = match ($lesson->graphics_mode) {
-			'none' => [],
-			'custom' => [1, 2, 3],
-			default => [1],
+		match (true) {
+			$lesson->content !== null => self::dispatch($lesson, 'queued', self::graphicJobs($lesson)),
+			$lesson->plan_confirmed_at !== null => self::write($lesson),
+			default => self::plan($lesson),
 		};
-		$finished = $lesson->graphics()->whereNotNull('graphic')->pluck('position')->all();
+	}
 
-		foreach (array_diff($positions, $finished) as $position) {
-			$jobs[] = new GenerateLessonGraphic($lesson, $position);
+	/**
+	 * The planning call. The job stops for the review or starts the writing itself.
+	 */
+	public static function plan(Lesson $lesson): void
+	{
+		self::dispatch($lesson, 'queued', [new PlanLesson($lesson)]);
+	}
+
+	/**
+	 * Text part, modules, check and the planned graphics.
+	 */
+	public static function write(Lesson $lesson): void
+	{
+		$jobs = [new WriteLesson($lesson)];
+
+		if (config('lessons.check_enabled')) {
+			$jobs[] = new CheckLesson($lesson);
 		}
 
-		$jobs[] = new FinishLesson($lesson);
+		// «page» rather than «queued»: the progress shows the planning as done
+		self::dispatch($lesson, 'page', [...$jobs, ...self::graphicJobs($lesson)]);
+	}
 
+	/**
+	 * One job per planned graphic that isn't built yet, then the finish.
+	 *
+	 * @return list<LessonStep>
+	 */
+	private static function graphicJobs(Lesson $lesson): array
+	{
+		$positions = $lesson->graphics()->whereNotNull('plan')->whereNull('graphic')->pluck('position');
+
+		return [
+			...$positions->map(fn (int $position) => new GenerateLessonGraphic($lesson, $position))->values()->all(),
+			new FinishLesson($lesson),
+		];
+	}
+
+	/**
+	 * @param  list<LessonStep>  $jobs
+	 */
+	private static function dispatch(Lesson $lesson, string $step, array $jobs): void
+	{
 		$lesson->update([
 			'status' => LessonStatus::Generating,
-			'step' => 'queued',
+			'step' => $step,
 			'error' => null,
 		]);
 

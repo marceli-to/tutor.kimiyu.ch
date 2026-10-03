@@ -20,7 +20,13 @@ type LessonItem = {
 	title: string;
 	math: boolean;
 	emoji: string | null;
-	status: 'draft' | 'generating' | 'planned' | 'review' | 'published' | 'failed';
+	status:
+		| 'draft'
+		| 'generating'
+		| 'planned'
+		| 'review'
+		| 'published'
+		| 'failed';
 	statusLabel: string;
 	date: string | null;
 };

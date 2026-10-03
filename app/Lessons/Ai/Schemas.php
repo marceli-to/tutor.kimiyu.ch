@@ -253,7 +253,7 @@ class Schemas
 	}
 
 	/**
-	 * Modules not offered by the profile are left out (not nullable); AnalyzeLesson sets them to null.
+	 * Modules not offered by the profile are left out (not nullable); WriteLesson sets them to null.
 	 * Without a profile the full set.
 	 *
 	 * @return array<string, mixed>

@@ -27,7 +27,13 @@ const props = defineProps<{
 	} | null;
 	lesson: {
 		id: number;
-		status: 'draft' | 'generating' | 'planned' | 'review' | 'published' | 'failed';
+		status:
+			| 'draft'
+			| 'generating'
+			| 'planned'
+			| 'review'
+			| 'published'
+			| 'failed';
 		step: string | null;
 		error: string | null;
 		canRetry: boolean;

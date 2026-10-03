@@ -4,9 +4,9 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** «Plan Teil 3a»
-- **Checks:** 741 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
-- **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (6 files, gitignored) can be deleted once everything works.
+- **Last commit:** «Teil 3a: Planen und Schreiben getrennt»
+- **Checks:** 759 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (7 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
 
@@ -35,7 +35,10 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 
 ## Offen
 
-1. **Teil 3a – Plan bestätigen**: plan written (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`, Tasks 1–9), not started. Approach confirmed by Marcel; execute in a new session with superpowers:executing-plans.
+1. **Teil 3a – Plan bestätigen** (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`): Tasks 1–3 done, 4–8 open (confirm/replan backend, PlanReview page, form checkbox, expiry, docs).
+	- Done: status `planned` («Plan prüfen»), `lessons.plan` / `plan_confirmed_at` / `review_plan` (migrated); the analysis also returns `title`, `key_idea`, `sections` (schema probe OK, 2134 bytes); plan binding in the page prompt, key idea/sections/note/struck additions in `Prompts::context()`.
+	- `AnalyzeLesson` split into `PlanLesson` (analysis → plan) and `WriteLesson` (page, modules, repair; title from the plan). `GenerationPipeline::start()` → graphics only / `write()` / `plan()`; graphic jobs only for planned graphics. Retry after a write failure skips planning.
+	- Until Task 4: without review the `PlanLesson` job sets `plan_confirmed_at` itself; `review_plan` isn't in the form yet (Task 6), so every lesson runs through.
 2. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
 
 Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step); check corrections can't fill null fields (`tolerance`, `unit`) and a corrected mistake sentence keeps its old `mistake_word`; PHP/TS answer checkers have no shared parity tests (no JS test runner).

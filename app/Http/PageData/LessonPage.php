@@ -55,7 +55,7 @@ class LessonPage
 	}
 
 	/**
-	 * Which graphics are being built, for the progress display. After the analysis those with a plan,
+	 * Which graphics are being built, for the progress display. After the planning those with a plan,
 	 * before it graphic 1 («auto») or the parents' wishes.
 	 *
 	 * @return list<int>
@@ -66,7 +66,7 @@ class LessonPage
 			return [];
 		}
 
-		if ($lesson->content !== null) {
+		if ($lesson->content !== null || $lesson->plan !== null) {
 			return array_values($lesson->graphics
 				->filter(fn (LessonGraphic $graphic) => $graphic->plan !== null)
 				->map(fn (LessonGraphic $graphic) => $graphic->position)
