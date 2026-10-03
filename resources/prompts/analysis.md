@@ -10,11 +10,12 @@ Diese Regeln gelten für zwei Aufrufe nacheinander, beide mit denselben Fotos. D
 - `subject`: das Schulfach nach Lehrplan 21 (z. B. «Natur und Technik», «Mathematik», «Französisch»). Ist ein Fach angegeben, übernimm es unverändert. Sonst wähle wenn möglich einen dieser Namen: «Natur und Technik» · «Biologie» · «Chemie» · «Physik» · «Mathematik» · «Deutsch» · «Französisch» · «Englisch» · «Räume, Zeiten, Gesellschaften» · «Geschichte» · «Geografie» · «Wirtschaft, Arbeit, Haushalt» · «Ethik, Religionen, Gemeinschaft» · «Informatik».
 - `summary`: eine neutrale Zusammenfassung des Stoffs
 - `additions`: was du aus Fachwissen ergänzt hast, weil es auf den Fotos fehlte (siehe «Lücken ergänzen»)
+- `title`, `key_idea`, `sections`: der Plan der Seite (siehe «Planen»). Die Eltern können ihn prüfen und ändern, bevor die Seite geschrieben wird.
 - `graphic_plans`: die Ideen für die interaktiven Grafiken (sie werden in einem späteren Schritt gebaut)
 
 **Schritt 2:**
 
-- `page`: der Textteil der Lernseite. Zusammenfassung, Ergänzungen und Pläne für die Grafiken aus Schritt 1 stehen im Benutzer-Prompt und sind verbindlich: Schreib den Textteil daraus und aus den Fotos, mit den Begriffen des Buchs. Setze die Bausteine `graphic` nur für die geplanten Grafiken; `meta.instructions` und `try_it` passen zum Plan von Grafik 1.
+- `page`: der Textteil der Lernseite. Zusammenfassung, Ergänzungen, der Plan der Seite und die Pläne für die Grafiken aus Schritt 1 stehen im Benutzer-Prompt und sind verbindlich, die Eltern haben sie vielleicht geändert. `meta.title` und `meta.key_idea` übernimmst du unverändert aus dem Plan; die Abschnitte schreibst du in der Reihenfolge des Plans, mit seinen Titeln. Eine «Anmerkung der Eltern zum Plan» befolgst du; gestrichene Ergänzungen lässt du weg, auch in Bausteinen mit `origin: "added"`. Schreib den Textteil daraus und aus den Fotos, mit den Begriffen des Buchs. Setze die Bausteine `graphic` nur für die geplanten Grafiken; `meta.instructions` und `try_it` passen zum Plan von Grafik 1.
 
 Im zweiten Schritt steht im Benutzer-Prompt ein Abschnitt «Fachprofil» mit Regeln für dieses Fach. Halte dich an den Abschnitt «Fachprofil», er geht den allgemeinen Regeln vor. Felder, die im Schema fehlen (z. B. `try_it`), lieferst du nicht.
 
@@ -63,7 +64,9 @@ Sind die Fotos zu dünn für eine vollständige Seite, oder nennt der Auftrag ei
 
 ## 3. Planen
 
-- **Kernidee in einem Satz** (`meta.key_idea`, Schritt 2): Was muss das Kind nach dem Lernen verstanden haben?
+- **Titel** (`title`): wie `meta.title` unter «Seitenaufbau», eine Frage oder Formel, höchstens 70 Zeichen.
+- **Kernidee in einem Satz** (`key_idea`): Was muss das Kind nach dem Lernen verstanden haben?
+- **Abschnitte** (`sections`): so viele, wie die Zeile «Umfang» angibt, je mit kurzem `title` und einem Satz `goal`, was der Abschnitt erklärt. In der Reihenfolge, in der das Kind sie lesen soll.
 - **Grafiken** (`graphic_plans`): Grafik 1 ist die Hauptgrafik direkt unter dem Titel. Grafiken 2 und 3 stehen in einem Abschnitt, neben der Erklärung, die sie zeigen: Setze dort den Baustein `{ "type": "graphic", "number": 2 }` (bzw. `3`). Jeder Eintrag in `graphic_plans` hat die Nummer `number`, einen `plan` (Muster und Idee) oder null und einen `note` für die Eltern oder null. Was die Eltern gewählt haben, steht im Auftrag unter «Grafiken»:
     - «Grafiken: keine»: `graphic_plans` bleibt leer, kein Baustein `graphic`.
     - «Grafiken: höchstens eine»: Wähle das Muster, das den Kern des Themas sichtbar macht, als Grafik 1 (`number: 1`). Die Interaktion muss den Mechanismus zeigen, nicht nur dekorieren. Zeigt kein Muster den Kern, z. B. bei reinen Rechenverfahren, Rechtschreib- und Grammatikregeln oder Vokabeln, bleibt `graphic_plans` leer. Lieber keine Grafik als eine, die nur dekoriert. In Mathematik passt oft `calculator` (Werte eingeben, Ergebnis und Rechenweg sehen); prüfe das, bevor du auf die Grafik verzichtest. Kein Baustein `graphic`.

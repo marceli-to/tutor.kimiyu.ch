@@ -424,15 +424,15 @@ it('writes the page in a second call with the photos, the summary, the additions
 		->toContain("Grafik 1 (oben): Muster sliders\nDrei Regler für Licht, CO₂ und Wasser.")
 		->toContain('Liefere nur `page`')
 		->not->toContain('Mia')
-		->and($this->fake->requestsFor('analysis')[0]->prompt)->toContain('Liefere nur `source`, `subject`, `summary`, `additions` und `graphic_plans`');
+		->and($this->fake->requestsFor('analysis')[0]->prompt)->toContain('Liefere nur `source`, `subject`, `summary`, `additions`, `title`, `key_idea`, `sections` und `graphic_plans`');
 });
 
 it('shows each call only the example of its own fields', function () {
 	upload();
 
 	expect($this->fake->requestsFor('analysis')[0]->system)->toContain('"graphic_plans": [')
-		->not->toContain('"sections": [')
-		->and($this->fake->requestsFor('page')[0]->system)->toContain('"sections": [')
+		->not->toContain('"blocks": [')
+		->and($this->fake->requestsFor('page')[0]->system)->toContain('"blocks": [')
 		->not->toContain('"graphic_plans": [');
 });
 

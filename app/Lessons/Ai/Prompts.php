@@ -20,7 +20,8 @@ use Illuminate\Support\Facades\File;
 class Prompts
 {
 	/**
-	 * First step: check the source, summary, additions and plans for the graphics.
+	 * First step: check the source, summary, additions, the plan of the page (title, key idea, sections)
+	 * and plans for the graphics. The parents may confirm the plan before the expensive steps run.
 	 * The text part comes in a call of its own (pageRequest); together the schema is too large for the API.
 	 *
 	 * @param  list<array{mime: string, data: string}>  $images
@@ -32,6 +33,12 @@ class Prompts
 			'subject' => 'Biologie',
 			'summary' => '…',
 			'additions' => [],
+			'title' => 'Wie macht ein Blatt Zucker aus Licht?',
+			'key_idea' => 'Pflanzen bauen mit der Energie des Lichts aus CO₂ und Wasser Traubenzucker und geben dabei Sauerstoff ab.',
+			'sections' => [
+				['title' => 'Das Rezept', 'goal' => 'Zeigt die Zutaten und Produkte der Fotosynthese als Gleichung.'],
+				['title' => 'Wo und wann es passiert', 'goal' => 'Erklärt, dass Chloroplasten im Blatt die Fotosynthese bei Licht ausführen.'],
+			],
 			'graphic_plans' => [[
 				'number' => 1,
 				'plan' => [
@@ -46,7 +53,7 @@ class Prompts
 			step: 'analysis',
 			system: $system,
 			prompt: implode("\n\n", [
-				'Schritt 1 von 2: Liefere nur `source`, `subject`, `summary`, `additions` und `graphic_plans`. Den Textteil (`page`) schreibst du im zweiten Schritt.',
+				'Schritt 1 von 2: Liefere nur `source`, `subject`, `summary`, `additions`, `title`, `key_idea`, `sections` und `graphic_plans`. Den Textteil (`page`) schreibst du im zweiten Schritt.',
 				self::sourceLines($lesson, count($images)),
 			]),
 			schema: Schemas::analysis(),
@@ -83,12 +90,13 @@ class Prompts
 			$parts[] = "Ergänzt (nicht auf den Fotos), diese Bausteine haben `origin: \"added\"`:\n- ".implode("\n- ", $lesson->additions);
 		}
 
+		$parts[] = self::planText($lesson);
 		$parts[] = self::pagePlanText($lesson);
 
 		return new ModelRequest(
 			step: 'page',
 			system: $system,
-			prompt: implode("\n\n", $parts),
+			prompt: implode("\n\n", array_filter($parts)),
 			schema: Schemas::part('page', $profile),
 			maxTokens: config('lessons.max_tokens.page'),
 			images: $images,
@@ -342,6 +350,42 @@ class Prompts
 	}
 
 	/**
+	 * The confirmed plan of the page, binding for the text part: title, key idea, sections in order,
+	 * the parents' note and the additions they struck. Null for lessons planned before the plan existed.
+	 */
+	private static function planText(Lesson $lesson): ?string
+	{
+		if ($lesson->plan === null) {
+			return null;
+		}
+
+		$sections = collect($lesson->plan['sections'])
+			->values()
+			->map(fn (array $section, int $index) => ($index + 1).". {$section['title']}".($section['goal'] ? ": {$section['goal']}" : ''));
+
+		return implode("\n\n", array_filter([
+			"Plan der Seite:\nTitel: {$lesson->plan['title']}\nKernidee: {$lesson->plan['key_idea']}",
+			"Abschnitte (verbindlich, in dieser Reihenfolge):\n".$sections->implode("\n"),
+			self::noteLine($lesson),
+			self::removedAdditionsText($lesson, 'Diese Ergänzungen haben die Eltern gestrichen, lass sie weg:'),
+		]));
+	}
+
+	private static function noteLine(Lesson $lesson): ?string
+	{
+		$note = $lesson->plan['note'] ?? null;
+
+		return $note ? "Anmerkung der Eltern zum Plan: {$note}" : null;
+	}
+
+	private static function removedAdditionsText(Lesson $lesson, string $heading): ?string
+	{
+		$removed = $lesson->plan['removed_additions'] ?? [];
+
+		return $removed !== [] ? "{$heading}\n- ".implode("\n- ", $removed) : null;
+	}
+
+	/**
 	 * The plans from the first step, for the text part: where «graphic» blocks belong
 	 * and whether there is a graphic 1 for «meta.instructions» and «try_it».
 	 */
@@ -407,9 +451,10 @@ class Prompts
 	}
 
 	/**
-	 * Part shared by all steps after the analysis: subject, level, purpose, scope, modules, request, summary and additions.
+	 * Part shared by all steps after the analysis: subject, level, purpose, scope, modules, request, summary, additions
+	 * and the confirmed plan (key idea, sections, the parents' note and the additions they struck).
 	 * For parts the child sees ($forChild, e.g. the graphic) without additions and without the «(ergänzt)» mark;
-	 * purpose, scope and modules don't matter there and are left out, and of the profile only the label.
+	 * purpose, scope and modules don't matter there and are left out, of the profile only the label, of the plan only the key idea.
 	 */
 	private static function context(Lesson $lesson, bool $forChild = false): string
 	{
@@ -437,7 +482,21 @@ class Prompts
 			$parts[] = "Ergänzt (nicht auf den Fotos):\n- ".implode("\n- ", $lesson->additions);
 		}
 
-		return implode("\n\n", $parts);
+		if ($lesson->plan !== null) {
+			$parts[] = $forChild
+				? "Kernidee: {$lesson->plan['key_idea']}"
+				: implode("\n", array_filter([
+					"Kernidee: {$lesson->plan['key_idea']}",
+					'Abschnitte: '.collect($lesson->plan['sections'])->pluck('title')->implode(' · '),
+					self::noteLine($lesson),
+				]));
+
+			if (! $forChild) {
+				$parts[] = self::removedAdditionsText($lesson, 'Von den Eltern gestrichen, nicht verwenden:');
+			}
+		}
+
+		return implode("\n\n", array_filter($parts));
 	}
 
 	private static function purposeLine(Lesson $lesson): string

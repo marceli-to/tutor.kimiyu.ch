@@ -113,6 +113,9 @@ it('lets the analysis report unreadable photos without content', function () {
 		'subject' => '',
 		'summary' => '',
 		'additions' => [],
+		'title' => '',
+		'key_idea' => '',
+		'sections' => [],
 		'graphic_plans' => [],
 	];
 

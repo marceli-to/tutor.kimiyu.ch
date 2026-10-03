@@ -32,6 +32,12 @@ class Schemas
 			'subject' => ['type' => 'string', 'description' => 'Schulfach, z. B. Biologie, Mathematik, Französisch'],
 			'summary' => ['type' => 'string', 'description' => 'Neutrale, vollständige Zusammenfassung des Stoffs in eigenen Worten'],
 			'additions' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Pro Ergänzung ein Satz: was auf den Fotos fehlte und was aus Fachwissen ergänzt wurde. Leer, wenn nichts ergänzt wurde oder es keine Fotos gibt.'],
+			'title' => ['type' => 'string', 'description' => 'Titel der Lernseite'],
+			'key_idea' => ['type' => 'string', 'description' => 'Was das Kind nach dem Lernen verstanden haben muss, ein Satz'],
+			'sections' => ['type' => 'array', 'description' => 'Geplante Abschnitte mit Titel und einem Satz, was er erklärt', 'items' => self::object([
+				'title' => ['type' => 'string'],
+				'goal' => ['type' => 'string'],
+			])],
 			'graphic_plans' => ['type' => 'array', 'items' => self::object([
 				'number' => ['type' => 'integer'],
 				'plan' => self::nullable(self::graphicPlan()),
