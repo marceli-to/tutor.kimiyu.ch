@@ -1,0 +1,248 @@
+{
+    "meta": {
+        "title": "3 kg kosten Fr. 7.50 – und 5 kg?",
+        "instructions": "Gib im Rechner Menge und Preis ein und schau zu, wie der Dreisatz Schritt für Schritt rechnet.",
+        "topic": "Dreisatz",
+        "key_idea": "Beim Dreisatz rechnest du zuerst auf eine Einheit herunter und dann auf die gesuchte Menge hinauf; das geht, weil beide Grössen im gleichen Verhältnis wachsen.",
+        "emoji": "🧮",
+        "palette": "petrol"
+    },
+    "sections": [
+        {
+            "title": "Was ist ein Dreisatz?",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": "Du kennst ein Wertepaar, zum Beispiel: 3 kg Äpfel kosten Fr. 7.50. Gesucht ist der Preis für eine andere Menge. Wenn doppelt so viele Äpfel doppelt so viel kosten, sind Menge und Preis proportional. Dann hilft dir der Dreisatz: drei Zeilen, und du hast die Lösung.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "formula",
+                    "text": "$\\text{Wert für 1 Einheit} = \\dfrac{\\text{bekannter Wert}}{\\text{bekannte Menge}}$",
+                    "addendum": "Zuerst rechnest du aus, was eine Einheit kostet (1 kg, 1 Heft, 1 Stunde). Dann multiplizierst du mit der gesuchten Menge.",
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Schritt für Schritt",
+            "blocks": [
+                {
+                    "type": "worked_solution",
+                    "task": "3 kg Äpfel kosten Fr. 7.50. Wie viel kosten 5 kg?",
+                    "steps": [
+                        {
+                            "text": "Schreib auf, was du weisst: $3\\text{ kg} \\rightarrow \\text{Fr. } 7.50$",
+                            "reason": "Links steht immer die Menge, rechts der Preis. So verwechselst du nichts."
+                        },
+                        {
+                            "text": "Rechne auf 1 kg herunter: $7.50 : 3 = 2.50$, also $1\\text{ kg} \\rightarrow \\text{Fr. } 2.50$",
+                            "reason": "Ein Drittel der Menge kostet ein Drittel des Preises: Du teilst beide Seiten durch 3."
+                        },
+                        {
+                            "text": "Rechne auf 5 kg hinauf: $2.50 \\cdot 5 = 12.50$, also $5\\text{ kg} \\rightarrow \\text{Fr. } 12.50$",
+                            "reason": "Fünfmal so viele Äpfel kosten fünfmal so viel."
+                        }
+                    ],
+                    "result": "5 kg Äpfel kosten Fr. 12.50.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "box",
+                    "title": "Überschlag: Ist das Ergebnis vernünftig?",
+                    "paragraphs": [
+                        "5 kg sind etwas weniger als doppelt so viel wie 3 kg. Also muss der Preis etwas weniger als das Doppelte von Fr. 7.50 sein, also weniger als Fr. 15.–.",
+                        "Fr. 12.50 passt. Hättest du Fr. 1.50 oder Fr. 37.50 herausbekommen, wüsstest du sofort: Da stimmt etwas nicht."
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Wann passt der Dreisatz?",
+            "blocks": [
+                {
+                    "type": "facts",
+                    "entries": [
+                        {
+                            "title": "Proportional",
+                            "text": "Doppelte Menge, doppelter Wert: Preis und Gewicht, Weg und Zeit bei gleichem Tempo, Mehl und Portionen im Rezept."
+                        },
+                        {
+                            "title": "Nicht proportional",
+                            "text": "Das Alter und die Körpergrösse wachsen nicht im gleichen Verhältnis. Hier hilft der Dreisatz nicht."
+                        },
+                        {
+                            "title": "Brüche gehen auch",
+                            "text": "Braucht ein Rezept für 4 Personen $\\frac{3}{4}$ Liter Milch, brauchen 2 Personen die Hälfte: $\\frac{3}{8}$ Liter."
+                        }
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        }
+    ],
+    "try_it": null,
+    "modules": {
+        "quiz": [
+            {
+                "id": "q1",
+                "question": "4 Hefte kosten Fr. 6.00. Was kostet 1 Heft?",
+                "options": ["Fr. 24.00", "Fr. 1.50", "Fr. 2.00", "Fr. 10.00"],
+                "answer": 1,
+                "hint": "Eine Einheit: Teile den Preis durch die Anzahl.",
+                "explanation": "$6.00 : 4 = 1.50$. Ein Heft kostet Fr. 1.50. Fr. 24.00 wäre mal statt geteilt gerechnet.",
+                "origin": "photo"
+            },
+            {
+                "id": "q2",
+                "question": "Ein Velo fährt in 2 Stunden 30 km. Wie weit fährt es in 3 Stunden beim gleichen Tempo?",
+                "options": ["35 km", "20 km", "60 km", "45 km"],
+                "answer": 3,
+                "hint": "Rechne zuerst aus, wie weit es in 1 Stunde fährt.",
+                "explanation": "In 1 Stunde fährt es $30 : 2 = 15$ km, in 3 Stunden $15 \\cdot 3 = 45$ km.",
+                "origin": "photo"
+            },
+            {
+                "id": "q3",
+                "question": "Welche Grössen sind proportional?",
+                "options": [
+                    "Gewicht der Äpfel und Preis",
+                    "Alter und Körpergrösse",
+                    "Schuhgrösse und Note in Mathe",
+                    "Anzahl Geschwister und Wohnort"
+                ],
+                "answer": 0,
+                "hint": "Doppelt so viel von der einen Grösse muss doppelt so viel von der anderen geben.",
+                "explanation": "Doppelt so viele Äpfel kosten doppelt so viel. Bei den anderen Paaren gibt es keinen festen Zusammenhang.",
+                "origin": "photo"
+            },
+            {
+                "id": "q4",
+                "question": "Was ist beim Dreisatz der mittlere Schritt?",
+                "options": [
+                    "Das Ergebnis runden",
+                    "Den Überschlag machen",
+                    "Auf eine Einheit herunterrechnen",
+                    "Die Einheiten umrechnen"
+                ],
+                "answer": 2,
+                "hint": "Zwischen dem bekannten und dem gesuchten Wertepaar liegt eine Zeile.",
+                "explanation": "In der mittleren Zeile steht der Wert für eine Einheit, zum Beispiel für 1 kg.",
+                "origin": "photo"
+            },
+            {
+                "id": "q5",
+                "question": "Ein Rezept für 4 Personen braucht $\\frac{3}{4}$ Liter Milch. Wie viel brauchen 2 Personen?",
+                "options": [
+                    "$\\frac{3}{2}$ Liter",
+                    "$\\frac{3}{8}$ Liter",
+                    "$\\frac{1}{4}$ Liter",
+                    "$\\frac{6}{4}$ Liter"
+                ],
+                "answer": 1,
+                "hint": "Halb so viele Personen, halb so viel Milch.",
+                "explanation": "Die Hälfte von $\\frac{3}{4}$ ist $\\frac{3}{8}$. $\\frac{3}{2}$ wäre das Doppelte.",
+                "origin": "photo"
+            }
+        ],
+        "sorting": null,
+        "flashcards": null,
+        "cloze": {
+            "instructions": "Ergänze die Lücken.",
+            "segments": [
+                {
+                    "text": "3 kg Birnen kosten Fr. 9.00. Zuerst rechnest du auf 1 kg herunter: 1 kg kostet Fr. "
+                },
+                {
+                    "id": "g1",
+                    "answers": ["3.00", "3", "3.–"]
+                },
+                {
+                    "text": ". Dann rechnest du auf 4 kg hinauf: 4 kg kosten Fr. "
+                },
+                {
+                    "id": "g2",
+                    "answers": ["12.00", "12", "12.–"]
+                },
+                {
+                    "text": ". Das geht, weil Menge und Preis "
+                },
+                {
+                    "id": "g3",
+                    "answers": ["proportional"]
+                },
+                {
+                    "text": " sind: Die doppelte Menge kostet das "
+                },
+                {
+                    "id": "g4",
+                    "answers": ["Doppelte"]
+                },
+                {
+                    "text": "."
+                }
+            ],
+            "origin": "photo"
+        },
+        "exercises": {
+            "instructions": "Rechne mit dem Dreisatz. Die Einheit darfst du weglassen.",
+            "entries": [
+                {
+                    "id": "a1",
+                    "question": "4 Hefte kosten Fr. 6.00. Wie viel kosten 7 Hefte?",
+                    "kind": "number",
+                    "answer": "10.50",
+                    "tolerance": null,
+                    "unit": "Fr.",
+                    "hint": "Rechne zuerst aus, was 1 Heft kostet.",
+                    "solution_path": "1 Heft: $6.00 : 4 = 1.50$. 7 Hefte: $1.50 \\cdot 7 = 10.50$. Also Fr. 10.50."
+                },
+                {
+                    "id": "a2",
+                    "question": "Ein Auto fährt in 2 Stunden 150 km. Wie weit fährt es in 5 Stunden beim gleichen Tempo?",
+                    "kind": "number",
+                    "answer": "375",
+                    "tolerance": null,
+                    "unit": "km",
+                    "hint": "Wie weit fährt es in 1 Stunde?",
+                    "solution_path": "1 Stunde: $150 : 2 = 75$ km. 5 Stunden: $75 \\cdot 5 = 375$ km."
+                },
+                {
+                    "id": "a3",
+                    "question": "Für 6 Portionen Teig braucht man 450 g Mehl. Wie viel Mehl braucht es für 4 Portionen?",
+                    "kind": "number",
+                    "answer": "300",
+                    "tolerance": null,
+                    "unit": "g",
+                    "hint": "Hier rechnest du zuerst auf 1 Portion herunter.",
+                    "solution_path": "1 Portion: $450 : 6 = 75$ g. 4 Portionen: $75 \\cdot 4 = 300$ g."
+                },
+                {
+                    "id": "a4",
+                    "question": "Eine Pumpe füllt in 3 Minuten 20 Liter. Wie viele Liter füllt sie in 10 Minuten? Runde auf eine Stelle nach dem Komma.",
+                    "kind": "number",
+                    "answer": "66,7",
+                    "tolerance": 0.05,
+                    "unit": "l",
+                    "hint": "$20 : 3$ geht nicht auf. Rechne mit dem Taschenrechner weiter und runde erst am Schluss.",
+                    "solution_path": "1 Minute: $20 : 3 \\approx 6{,}667$ Liter. 10 Minuten: $6{,}667 \\cdot 10 \\approx 66{,}7$ Liter."
+                },
+                {
+                    "id": "a5",
+                    "question": "Ein Rezept für 4 Personen braucht $\\frac{3}{4}$ Liter Milch. Wie viel Milch brauchen 2 Personen? Schreib das Ergebnis als Bruch.",
+                    "kind": "fraction",
+                    "answer": "3/8",
+                    "tolerance": null,
+                    "unit": null,
+                    "hint": "Halb so viele Personen brauchen halb so viel Milch.",
+                    "solution_path": "$\\frac{3}{4} : 2 = \\frac{3}{8}$. 2 Personen brauchen $\\frac{3}{8}$ Liter."
+                }
+            ]
+        },
+        "find_the_mistake": null
+    },
+    "reflect": {
+        "question": "Beim Taxi bezahlst du eine Grundgebühr und dann pro Kilometer. Kostet eine doppelt so lange Fahrt doppelt so viel? Darfst du hier mit dem Dreisatz rechnen?"
+    }
+}

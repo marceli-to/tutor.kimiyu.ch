@@ -7,41 +7,41 @@ import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 
 defineOptions({
-    layout: {
-        title: 'E-Mail-Adresse bestätigen',
-        description:
-            'Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade geschickt haben.',
-    },
+	layout: {
+		title: 'E-Mail-Adresse bestätigen',
+		description:
+			'Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade geschickt haben.',
+	},
 });
 
 defineProps<{
-    status?: string;
+	status?: string;
 }>();
 </script>
 
 <template>
-    <Head title="E-Mail-Adresse bestätigen" />
+	<Head title="E-Mail-Adresse bestätigen" />
 
-    <div
-        v-if="status === 'verification-link-sent'"
-        class="mb-4 text-center text-sm font-medium text-green-600"
-    >
-        Wir haben dir einen neuen Bestätigungslink an deine E-Mail-Adresse
-        geschickt.
-    </div>
+	<div
+		v-if="status === 'verification-link-sent'"
+		class="mb-4 text-center text-sm font-medium text-green-600"
+	>
+		Wir haben dir einen neuen Bestätigungslink an deine E-Mail-Adresse
+		geschickt.
+	</div>
 
-    <Form
-        v-bind="send.form()"
-        class="space-y-6 text-center"
-        v-slot="{ processing }"
-    >
-        <Button :disabled="processing" variant="secondary">
-            <Spinner v-if="processing" />
-            Bestätigungs-E-Mail erneut senden
-        </Button>
+	<Form
+		v-bind="send.form()"
+		class="space-y-6 text-center"
+		v-slot="{ processing }"
+	>
+		<Button :disabled="processing" variant="secondary">
+			<Spinner v-if="processing" />
+			Bestätigungs-E-Mail erneut senden
+		</Button>
 
-        <TextLink :href="logout()" as="button" class="mx-auto block text-sm">
-            Abmelden
-        </TextLink>
-    </Form>
+		<TextLink :href="logout()" as="button" class="mx-auto block text-sm">
+			Abmelden
+		</TextLink>
+	</Form>
 </template>

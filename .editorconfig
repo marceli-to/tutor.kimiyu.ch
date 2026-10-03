@@ -4,9 +4,13 @@ root = true
 charset = utf-8
 end_of_line = lf
 indent_size = 4
-indent_style = space
+indent_style = tab
 insert_final_newline = true
 trim_trailing_whitespace = true
+
+# JSON, YAML and Markdown keep spaces (YAML cannot use tabs).
+[*.{json,yaml,yml,md}]
+indent_style = space
 
 [*.md]
 trim_trailing_whitespace = false

@@ -7,96 +7,96 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const emit = defineEmits<{
-    success: [];
+	success: [];
 }>();
 
 const getDefaultPasskeyName = () => {
-    const ua = navigator.userAgent;
+	const ua = navigator.userAgent;
 
-    const browser = [
-        { pattern: /Edg|Edge/, name: 'Edge' },
-        { pattern: /OPR|Opera|OPiOS/, name: 'Opera' },
-        { pattern: /Firefox|FxiOS/, name: 'Firefox' },
-        { pattern: /Chrome|CriOS/, name: 'Chrome' },
-        { pattern: /Safari/, name: 'Safari' },
-    ].find(({ pattern }) => pattern.test(ua))?.name;
+	const browser = [
+		{ pattern: /Edg|Edge/, name: 'Edge' },
+		{ pattern: /OPR|Opera|OPiOS/, name: 'Opera' },
+		{ pattern: /Firefox|FxiOS/, name: 'Firefox' },
+		{ pattern: /Chrome|CriOS/, name: 'Chrome' },
+		{ pattern: /Safari/, name: 'Safari' },
+	].find(({ pattern }) => pattern.test(ua))?.name;
 
-    const os = [
-        { pattern: /iPhone/, name: 'iPhone' },
-        { pattern: /iPad|Macintosh(?=.*Mobile)/, name: 'iPad' },
-        { pattern: /Android/, name: 'Android' },
-        { pattern: /Mac/, name: 'Mac' },
-        { pattern: /Windows/, name: 'Windows' },
-    ].find(({ pattern }) => pattern.test(ua))?.name;
+	const os = [
+		{ pattern: /iPhone/, name: 'iPhone' },
+		{ pattern: /iPad|Macintosh(?=.*Mobile)/, name: 'iPad' },
+		{ pattern: /Android/, name: 'Android' },
+		{ pattern: /Mac/, name: 'Mac' },
+		{ pattern: /Windows/, name: 'Windows' },
+	].find(({ pattern }) => pattern.test(ua))?.name;
 
-    return [browser, os].filter(Boolean).join(' auf ') || '';
+	return [browser, os].filter(Boolean).join(' auf ') || '';
 };
 
 const name = ref(getDefaultPasskeyName());
 const showForm = ref(false);
 
 const { register, isLoading, error, isSupported } = usePasskeyRegister({
-    onSuccess: () => {
-        name.value = '';
-        showForm.value = false;
-        emit('success');
-    },
+	onSuccess: () => {
+		name.value = '';
+		showForm.value = false;
+		emit('success');
+	},
 });
 
 const handleSubmit = async (event: Event) => {
-    event.preventDefault();
+	event.preventDefault();
 
-    if (!name.value.trim()) {
-        return;
-    }
+	if (!name.value.trim()) {
+		return;
+	}
 
-    await register(name.value);
+	await register(name.value);
 };
 
 const handleCancel = () => {
-    showForm.value = false;
-    name.value = '';
+	showForm.value = false;
+	name.value = '';
 };
 </script>
 
 <template>
-    <div v-if="!isSupported" class="text-sm text-muted-foreground">
-        Dieser Browser unterstützt keine Passkeys.
-    </div>
+	<div v-if="!isSupported" class="text-sm text-muted-foreground">
+		Dieser Browser unterstützt keine Passkeys.
+	</div>
 
-    <Button v-else-if="!showForm" variant="outline" @click="showForm = true">
-        Passkey hinzufügen
-    </Button>
+	<Button v-else-if="!showForm" variant="outline" @click="showForm = true">
+		Passkey hinzufügen
+	</Button>
 
-    <form
-        v-else
-        @submit="handleSubmit"
-        class="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
-    >
-        <div class="grid gap-2">
-            <Label for="passkey-name">Name des Passkeys</Label>
-            <Input
-                id="passkey-name"
-                type="text"
-                v-model="name"
-                placeholder="z. B. MacBook Pro, iPhone"
-                class="mt-1 block w-full border-foreground/20"
-                v-focus
-            />
-            <p class="text-xs text-muted-foreground">
-                Mit einem Namen erkennst du den Passkey später wieder.
-            </p>
-        </div>
+	<form
+		v-else
+		@submit="handleSubmit"
+		class="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
+	>
+		<div class="grid gap-2">
+			<Label for="passkey-name">Name des Passkeys</Label>
+			<Input
+				id="passkey-name"
+				type="text"
+				v-model="name"
+				placeholder="z. B. MacBook Pro, iPhone"
+				class="mt-1 block w-full border-foreground/20"
+				v-focus
+			/>
+			<p class="text-xs text-muted-foreground">
+				Mit einem Namen erkennst du den Passkey später wieder.
+			</p>
+		</div>
 
-        <InputError v-if="error" :message="error" />
+		<InputError v-if="error" :message="error" />
 
-        <div class="flex gap-2">
-            <Button type="submit" :disabled="isLoading || !name.trim()">
-                {{ isLoading ? 'Wird registriert …' : 'Passkey registrieren' }}
-            </Button>
-            <Button type="button" variant="ghost" @click="handleCancel">
-                Abbrechen
-            </Button>
-        </div>
-    </form>
+		<div class="flex gap-2">
+			<Button type="submit" :disabled="isLoading || !name.trim()">
+				{{ isLoading ? 'Wird registriert …' : 'Passkey registrieren' }}
+			</Button>
+			<Button type="button" variant="ghost" @click="handleCancel">
+				Abbrechen
+			</Button>
+		</div>
+	</form>
 </template>

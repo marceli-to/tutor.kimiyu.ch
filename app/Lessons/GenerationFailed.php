@@ -5,12 +5,12 @@ namespace App\Lessons;
 use RuntimeException;
 
 /**
- * Die Generierung kann nicht weitergehen. Die Nachricht wird den Eltern angezeigt.
+ * The generation can't continue. The message is shown to the parents.
  */
 class GenerationFailed extends RuntimeException
 {
-    public function __construct(string $message, public readonly ?string $detail = null)
-    {
-        parent::__construct($message);
-    }
+	public function __construct(string $message, public readonly ?string $detail = null)
+	{
+		parent::__construct($message);
+	}
 }

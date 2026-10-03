@@ -6,20 +6,20 @@ import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
-    breadcrumbs?: BreadcrumbItem[];
+	breadcrumbs?: BreadcrumbItem[];
 };
 
 withDefaults(defineProps<Props>(), {
-    breadcrumbs: () => [],
+	breadcrumbs: () => [],
 });
 </script>
 
 <template>
-    <AppShell variant="header">
-        <AppHeader :breadcrumbs="breadcrumbs" />
-        <AppContent variant="header">
-            <slot />
-        </AppContent>
-        <Toaster />
-    </AppShell>
+	<AppShell variant="header">
+		<AppHeader :breadcrumbs="breadcrumbs" />
+		<AppContent variant="header">
+			<slot />
+		</AppContent>
+		<Toaster />
+	</AppShell>
 </template>

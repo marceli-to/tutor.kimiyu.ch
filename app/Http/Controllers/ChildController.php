@@ -2,135 +2,80 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
-use App\Lessons\Progress;
+use App\Actions\Children\CreateChild;
+use App\Actions\Children\DeleteChild;
+use App\Actions\Children\RenewShareLink;
+use App\Actions\Children\UpdateChild;
+use App\Http\PageData\ChildProgress;
+use App\Http\PageData\ChildrenIndex;
+use App\Http\Requests\ChildRequest;
 use App\Models\Child;
-use App\Models\Lesson;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ChildController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        return Inertia::render('children/Index', [
-            'children' => $request->user()->children()
-                ->withCount(['lessons', 'lessons as published_count' => fn ($q) => $q->whereNotNull('published_at')])
-                ->orderBy('name')
-                ->get()
-                ->map(fn (Child $child) => [
-                    'id' => $child->id,
-                    'name' => $child->name,
-                    'level' => $child->level,
-                    'lessons' => $child->lessons_count,
-                    'published' => $child->published_count,
-                    'shareUrl' => route('shared.index', $child->share_token),
-                ]),
-        ]);
-    }
+	public function index(Request $request): Response
+	{
+		return Inertia::render('children/Index', (new ChildrenIndex($request->user()))->props());
+	}
 
-    public function store(Request $request): RedirectResponse
-    {
-        $request->user()->children()->create($this->validated($request));
+	public function store(ChildRequest $request, CreateChild $createChild): RedirectResponse
+	{
+		$createChild->handle($request->user(), $request->validated('name'), $request->validated('level'));
 
-        $this->toast('Kind hinzugefügt.');
+		$this->toast('Kind hinzugefügt.');
 
-        return back();
-    }
+		return back();
+	}
 
-    public function update(Request $request, Child $child): RedirectResponse
-    {
-        Gate::authorize('update', $child);
+	public function update(ChildRequest $request, Child $child, UpdateChild $updateChild): RedirectResponse
+	{
+		$updateChild->handle($child, $request->validated('name'), $request->validated('level'));
 
-        $child->update($this->validated($request));
+		$this->toast('Gespeichert.');
 
-        $this->toast('Gespeichert.');
+		return back();
+	}
 
-        return back();
-    }
+	/**
+	 * Deletes the child with all lessons and progress.
+	 */
+	public function destroy(Child $child, DeleteChild $deleteChild): RedirectResponse
+	{
+		Gate::authorize('delete', $child);
 
-    /**
-     * Löscht das Kind mit allen Lernseiten und dem Lernstand.
-     */
-    public function destroy(Child $child, LessonGenerator $generator): RedirectResponse
-    {
-        Gate::authorize('delete', $child);
+		$deleteChild->handle($child);
 
-        foreach ($child->lessons as $lesson) {
-            $generator->deleteImages($lesson);
-        }
+		$this->toast('Kind und Lernseiten gelöscht.');
 
-        $child->delete();
+		return back();
+	}
 
-        $this->toast('Kind und Lernseiten gelöscht.');
+	/**
+	 * Progress: per lesson, what is mastered and what still needs practice.
+	 */
+	public function progress(Child $child): Response
+	{
+		Gate::authorize('update', $child);
 
-        return back();
-    }
+		return Inertia::render('children/Progress', (new ChildProgress($child))->props());
+	}
 
-    /**
-     * Lernstand: pro Lernseite, was sitzt und was noch geübt werden muss.
-     */
-    public function progress(Child $child): Response
-    {
-        Gate::authorize('update', $child);
+	/**
+	 * New link, e.g. when the old one went to the wrong person. The old link stops working.
+	 */
+	public function renewLink(Child $child, RenewShareLink $renewShareLink): RedirectResponse
+	{
+		Gate::authorize('update', $child);
 
-        $lessons = $child->lessons()
-            ->whereNotNull('content')
-            ->whereIn('status', [LessonStatus::Review, LessonStatus::Published])
-            ->latest()
-            ->get();
+		$renewShareLink->handle($child);
 
-        $summaries = Progress::summaries($child, $lessons);
-        $lastActivity = $child->attempts()->latest('created_at')->value('created_at');
+		$this->toast('Neuer Link erstellt. Der alte Link funktioniert nicht mehr.');
 
-        return Inertia::render('children/Progress', [
-            'child' => [
-                'id' => $child->id,
-                'name' => $child->name,
-                'lastActivity' => $lastActivity ? Carbon::parse($lastActivity)->diffForHumans() : null,
-            ],
-            'lessons' => $lessons->map(fn (Lesson $lesson) => [
-                'id' => $lesson->id,
-                'title' => $lesson->title,
-                'subject' => $lesson->subject,
-                'emoji' => $lesson->content['meta']['emoji'] ?? null,
-                'published' => $lesson->status === LessonStatus::Published,
-                ...$summaries[$lesson->id],
-            ])->values(),
-        ]);
-    }
-
-    /**
-     * Neuer Link, z. B. wenn der alte an die falsche Person ging. Der alte Link funktioniert danach nicht mehr.
-     */
-    public function renewLink(Child $child): RedirectResponse
-    {
-        Gate::authorize('update', $child);
-
-        $child->forceFill(['share_token' => Child::newShareToken()])->save();
-
-        $this->toast('Neuer Link erstellt. Der alte Link funktioniert nicht mehr.');
-
-        return back();
-    }
-
-    /**
-     * @return array{name: string, level: string|null}
-     */
-    private function validated(Request $request): array
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:60'],
-            'level' => ['nullable', 'string', 'max:60'],
-        ], [
-            'name.required' => 'Gib einen Namen ein.',
-        ]);
-
-        return ['name' => trim($data['name']), 'level' => isset($data['level']) ? trim($data['level']) : null];
-    }
+		return back();
+	}
 }

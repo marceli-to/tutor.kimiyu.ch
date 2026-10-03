@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Progress\RecordAnswer;
 use App\Enums\LessonStatus;
+use App\Http\PageData\SharedLessonIndex;
+use App\Lessons\AnswerResult;
 use App\Lessons\LessonView;
 use App\Lessons\Progress;
 use App\Models\Child;
@@ -14,89 +17,54 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Was das Kind über seinen Link sieht: nur freigegebene Lernseiten, nur lesen, ohne Login.
+ * What the child sees through its link: only published lessons, read only, without login.
  */
 class SharedLessonController extends Controller
 {
-    public function index(string $token): Response
-    {
-        $child = $this->child($token);
+	public function index(string $token): Response
+	{
+		$child = $this->child($token);
 
-        $lessons = $child->lessons()
-            ->where('status', LessonStatus::Published)
-            ->latest('published_at')
-            ->get();
+		return Inertia::render('shared/Index', (new SharedLessonIndex($child))->props());
+	}
 
-        $progress = Progress::summaries($child, $lessons);
+	public function show(string $token, Lesson $lesson): Response
+	{
+		$child = $this->child($token);
 
-        return Inertia::render('shared/Index', [
-            'token' => $token,
-            'childName' => $child->name,
-            'subjects' => $lessons
-                ->groupBy('subject')
-                ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
-                ->map(fn ($lessons, string $subject) => [
-                    'name' => $subject,
-                    'lessons' => $lessons->map(fn (Lesson $lesson) => [
-                        'id' => $lesson->id,
-                        'title' => $lesson->title,
-                        'emoji' => $lesson->content['meta']['emoji'] ?? null,
-                        'kernidee' => $lesson->content['meta']['kernidee'] ?? null,
-                        'progress' => [
-                            'sitzt' => $progress[$lesson->id]['counts']['sitzt'],
-                            'total' => $progress[$lesson->id]['total'],
-                        ],
-                    ])->values(),
-                ])
-                ->values(),
-        ]);
-    }
+		abort_unless($lesson->child_id === $child->id && $lesson->status === LessonStatus::Published, 404);
 
-    public function show(string $token, Lesson $lesson): Response
-    {
-        $child = $this->child($token);
+		return Inertia::render('shared/Show', [
+			'token' => $token,
+			'lesson' => LessonView::page($lesson),
+		]);
+	}
 
-        abort_unless($lesson->child_id === $child->id && $lesson->status === LessonStatus::Published, 404);
+	/**
+	 * One answer of the child. The server checks it itself against the content.
+	 */
+	public function answer(Request $request, string $token, Lesson $lesson, RecordAnswer $recordAnswer): JsonResponse
+	{
+		$child = $this->child($token);
 
-        return Inertia::render('shared/Show', [
-            'token' => $token,
-            'lesson' => LessonView::page($lesson),
-        ]);
-    }
+		abort_unless($lesson->child_id === $child->id && $lesson->status === LessonStatus::Published, 404);
 
-    /**
-     * Eine Antwort des Kindes. Der Server prüft sie selbst gegen den Inhalt.
-     */
-    public function answer(Request $request, string $token, Lesson $lesson): JsonResponse
-    {
-        $child = $this->child($token);
+		$data = $request->validate([
+			'module' => ['required', Rule::in(Progress::MODULES)],
+			'item_id' => ['required', 'string', 'max:20'],
+			'answer' => ['present', 'nullable'],
+		]);
 
-        abort_unless($lesson->child_id === $child->id && $lesson->status === LessonStatus::Published, 404);
+		$result = $recordAnswer->handle($child, $lesson, $data['module'], $data['item_id'], $data['answer']);
 
-        $data = $request->validate([
-            'module' => ['required', Rule::in(['quiz', 'sortieren', 'lueckentext'])],
-            'item_id' => ['required', 'string', 'max:20'],
-            'answer' => ['present', 'nullable'],
-        ]);
+		abort_if($result === null, 422, 'Diese Aufgabe gibt es nicht.');
 
-        $answer = $data['answer'];
-        $correct = Progress::check($lesson, $data['module'], $data['item_id'], is_scalar($answer) ? $answer : null);
+		return response()->json(['correct' => $result->isCorrect(), 'almost' => $result === AnswerResult::Almost]);
+	}
 
-        abort_if($correct === null, 422, 'Diese Aufgabe gibt es nicht.');
-
-        $child->attempts()->create([
-            'lesson_id' => $lesson->id,
-            'module' => $data['module'],
-            'item_id' => $data['item_id'],
-            'correct' => $correct,
-        ]);
-
-        return response()->json(['correct' => $correct]);
-    }
-
-    private function child(string $token): Child
-    {
-        // Falscher Link: 404 wie bei einer nicht vorhandenen Seite, damit nichts über gültige Links verraten wird
-        return Child::query()->where('share_token', $token)->firstOrFail();
-    }
+	private function child(string $token): Child
+	{
+		// Wrong link: 404 like for a missing page, so nothing is revealed about valid links
+		return Child::query()->where('share_token', $token)->firstOrFail();
+	}
 }

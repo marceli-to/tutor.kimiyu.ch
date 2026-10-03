@@ -15,10 +15,10 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
-    ->in('Feature');
+	->use(RefreshDatabase::class)
+	->in('Feature');
 
-// Unit-Tests brauchen den Container (Validator, Pfade), aber keine Datenbank
+// Unit tests need the container (validator, paths), but no database
 pest()->extend(TestCase::class)->in('Unit');
 
 /*
@@ -33,7 +33,7 @@ pest()->extend(TestCase::class)->in('Unit');
 */
 
 expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+	return $this->toBe(1);
 });
 
 /*
@@ -49,5 +49,5 @@ expect()->extend('toBeOne', function () {
 
 function something()
 {
-    // ..
+	// ..
 }

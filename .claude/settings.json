@@ -1,0 +1,15 @@
+{
+    "hooks": {
+        "SessionStart": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "f=\"$CLAUDE_PROJECT_DIR/docs/plans/STATUS.md\"; [ -f \"$f\" ] && cat \"$f\" || true",
+                        "statusMessage": "Projektstatus laden"
+                    }
+                ]
+            }
+        ]
+    }
+}

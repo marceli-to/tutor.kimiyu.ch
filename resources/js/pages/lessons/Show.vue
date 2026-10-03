@@ -5,93 +5,138 @@ import GenerationStatus from '@/components/lesson/GenerationStatus.vue';
 import LessonPage from '@/components/lesson/LessonPage.vue';
 import ParentToolbar from '@/components/lesson/ParentToolbar.vue';
 import ReviewNotice from '@/components/lesson/ReviewNotice.vue';
-import type { LessonContent, LessonHero, Palette } from '@/types';
+import { mathToPlain } from '@/lib/math';
+import type {
+	GraphicState,
+	LessonContent,
+	LessonGraphics,
+	LessonProfile,
+	Palette,
+} from '@/types';
 
 const props = defineProps<{
-    // Nur für die Eltern, nicht in der lokalen Vorschau
-    parent: {
-        childName: string;
-        shareUrl: string | null;
-        canPublish: boolean;
-        canRegenerate: { quiz: boolean; grafik: boolean };
-    } | null;
-    lesson: {
-        id: number;
-        status: 'draft' | 'generating' | 'review' | 'published' | 'failed';
-        step: string | null;
-        error: string | null;
-        canRetry: boolean;
-        fromTopic: boolean;
-        withHero: boolean;
-        subject: string;
-        level: string;
-        content: LessonContent | null;
-        palette: Palette | null;
-        hero: LessonHero | null;
-        heroError: string | null;
-        checkNotes: { bereich: string; aenderung: string }[];
-    };
+	// Only for the parents, not in the local preview
+	parent: {
+		childName: string;
+		shareUrl: string | null;
+		canPublish: boolean;
+		canRegenerate: { quiz: boolean };
+		quizCount: number;
+		graphics: GraphicState[];
+		additions: string[];
+	} | null;
+	lesson: {
+		id: number;
+		status:
+			| 'draft'
+			| 'generating'
+			| 'planned'
+			| 'review'
+			| 'published'
+			| 'failed';
+		step: string | null;
+		error: string | null;
+		canRetry: boolean;
+		fromTopic: boolean;
+		// Positions of the graphics being built (for the progress display)
+		plannedGraphics: number[];
+		subject: string;
+		profile: LessonProfile;
+		speechLang: string | null;
+		// TeX between $…$ is rendered as a formula
+		math: boolean;
+		level: string;
+		content: LessonContent | null;
+		palette: Palette | null;
+		graphics: LessonGraphics;
+		checkNotes: { area: string; change: string }[];
+	};
 }>();
 
-const generating = computed(() =>
-    ['draft', 'generating'].includes(props.lesson.status),
+// The browser tab can't show formulas
+const pageTitle = computed(() => {
+	const title = props.lesson.content?.meta.title;
+
+	if (title === undefined) {
+		return 'Lernseite entsteht';
+	}
+
+	return props.lesson.math ? mathToPlain(title) : title;
+});
+
+// A regenerated part keeps the status (the child still sees the page), only the step shows it
+const regenerating = computed(
+	() => props.lesson.step?.startsWith('regenerate-') ?? false,
 );
 
-// Solange die Seite entsteht, alle 3 Sekunden den Stand abfragen
+const generating = computed(
+	() =>
+		['draft', 'generating'].includes(props.lesson.status) ||
+		regenerating.value,
+);
+
+// While the page is being created, poll the state every 3 seconds
+// (with the parent's actions and graphic errors, which change at the end as well)
 const { start, stop } = usePoll(
-    3000,
-    { only: ['lesson'] },
-    { autoStart: generating.value },
+	3000,
+	{ only: ['lesson', 'parent'] },
+	{ autoStart: generating.value },
 );
 
 watch(generating, (active) => (active ? start() : stop()));
 </script>
 
 <template>
-    <Head :title="lesson.content?.meta.titel ?? 'Lernseite entsteht'" />
+	<Head :title="pageTitle" />
 
-    <GenerationStatus
-        v-if="
-            generating ||
-            lesson.status === 'failed' ||
-            !lesson.content ||
-            !lesson.palette
-        "
-        :lesson-id="lesson.id"
-        :status="lesson.status"
-        :step="lesson.step"
-        :error="lesson.error"
-        :can-retry="lesson.canRetry"
-        :with-hero="lesson.withHero"
-    />
+	<GenerationStatus
+		v-if="
+			generating ||
+			lesson.status === 'failed' ||
+			!lesson.content ||
+			!lesson.palette
+		"
+		:lesson-id="lesson.id"
+		:status="lesson.status"
+		:step="lesson.step"
+		:error="lesson.error"
+		:can-retry="lesson.canRetry"
+		:planned-graphics="lesson.plannedGraphics"
+	/>
 
-    <template v-else>
-        <ParentToolbar
-            v-if="parent"
-            :lesson-id="lesson.id"
-            :status="lesson.status"
-            :child-name="parent.childName"
-            :share-url="parent.shareUrl"
-            :can-publish="parent.canPublish"
-            :can-regenerate="parent.canRegenerate"
-        />
+	<template v-else>
+		<ParentToolbar
+			v-if="parent"
+			:lesson-id="lesson.id"
+			:status="lesson.status"
+			:child-name="parent.childName"
+			:share-url="parent.shareUrl"
+			:can-publish="parent.canPublish"
+			:can-regenerate="parent.canRegenerate"
+			:quiz-count="parent.quizCount"
+			:graphics="parent.graphics"
+		/>
 
-        <LessonPage
-            :content="lesson.content"
-            :palette="lesson.palette"
-            :hero="lesson.hero"
-            :subject="lesson.subject"
-            :level="lesson.level"
-        >
-            <template v-if="lesson.status === 'review' || lesson.error" #before>
-                <ReviewNotice
-                    :status="lesson.status"
-                    :error="lesson.error"
-                    :check-notes="lesson.checkNotes"
-                    :hero-error="lesson.heroError"
-                    :from-topic="lesson.fromTopic"
-                />
-            </template>
-        </LessonPage>
-    </template>
+		<LessonPage
+			:content="lesson.content"
+			:palette="lesson.palette"
+			:graphics="lesson.graphics"
+			:subject="lesson.subject"
+			:profile="lesson.profile"
+			:speech-lang="lesson.speechLang"
+			:math="lesson.math"
+			:level="lesson.level"
+		>
+			<template v-if="lesson.status === 'review' || lesson.error" #before>
+				<ReviewNotice
+					:status="lesson.status"
+					:error="lesson.error"
+					:check-notes="lesson.checkNotes"
+					:graphics="parent?.graphics ?? []"
+					:from-topic="lesson.fromTopic"
+					:additions="parent?.additions ?? []"
+				/>
+			</template>
+		</LessonPage>
+	</template>
 </template>

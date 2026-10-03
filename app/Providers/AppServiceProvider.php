@@ -17,55 +17,51 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        $this->app->singleton(LanguageModel::class, function () {
-            if (config('lessons.fake_ai')) {
-                return new FakeLanguageModel;
-            }
+	/**
+	 * Register any application services.
+	 */
+	public function register(): void
+	{
+		$this->app->singleton(ClaudeLanguageModel::class, fn () => new ClaudeLanguageModel(
+			client: new Client(apiKey: (string) config('services.anthropic.key')),
+			fallbacks: config('services.anthropic.fallbacks'),
+			timeout: config('services.anthropic.timeout'),
+		));
 
-            return new ClaudeLanguageModel(
-                client: new Client(apiKey: (string) config('services.anthropic.key')),
-                model: config('services.anthropic.model'),
-                effort: config('services.anthropic.effort'),
-                fallbacks: config('services.anthropic.fallbacks'),
-                timeout: config('services.anthropic.timeout'),
-            );
-        });
-    }
+		$this->app->singleton(LanguageModel::class, fn ($app) => config('lessons.fake_ai')
+			? new FakeLanguageModel
+			: $app->make(ClaudeLanguageModel::class));
+	}
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        $this->configureDefaults();
+	/**
+	 * Bootstrap any application services.
+	 */
+	public function boot(): void
+	{
+		$this->configureDefaults();
 
-        RateLimiter::for('answers', fn (Request $request) => Limit::perMinute(240)->by($request->ip()));
-    }
+		RateLimiter::for('answers', fn (Request $request) => Limit::perMinute(240)->by($request->ip()));
+	}
 
-    /**
-     * Configure default behaviors for production-ready applications.
-     */
-    protected function configureDefaults(): void
-    {
-        Date::use(CarbonImmutable::class);
+	/**
+	 * Configure default behaviors for production-ready applications.
+	 */
+	protected function configureDefaults(): void
+	{
+		Date::use(CarbonImmutable::class);
 
-        DB::prohibitDestructiveCommands(
-            app()->isProduction(),
-        );
+		DB::prohibitDestructiveCommands(
+			app()->isProduction(),
+		);
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
-    }
+		Password::defaults(fn (): ?Password => app()->isProduction()
+			? Password::min(12)
+				->mixedCase()
+				->letters()
+				->numbers()
+				->symbols()
+				->uncompromised()
+			: null,
+		);
+	}
 }

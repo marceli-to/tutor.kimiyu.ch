@@ -10,81 +10,81 @@ import { Spinner } from '@/components/ui/spinner';
 import { update } from '@/routes/password';
 
 defineOptions({
-    layout: {
-        title: 'Passwort zurücksetzen',
-        description: 'Gib unten dein neues Passwort ein.',
-    },
+	layout: {
+		title: 'Passwort zurücksetzen',
+		description: 'Gib unten dein neues Passwort ein.',
+	},
 });
 
 const props = defineProps<{
-    token: string;
-    email: string;
-    passwordRules: string;
+	token: string;
+	email: string;
+	passwordRules: string;
 }>();
 
 const inputEmail = ref(props.email);
 </script>
 
 <template>
-    <Head title="Passwort zurücksetzen" />
+	<Head title="Passwort zurücksetzen" />
 
-    <Form
-        v-bind="update.form()"
-        :transform="(data) => ({ ...data, token, email })"
-        :reset-on-success="['password', 'password_confirmation']"
-        v-slot="{ errors, processing }"
-    >
-        <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="email">E-Mail</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    autocomplete="email"
-                    v-model="inputEmail"
-                    class="mt-1 block w-full"
-                    readonly
-                />
-                <InputError :message="errors.email" class="mt-2" />
-            </div>
+	<Form
+		v-bind="update.form()"
+		:transform="(data) => ({ ...data, token, email })"
+		:reset-on-success="['password', 'password_confirmation']"
+		v-slot="{ errors, processing }"
+	>
+		<div class="grid gap-6">
+			<div class="grid gap-2">
+				<Label for="email">E-Mail</Label>
+				<Input
+					id="email"
+					type="email"
+					name="email"
+					autocomplete="email"
+					v-model="inputEmail"
+					class="mt-1 block w-full"
+					readonly
+				/>
+				<InputError :message="errors.email" class="mt-2" />
+			</div>
 
-            <div class="grid gap-2">
-                <Label for="password">Neues Passwort</Label>
-                <PasswordInput
-                    id="password"
-                    name="password"
-                    autocomplete="new-password"
-                    class="mt-1 block w-full"
-                    autofocus
-                    placeholder="Neues Passwort"
-                    :passwordrules="passwordRules"
-                />
-                <InputError :message="errors.password" />
-            </div>
+			<div class="grid gap-2">
+				<Label for="password">Neues Passwort</Label>
+				<PasswordInput
+					id="password"
+					name="password"
+					autocomplete="new-password"
+					class="mt-1 block w-full"
+					autofocus
+					placeholder="Neues Passwort"
+					:passwordrules="passwordRules"
+				/>
+				<InputError :message="errors.password" />
+			</div>
 
-            <div class="grid gap-2">
-                <Label for="password_confirmation">Passwort bestätigen</Label>
-                <PasswordInput
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    autocomplete="new-password"
-                    class="mt-1 block w-full"
-                    placeholder="Passwort bestätigen"
-                    :passwordrules="passwordRules"
-                />
-                <InputError :message="errors.password_confirmation" />
-            </div>
+			<div class="grid gap-2">
+				<Label for="password_confirmation">Passwort bestätigen</Label>
+				<PasswordInput
+					id="password_confirmation"
+					name="password_confirmation"
+					autocomplete="new-password"
+					class="mt-1 block w-full"
+					placeholder="Passwort bestätigen"
+					:passwordrules="passwordRules"
+				/>
+				<InputError :message="errors.password_confirmation" />
+			</div>
 
-            <Button
-                type="submit"
-                class="mt-4 w-full"
-                :disabled="processing"
-                data-test="reset-password-button"
-            >
-                <Spinner v-if="processing" />
-                Passwort zurücksetzen
-            </Button>
-        </div>
-    </Form>
+			<Button
+				type="submit"
+				class="mt-4 w-full"
+				:disabled="processing"
+				data-test="reset-password-button"
+			>
+				<Spinner v-if="processing" />
+				Passwort zurücksetzen
+			</Button>
+		</div>
+	</Form>
 </template>

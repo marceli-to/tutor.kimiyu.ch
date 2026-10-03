@@ -1,60 +1,91 @@
 <?php
 
+use App\Lessons\AnswerResult;
 use App\Lessons\ClozeParser;
 
 it('splits text and gaps into segments', function () {
-    expect(ClozeParser::parse('Die Pflanze nimmt [CO₂|CO2] und [Wasser] auf.'))->toBe([
-        ['text' => 'Die Pflanze nimmt '],
-        ['id' => 'g1', 'loesungen' => ['CO₂', 'CO2']],
-        ['text' => ' und '],
-        ['id' => 'g2', 'loesungen' => ['Wasser']],
-        ['text' => ' auf.'],
-    ]);
+	expect(ClozeParser::parse('Die Pflanze nimmt [CO₂|CO2] und [Wasser] auf.'))->toBe([
+		['text' => 'Die Pflanze nimmt '],
+		['id' => 'g1', 'answers' => ['CO₂', 'CO2']],
+		['text' => ' und '],
+		['id' => 'g2', 'answers' => ['Wasser']],
+		['text' => ' auf.'],
+	]);
 });
 
 it('handles gaps at the start and end', function () {
-    expect(ClozeParser::parse('[Licht] ist Energie für [Pflanzen]'))->toBe([
-        ['id' => 'g1', 'loesungen' => ['Licht']],
-        ['text' => ' ist Energie für '],
-        ['id' => 'g2', 'loesungen' => ['Pflanzen']],
-    ]);
+	expect(ClozeParser::parse('[Licht] ist Energie für [Pflanzen]'))->toBe([
+		['id' => 'g1', 'answers' => ['Licht']],
+		['text' => ' ist Energie für '],
+		['id' => 'g2', 'answers' => ['Pflanzen']],
+	]);
 });
 
 it('trims alternatives and drops empty ones', function () {
-    expect(ClozeParser::parse('[ Sauerstoff | O₂ || ]'))->toBe([
-        ['id' => 'g1', 'loesungen' => ['Sauerstoff', 'O₂']],
-    ]);
+	expect(ClozeParser::parse('[ Sauerstoff | O₂ || ]'))->toBe([
+		['id' => 'g1', 'answers' => ['Sauerstoff', 'O₂']],
+	]);
 });
 
 it('skips gap ids that are already taken', function () {
-    $segments = ClozeParser::parse('[a] und [b]', existingIds: ['g1', 'g3']);
+	$segments = ClozeParser::parse('[a] und [b]', existingIds: ['g1', 'g3']);
 
-    expect(array_column(array_filter($segments, fn ($s) => isset($s['id'])), 'id'))->toBe(['g2', 'g4']);
+	expect(array_column(array_filter($segments, fn ($s) => isset($s['id'])), 'id'))->toBe(['g2', 'g4']);
 });
 
 it('rejects an empty gap', function () {
-    ClozeParser::parse('Das ist [ | ] leer.');
+	ClozeParser::parse('Das ist [ | ] leer.');
 })->throws(InvalidArgumentException::class, 'Eine Lücke ist leer');
 
 it('rejects an unclosed bracket', function (string $markup) {
-    ClozeParser::parse($markup);
+	ClozeParser::parse($markup);
 })->with([
-    'offen' => 'Die Pflanze nimmt [CO₂ auf.',
-    'geschlossen' => 'Die Pflanze nimmt CO₂] auf.',
-    'verschachtelt' => 'Die [Pflanze [nimmt]] auf.',
+	'opening only' => 'Die Pflanze nimmt [CO₂ auf.',
+	'closing only' => 'Die Pflanze nimmt CO₂] auf.',
+	'nested' => 'Die [Pflanze [nimmt]] auf.',
 ])->throws(InvalidArgumentException::class);
 
 it('turns segments back into the same markup', function () {
-    $markup = 'Die Pflanze nimmt [Kohlenstoffdioxid|CO₂|CO2] aus der Luft und [Wasser] aus dem Boden.';
+	$markup = 'Die Pflanze nimmt [Kohlenstoffdioxid|CO₂|CO2] aus der Luft und [Wasser] aus dem Boden.';
 
-    expect(ClozeParser::toMarkup(ClozeParser::parse($markup)))->toBe($markup);
+	expect(ClozeParser::toMarkup(ClozeParser::parse($markup)))->toBe($markup);
 });
 
 it('accepts answers regardless of case and extra spaces', function () {
-    $solutions = ['Kohlenstoffdioxid', 'CO₂'];
+	$solutions = ['Kohlenstoffdioxid', 'CO₂'];
 
-    expect(ClozeParser::isCorrect('  kohlenstoffdioxid ', $solutions))->toBeTrue()
-        ->and(ClozeParser::isCorrect('co₂', $solutions))->toBeTrue()
-        ->and(ClozeParser::isCorrect('Sauerstoff', $solutions))->toBeFalse()
-        ->and(ClozeParser::normalize("Rote   \n Blutkörperchen"))->toBe('rote blutkörperchen');
+	expect(ClozeParser::isCorrect('  kohlenstoffdioxid ', $solutions))->toBeTrue()
+		->and(ClozeParser::isCorrect('co₂', $solutions))->toBeTrue()
+		->and(ClozeParser::isCorrect('Sauerstoff', $solutions))->toBeFalse()
+		->and(ClozeParser::normalize("Rote   \n Blutkörperchen"))->toBe('rote blutkörperchen');
+});
+
+it('tells an answer with a missing or wrong accent apart from a wrong one', function (string $answer, array $solutions, AnswerResult $result) {
+	expect(ClozeParser::check($answer, $solutions))->toBe($result)
+		->and(ClozeParser::isCorrect($answer, $solutions))->toBe($result === AnswerResult::Correct);
+})->with([
+	'exact' => ['été', ['été'], AnswerResult::Correct],
+	'case' => ['ÉTÉ', ['été'], AnswerResult::Correct],
+	'missing accents' => ['ete', ['été'], AnswerResult::Almost],
+	'wrong accent' => ['èté', ['été'], AnswerResult::Almost],
+	'grave' => ['a', ['à'], AnswerResult::Almost],
+	'umlaut' => ['Uber', ['über'], AnswerResult::Almost],
+	'accent too many' => ['allée', ['allee'], AnswerResult::Almost],
+	'other alternative exact' => ['co2', ['CO₂', 'CO2'], AnswerResult::Correct],
+	'wrong' => ['parle', ['mangé'], AnswerResult::Wrong],
+	'empty' => ['', ['été'], AnswerResult::Wrong],
+]);
+
+it('counts upper and lower case in a case sensitive cloze', function (string $answer, AnswerResult $result) {
+	expect(ClozeParser::check($answer, ['Das'], caseSensitive: true))->toBe($result)
+		->and(ClozeParser::check($answer, ['Das']))->toBe(AnswerResult::Correct);
+})->with([
+	'exact' => [' Das ', AnswerResult::Correct],
+	'lower case' => ['das', AnswerResult::Wrong],
+	'upper case' => ['DAS', AnswerResult::Wrong],
+]);
+
+it('counts accents and umlauts as mistakes in a case sensitive cloze', function () {
+	expect(ClozeParser::check('fur', ['für'], caseSensitive: true))->toBe(AnswerResult::Wrong)
+		->and(ClozeParser::check('fur', ['für']))->toBe(AnswerResult::Almost);
 });

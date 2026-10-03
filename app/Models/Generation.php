@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Ein API-Call (Analyse, Hero, Prüfung, Reparatur) mit Token-Verbrauch und Kosten.
+ * One API call (analysis, graphic, check, repair) with token usage and cost.
+ * Belongs to the account: if the lesson is deleted with the child, the entry stays with lesson_id = null.
  *
  * @property int $id
- * @property int $lesson_id
+ * @property int $user_id
+ * @property int|null $lesson_id
  * @property string $step
  * @property string $model
  * @property string $status
@@ -25,14 +27,24 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['step', 'model', 'status', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens', 'cost_usd', 'duration_ms', 'error'])]
+#[Fillable(['user_id', 'step', 'model', 'status', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens', 'cost_usd', 'duration_ms', 'error'])]
 class Generation extends Model
 {
-    /**
-     * @return BelongsTo<Lesson, $this>
-     */
-    public function lesson(): BelongsTo
-    {
-        return $this->belongsTo(Lesson::class);
-    }
+	/**
+	 * Soft-deleted lessons too, so the cost page can still name them.
+	 *
+	 * @return BelongsTo<Lesson, $this>
+	 */
+	public function lesson(): BelongsTo
+	{
+		return $this->belongsTo(Lesson::class)->withTrashed();
+	}
+
+	/**
+	 * @return BelongsTo<User, $this>
+	 */
+	public function user(): BelongsTo
+	{
+		return $this->belongsTo(User::class);
+	}
 }

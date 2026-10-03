@@ -2,24 +2,29 @@
 
 namespace App\Jobs;
 
+use App\Actions\Generation\RegenerateQuizQuestions;
 use App\Enums\LessonStatus;
-use App\Lessons\LessonGenerator;
 
+/**
+ * Writes a new quiz for a finished page. A published page stays online meanwhile.
+ */
 class RegenerateQuiz extends LessonStep
 {
-    protected function step(): string
-    {
-        return 'neu-quiz';
-    }
+	protected function step(): string
+	{
+		return 'regenerate-quiz';
+	}
 
-    protected function run(LessonGenerator $generator): void
-    {
-        $generator->regenerateQuiz($this->lesson);
-    }
+	protected function run(): void
+	{
+		app(RegenerateQuizQuestions::class)->handle($this->lesson);
 
-    // Scheitert es, bleibt die Seite wie vorher, auch freigegeben
-    protected function statusAfterFailure(): LessonStatus
-    {
-        return $this->lesson->published_at ? LessonStatus::Published : LessonStatus::Review;
-    }
+		$this->lesson->update(RegenerateGraphic::needsReview());
+	}
+
+	// If it fails, the page stays as before, published too
+	protected function statusAfterFailure(): ?LessonStatus
+	{
+		return null;
+	}
 }

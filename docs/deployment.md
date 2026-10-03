@@ -31,6 +31,16 @@ php artisan optimize
 
 Die gebauten Assets (`public/build`) sind im Git, weil es auf Hostpoint kein Node gibt. Vor jedem Commit mit Frontend-Änderungen also `npm run build`.
 
+### Schemas prüfen
+
+Nach einem Deploy, der Schemas (`App\Lessons\Ai\Schemas`, Fachprofile) oder Modelle (`LESSON_MODEL_*`) ändert, auf dem Server:
+
+```bash
+php artisan lessons:check-schemas
+```
+
+Der Befehl schickt jedes Schema, das die Prompts verwenden, mit dem Modell des jeweiligen Schritts und einem einzigen Ausgabe-Token an die API (kostet zusammen weniger als $0.01). Die API lehnt zu grosse Grammatiken ab («grammar is too large»), und die Grösse in Bytes sagt das nicht zuverlässig voraus. Jede Zeile muss `OK` zeigen; sonst endet der Befehl mit Exit-Code 1 und das betroffene Fachprofil braucht weniger Bausteine.
+
 ## Queue
 
 Hostpoint hat keinen dauerhaften Worker. Ein Cronjob im Hostpoint-Panel startet jede Minute den Scheduler:
@@ -56,6 +66,7 @@ php artisan tinker --execute 'App\Models\User::create(["name" => "Name", "email"
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://tutor.kimiyu.ch`
 - `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`
 - `LESSON_FAKE_AI=false`, `LESSON_CHECK_ENABLED`, `LESSON_DELETE_IMAGES`
+- Optional pro Schritt: `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` und `LESSON_EFFORT_ANALYSIS|MODULES|CHECK|GRAPHIC` (Standard siehe `config/lessons.php`: Module und Prüfung auf Sonnet, Grafik mit Effort `medium`)
 - `MAIL_MAILER=log` (keine E-Mails, Passwort-Reset funktioniert deshalb nicht)
 
 ## Logs und Fehler

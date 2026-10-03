@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Hochgeladenes Foto einer Buchseite. Liegt auf der privaten Disk und wird nach der Analyse gelöscht.
+ * Uploaded photo of a book page. Stored on the private disk and deleted after the analysis.
  *
  * @property int $id
  * @property int $lesson_id
@@ -22,11 +22,11 @@ use Illuminate\Support\Carbon;
 #[Fillable(['path', 'mime_type', 'size', 'position'])]
 class LessonImage extends Model
 {
-    /**
-     * @return BelongsTo<Lesson, $this>
-     */
-    public function lesson(): BelongsTo
-    {
-        return $this->belongsTo(Lesson::class);
-    }
+	/**
+	 * @return BelongsTo<Lesson, $this>
+	 */
+	public function lesson(): BelongsTo
+	{
+		return $this->belongsTo(Lesson::class);
+	}
 }

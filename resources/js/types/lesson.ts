@@ -1,107 +1,217 @@
-// Inhalt einer Lernseite, Schema-Version 1 (siehe app/Lessons/ContentValidator.php)
+// Content of a lesson, schema version 1 (see app/Lessons/ContentValidator.php)
 
 export type CategoryId = 'cat1' | 'cat2' | 'cat3';
 
-export type LessonBlock =
-    | { typ: 'absatz'; text: string }
-    | { typ: 'formel'; text: string; zusatz?: string | null }
-    | { typ: 'fakten'; eintraege: { titel: string; text: string }[] }
-    | {
-          typ: 'spalten';
-          eintraege: {
-              titel: string;
-              kategorie: CategoryId;
-              absaetze: string[];
-          }[];
-      }
-    | { typ: 'box'; titel: string; absaetze: string[] };
+// Origin of a block: from the photos or added from subject knowledge (missing on old pages)
+export type Origin = { origin?: 'photo' | 'added' };
 
-export type QuizQuestion = {
-    id: string;
-    frage: string;
-    optionen: string[];
-    loesung: number;
-    tipp?: string | null;
-    erklaerung: string;
+export type LessonBlock = Origin &
+	(
+		| { type: 'paragraph'; text: string }
+		| { type: 'formula'; text: string; addendum?: string | null }
+		| { type: 'facts'; entries: { title: string; text: string }[] }
+		| {
+				type: 'columns';
+				entries: {
+					title: string;
+					category: CategoryId;
+					paragraphs: string[];
+				}[];
+		  }
+		| { type: 'box'; title: string; paragraphs: string[] }
+		// Graphic 2 or 3 at this place; graphic 1 is at the top
+		| { type: 'graphic'; number: number }
+		// Languages profile: word list and verb table
+		| {
+				type: 'vocabulary';
+				title?: string | null;
+				entries: {
+					foreign: string;
+					german: string;
+					info?: string | null;
+				}[];
+		  }
+		| {
+				type: 'conjugation';
+				verb: string;
+				tense: string;
+				forms: { person: string; form: string }[];
+		  }
+		// Math profile: a task calculated step by step
+		| {
+				type: 'worked_solution';
+				task: string;
+				steps: { text: string; reason?: string | null }[];
+				result: string;
+		  }
+		// Geometry profile: a figure the app draws from points, coordinates 0–100
+		| ({ type: 'figure' } & FigureData)
+	);
+
+export type FigureData = {
+	title?: string | null;
+	points: { id: string; x: number; y: number; label?: string | null }[];
+	lines: {
+		from: string;
+		to: string;
+		label?: string | null;
+		style: 'solid' | 'dashed';
+	}[];
+	angles: {
+		vertex: string;
+		from: string;
+		to: string;
+		label?: string | null;
+	}[];
+};
+
+export type QuizQuestion = Origin & {
+	id: string;
+	question: string;
+	options: string[];
+	answer: number;
+	hint?: string | null;
+	explanation: string;
 };
 
 export type SortModuleData = {
-    anleitung?: string | null;
-    kategorien: { id: CategoryId; label: string; sub?: string | null }[];
-    begriffe: {
-        id: string;
-        text: string;
-        kategorie: CategoryId;
-        erklaerung?: string | null;
-    }[];
+	instructions?: string | null;
+	categories: { id: CategoryId; label: string; sub?: string | null }[];
+	terms: (Origin & {
+		id: string;
+		text: string;
+		category: CategoryId;
+		explanation?: string | null;
+	})[];
 };
 
 export type FlashcardModuleData = {
-    anleitung?: string | null;
-    eintraege: { id: string; vorne: string; hinten: string }[];
+	instructions?: string | null;
+	entries: (Origin & { id: string; front: string; back: string })[];
 };
 
-export type ClozeSegment =
-    | { text: string }
-    | { id: string; loesungen: string[] };
+export type ClozeSegment = { text: string } | { id: string; answers: string[] };
 
-export type ClozeModuleData = {
-    anleitung?: string | null;
-    segmente: ClozeSegment[];
+export type ClozeModuleData = Origin & {
+	instructions?: string | null;
+	segments: ClozeSegment[];
+	// German spelling gaps: upper and lower case count; missing elsewhere
+	case_sensitive?: boolean | null;
 };
+
+// Math profile: a task the child calculates; the server checks the answer (App\Lessons\ExerciseAnswer)
+export type Exercise = {
+	id: string;
+	question: string;
+	kind: 'number' | 'fraction' | 'text';
+	answer: string;
+	tolerance?: number | null;
+	unit?: string | null;
+	hint?: string | null;
+	solution_path: string;
+};
+
+export type ExerciseModuleData = {
+	instructions?: string | null;
+	entries: Exercise[];
+};
+
+// German profile: a sentence with one wrong word; the server checks the answer (App\Lessons\MistakeAnswer)
+export type Mistake = {
+	id: string;
+	sentence: string;
+	// 0-based index of the wrong word, words split on spaces; null only in the edit view until a word is tapped
+	mistake_word: number | null;
+	correction: string;
+	explanation: string;
+};
+
+export type MistakeModuleData = {
+	instructions?: string | null;
+	entries: Mistake[];
+};
+
+// Answer to a sentence of «find_the_mistake»: the tapped word and its correction
+export type MistakeAnswerValue = { word: number; correction: string };
 
 export type LessonContent = {
-    meta: {
-        titel: string;
-        anleitung: string;
-        thema: string;
-        kernidee: string;
-        emoji: string;
-        palette: string;
-    };
-    abschnitte: { titel: string; bloecke: LessonBlock[] }[];
-    probieren: {
-        experimente: string[];
-        alltagsvergleich?: string | null;
-    } | null;
-    module: {
-        quiz: QuizQuestion[];
-        sortieren: SortModuleData | null;
-        karten: FlashcardModuleData | null;
-        lueckentext: ClozeModuleData | null;
-    };
-    nachdenken: { frage: string };
+	meta: {
+		title: string;
+		instructions: string;
+		topic: string;
+		key_idea: string;
+		emoji: string;
+		palette: string;
+	};
+	sections: { title: string; blocks: LessonBlock[] }[];
+	try_it: {
+		experiments: string[];
+		everyday_comparison?: string | null;
+	} | null;
+	modules: {
+		// null if the parents didn't want a quiz
+		quiz: QuizQuestion[] | null;
+		sorting: SortModuleData | null;
+		flashcards: FlashcardModuleData | null;
+		cloze: ClozeModuleData | null;
+		// Only in the math profile; missing on older pages
+		exercises?: ExerciseModuleData | null;
+		// Only in the german profile; missing on older pages
+		find_the_mistake?: MistakeModuleData | null;
+	};
+	reflect: { question: string };
 };
 
 export type PaletteColors = Record<
-    | 'accent'
-    | 'accent-bg'
-    | 'cat1'
-    | 'cat1-bg'
-    | 'cat2'
-    | 'cat2-bg'
-    | 'cat3'
-    | 'cat3-bg',
-    string
+	| 'accent'
+	| 'accent-bg'
+	| 'cat1'
+	| 'cat1-bg'
+	| 'cat2'
+	| 'cat2-bg'
+	| 'cat3'
+	| 'cat3-bg',
+	string
 >;
 
 export type Palette = {
-    label: string;
-    light: PaletteColors;
-    dark: PaletteColors;
+	label: string;
+	light: PaletteColors;
+	dark: PaletteColors;
 };
 
-export type LessonHero = {
-    url: string;
-    beschreibung: string;
+export type LessonGraphic = {
+	url: string;
+	description: string;
 };
 
-// Ergebnis einer einzelnen Antwort, für den Lernstand (Phase 4)
+// Finished graphics by position (1 at the top, 2 and 3 at their block in the content)
+export type LessonGraphics = Partial<Record<number, LessonGraphic>>;
+
+// Parents only: state of every graphic, including failed ones
+export type GraphicState = {
+	number: number;
+	error: string | null;
+	canRegenerate: boolean;
+	// Hidden by the parents in the edit view
+	hidden: boolean;
+};
+
+// Result of a single answer, for the progress (phase 4)
 export type ModuleAnswer = {
-    module: 'quiz' | 'sortieren' | 'lueckentext';
-    itemId: string;
-    // Gewählte Option (Quiz), gewählter Korb (Sortieren) oder Eingabe (Lückentext);
-    // der Server prüft selbst, ob sie stimmt
-    answer: number | string;
-    correct: boolean;
+	module: 'quiz' | 'sorting' | 'cloze' | 'exercises' | 'find_the_mistake';
+	itemId: string;
+	// Chosen option (quiz), chosen basket (sorting), input (cloze, exercises) or tapped word
+	// with its correction (find_the_mistake); the server checks itself whether it is right
+	answer: number | string | MistakeAnswerValue;
+	correct: boolean;
 };
+
+// Subject profile of a lesson (see app/Lessons/Profile.php)
+export type LessonProfile =
+	| 'science'
+	| 'general'
+	| 'languages'
+	| 'math'
+	| 'geometry'
+	| 'german';

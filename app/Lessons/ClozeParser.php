@@ -3,99 +3,132 @@
 namespace App\Lessons;
 
 use InvalidArgumentException;
+use Normalizer;
 
 /**
- * Wandelt Lückentext-Markup («Die Pflanze nimmt [CO₂|CO2] auf.») in Segmente um und zurück.
+ * Converts cloze markup («Die Pflanze nimmt [CO₂|CO2] auf.») into segments and back.
  *
- * Segmente: ['text' => '…'] oder ['id' => 'g1', 'loesungen' => ['CO₂', 'CO2']].
+ * Segments: ['text' => '…'] or ['id' => 'g1', 'answers' => ['CO₂', 'CO2']].
  */
 class ClozeParser
 {
-    /**
-     * @param  list<string>  $existingIds  IDs, die nicht vergeben werden dürfen
-     * @return list<array<string, string|list<string>>>
-     */
-    public static function parse(string $markup, array $existingIds = []): array
-    {
-        $segments = [];
-        $used = array_flip($existingIds);
-        $counter = 0;
+	/**
+	 * @param  list<string>  $existingIds  IDs that must not be assigned
+	 * @return list<array<string, string|list<string>>>
+	 */
+	public static function parse(string $markup, array $existingIds = []): array
+	{
+		$segments = [];
+		$used = array_flip($existingIds);
+		$counter = 0;
 
-        $parts = preg_split('/(\[[^\[\]]*\])/u', $markup, -1, PREG_SPLIT_DELIM_CAPTURE);
+		$parts = preg_split('/(\[[^\[\]]*\])/u', $markup, -1, PREG_SPLIT_DELIM_CAPTURE);
 
-        if ($parts === false) {
-            throw new InvalidArgumentException('Der Lückentext enthält ungültige Zeichen.');
-        }
+		if ($parts === false) {
+			throw new InvalidArgumentException('Der Lückentext enthält ungültige Zeichen.');
+		}
 
-        foreach ($parts as $part) {
-            if ($part === '') {
-                continue;
-            }
+		foreach ($parts as $part) {
+			if ($part === '') {
+				continue;
+			}
 
-            if (str_starts_with($part, '[') && str_ends_with($part, ']')) {
-                $solutions = array_values(array_filter(
-                    array_map('trim', explode('|', mb_substr($part, 1, -1))),
-                    fn (string $s) => $s !== '',
-                ));
+			if (str_starts_with($part, '[') && str_ends_with($part, ']')) {
+				$solutions = array_values(array_filter(
+					array_map('trim', explode('|', mb_substr($part, 1, -1))),
+					fn (string $s) => $s !== '',
+				));
 
-                if ($solutions === []) {
-                    throw new InvalidArgumentException('Eine Lücke ist leer: '.$part);
-                }
+				if ($solutions === []) {
+					throw new InvalidArgumentException('Eine Lücke ist leer: '.$part);
+				}
 
-                do {
-                    $id = 'g'.++$counter;
-                } while (isset($used[$id]));
-                $used[$id] = true;
+				do {
+					$id = 'g'.++$counter;
+				} while (isset($used[$id]));
+				$used[$id] = true;
 
-                $segments[] = ['id' => $id, 'loesungen' => $solutions];
+				$segments[] = ['id' => $id, 'answers' => $solutions];
 
-                continue;
-            }
+				continue;
+			}
 
-            if (str_contains($part, '[') || str_contains($part, ']')) {
-                throw new InvalidArgumentException('Eine eckige Klammer ist nicht geschlossen.');
-            }
+			if (str_contains($part, '[') || str_contains($part, ']')) {
+				throw new InvalidArgumentException('Eine eckige Klammer ist nicht geschlossen.');
+			}
 
-            $segments[] = ['text' => $part];
-        }
+			$segments[] = ['text' => $part];
+		}
 
-        return $segments;
-    }
+		return $segments;
+	}
 
-    /**
-     * @param  list<array<string, mixed>>  $segments
-     */
-    public static function toMarkup(array $segments): string
-    {
-        return implode('', array_map(
-            fn (array $s) => isset($s['loesungen'])
-                ? '['.implode('|', $s['loesungen']).']'
-                : $s['text'],
-            $segments,
-        ));
-    }
+	/**
+	 * @param  list<array<string, mixed>>  $segments
+	 */
+	public static function toMarkup(array $segments): string
+	{
+		return implode('', array_map(
+			fn (array $s) => isset($s['answers'])
+				? '['.implode('|', $s['answers']).']'
+				: $s['text'],
+			$segments,
+		));
+	}
 
-    /**
-     * Gleiche Normalisierung wie im Frontend: trimmen, Kleinbuchstaben, Leerraum zusammenfassen.
-     */
-    public static function normalize(string $answer): string
-    {
-        return preg_replace('/\s+/u', ' ', mb_strtolower(trim($answer)));
-    }
+	/**
+	 * Same normalisation as in the frontend: trim, lower case (unless case counts), collapse whitespace.
+	 */
+	public static function normalize(string $answer, bool $caseSensitive = false): string
+	{
+		$answer = trim($answer);
 
-    /**
-     * @param  list<string>  $solutions
-     */
-    public static function isCorrect(string $answer, array $solutions): bool
-    {
-        $normalized = self::normalize($answer);
+		return preg_replace('/\s+/u', ' ', $caseSensitive ? $answer : mb_strtolower($answer));
+	}
 
-        foreach ($solutions as $solution) {
-            if (self::normalize($solution) === $normalized) {
-                return true;
-            }
-        }
+	/**
+	 * Correct as in normalize(); almost if it only matches without accents (é/e, à/a, ü/u).
+	 * German spelling gaps («cloze.case_sensitive») are exact: case counts and there is no almost.
+	 *
+	 * @param  list<string>  $solutions
+	 */
+	public static function check(string $answer, array $solutions, bool $caseSensitive = false): AnswerResult
+	{
+		$normalized = self::normalize($answer, $caseSensitive);
+		$solutions = array_map(fn (string $solution) => self::normalize($solution, $caseSensitive), $solutions);
 
-        return false;
-    }
+		if (in_array($normalized, $solutions, true)) {
+			return AnswerResult::Correct;
+		}
+
+		if ($caseSensitive) {
+			return AnswerResult::Wrong;
+		}
+
+		$withoutAccents = self::withoutAccents($normalized);
+
+		foreach ($solutions as $solution) {
+			if ($withoutAccents !== '' && self::withoutAccents($solution) === $withoutAccents) {
+				return AnswerResult::Almost;
+			}
+		}
+
+		return AnswerResult::Wrong;
+	}
+
+	/**
+	 * @param  list<string>  $solutions
+	 */
+	public static function isCorrect(string $answer, array $solutions): bool
+	{
+		return self::check($answer, $solutions)->isCorrect();
+	}
+
+	/**
+	 * Same as in the frontend: decompose (NFD) and drop the combining marks. Not NFKD, so «CO₂» stays apart from «CO2».
+	 */
+	private static function withoutAccents(string $value): string
+	{
+		return (string) preg_replace('/\p{Mn}/u', '', (string) Normalizer::normalize($value, Normalizer::FORM_D));
+	}
 }

@@ -6,24 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('lessons', function (Blueprint $table) {
-            // Eltern können die interaktive Grafik abwählen, z. B. bei reinen Rechenverfahren
-            $table->boolean('with_hero')->default(true)->after('notes');
-        });
-    }
+	/**
+	 * Run the migrations.
+	 */
+	public function up(): void
+	{
+		Schema::table('lessons', function (Blueprint $table) {
+			// Parents can deselect the interactive graphic, e.g. for pure calculation methods
+			$table->boolean('with_hero')->default(true)->after('notes');
+		});
+	}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('lessons', function (Blueprint $table) {
-            $table->dropColumn('with_hero');
-        });
-    }
+	/**
+	 * Reverse the migrations.
+	 */
+	public function down(): void
+	{
+		Schema::table('lessons', function (Blueprint $table) {
+			$table->dropColumn('with_hero');
+		});
+	}
 };

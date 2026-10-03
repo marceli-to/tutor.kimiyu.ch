@@ -1,0 +1,363 @@
+{
+    "meta": {
+        "title": "Warum sind diese Winkel gleich gross?",
+        "instructions": "Dreh die Gerade s und schau, welche Winkel an den beiden Parallelen immer gleich gross bleiben.",
+        "topic": "Winkel an Parallelen",
+        "key_idea": "Schneidet eine Gerade zwei Parallelen, entstehen an beiden Schnittpunkten dieselben Winkel: Stufenwinkel und Wechselwinkel sind gleich gross, Nebenwinkel ergeben zusammen 180°.",
+        "emoji": "📐",
+        "palette": "blue"
+    },
+    "sections": [
+        {
+            "title": "Zwei Parallelen, eine Gerade",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": "Die Geraden g und h sind parallel: Sie haben überall den gleichen Abstand und schneiden sich nie. Die Gerade s schneidet beide, in den Punkten A und B. An jedem Schnittpunkt entstehen vier Winkel, zusammen also acht. Weil g und h in die gleiche Richtung laufen, trifft s beide unter dem gleichen Winkel.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "figure",
+                    "title": "Die Gerade s schneidet die Parallelen g und h",
+                    "points": [
+                        {
+                            "id": "G1",
+                            "x": 5,
+                            "y": 30,
+                            "label": null
+                        },
+                        {
+                            "id": "G2",
+                            "x": 95,
+                            "y": 30,
+                            "label": null
+                        },
+                        {
+                            "id": "H1",
+                            "x": 5,
+                            "y": 70,
+                            "label": null
+                        },
+                        {
+                            "id": "H2",
+                            "x": 95,
+                            "y": 70,
+                            "label": null
+                        },
+                        {
+                            "id": "A",
+                            "x": 58,
+                            "y": 30,
+                            "label": "A"
+                        },
+                        {
+                            "id": "B",
+                            "x": 34.9,
+                            "y": 70,
+                            "label": "B"
+                        },
+                        {
+                            "id": "T1",
+                            "x": 69.5,
+                            "y": 10,
+                            "label": null
+                        },
+                        {
+                            "id": "T2",
+                            "x": 23.4,
+                            "y": 90,
+                            "label": null
+                        }
+                    ],
+                    "lines": [
+                        {
+                            "from": "G1",
+                            "to": "G2",
+                            "label": "g",
+                            "style": "solid"
+                        },
+                        {
+                            "from": "H1",
+                            "to": "H2",
+                            "label": "h",
+                            "style": "solid"
+                        },
+                        {
+                            "from": "T2",
+                            "to": "T1",
+                            "label": "s",
+                            "style": "solid"
+                        }
+                    ],
+                    "angles": [
+                        {
+                            "vertex": "A",
+                            "from": "G1",
+                            "to": "B",
+                            "label": "α"
+                        },
+                        {
+                            "vertex": "A",
+                            "from": "G2",
+                            "to": "B",
+                            "label": "δ"
+                        },
+                        {
+                            "vertex": "B",
+                            "from": "H1",
+                            "to": "T2",
+                            "label": "β"
+                        },
+                        {
+                            "vertex": "B",
+                            "from": "H2",
+                            "to": "A",
+                            "label": "γ"
+                        }
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "box",
+                    "title": "So benennst du Winkel",
+                    "paragraphs": [
+                        "Winkel bezeichnet man mit griechischen Buchstaben: $\\alpha$ (Alpha), $\\beta$ (Beta), $\\gamma$ (Gamma), $\\delta$ (Delta).",
+                        "In der Figur ist $\\alpha = 60°$. Die anderen Winkel kannst du daraus ableiten, ohne zu messen."
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Stufenwinkel, Wechselwinkel, Nebenwinkel",
+            "blocks": [
+                {
+                    "type": "box",
+                    "title": "Stufenwinkel sind gleich gross",
+                    "paragraphs": [
+                        "$\\alpha$ und $\\beta$ liegen auf der gleichen Seite von s und jeweils links unterhalb der Parallelen, wie auf zwei Stufen einer Treppe. Schiebst du die Gerade g entlang von s nach unten auf h, liegt $\\alpha$ genau auf $\\beta$. Zusammen mit s bilden sie ein F."
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "box",
+                    "title": "Wechselwinkel sind gleich gross",
+                    "paragraphs": [
+                        "$\\alpha$ und $\\gamma$ liegen zwischen den Parallelen, aber auf verschiedenen Seiten von s: $\\alpha$ links unterhalb von g, $\\gamma$ rechts oberhalb von h. Sie bilden ein Z. Drehst du die Figur um eine halbe Drehung, liegt $\\gamma$ genau auf $\\alpha$."
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "formula",
+                    "text": "$\\alpha + \\delta = 180°$",
+                    "addendum": "$\\alpha$ und $\\delta$ sind Nebenwinkel: Sie liegen nebeneinander auf der Geraden g und ergänzen sich zu einem gestreckten Winkel.",
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Winkel berechnen",
+            "blocks": [
+                {
+                    "type": "worked_solution",
+                    "task": "Zwei Parallelen werden von einer Geraden geschnitten. Der Winkel $\\alpha$ misst 72°. Wie gross sind $\\beta$ (Stufenwinkel), $\\gamma$ (Wechselwinkel) und $\\delta$ (Nebenwinkel von $\\alpha$)?",
+                    "steps": [
+                        {
+                            "text": "$\\beta = \\alpha = 72°$",
+                            "reason": "Stufenwinkel an Parallelen sind gleich gross."
+                        },
+                        {
+                            "text": "$\\gamma = \\alpha = 72°$",
+                            "reason": "Wechselwinkel an Parallelen sind gleich gross."
+                        },
+                        {
+                            "text": "$\\delta = 180° - \\alpha = 180° - 72° = 108°$",
+                            "reason": "Nebenwinkel ergänzen sich zu 180°."
+                        },
+                        {
+                            "text": "Probe: $72° + 108° = 180°$",
+                            "reason": "Die beiden Winkel auf einer Seite der Geraden g ergeben zusammen einen gestreckten Winkel."
+                        }
+                    ],
+                    "result": "$\\beta = 72°$, $\\gamma = 72°$ und $\\delta = 108°$.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "paragraph",
+                    "text": "Achtung: Diese Regeln gelten nur, wenn g und h wirklich parallel sind. Sind sie es nicht, sind auch Stufenwinkel und Wechselwinkel verschieden gross.",
+                    "origin": "added"
+                }
+            ]
+        }
+    ],
+    "try_it": null,
+    "modules": {
+        "quiz": [
+            {
+                "id": "q1",
+                "question": "Die Geraden g und h sind parallel. Ein Stufenwinkel misst 65°. Wie gross ist der andere?",
+                "options": ["115°", "65°", "25°", "130°"],
+                "answer": 1,
+                "hint": "Stufenwinkel liegen an beiden Parallelen an der gleichen Stelle.",
+                "explanation": "Stufenwinkel an Parallelen sind gleich gross, also ebenfalls 65°. 115° wäre der Nebenwinkel.",
+                "origin": "photo"
+            },
+            {
+                "id": "q2",
+                "question": "Wie viel ergeben zwei Nebenwinkel zusammen?",
+                "options": ["90°", "360°", "180°", "120°"],
+                "answer": 2,
+                "hint": "Nebenwinkel liegen zusammen auf einer Geraden.",
+                "explanation": "Zusammen bilden sie einen gestreckten Winkel: $180°$.",
+                "origin": "photo"
+            },
+            {
+                "id": "q3",
+                "question": "Welche Form bilden zwei Wechselwinkel?",
+                "options": ["Ein Z", "Ein F", "Ein U", "Ein X"],
+                "answer": 0,
+                "hint": "Sie liegen auf verschiedenen Seiten der schneidenden Geraden.",
+                "explanation": "Wechselwinkel liegen schräg gegenüber, die Parallelen und die Gerade bilden dabei ein Z. Stufenwinkel bilden ein F.",
+                "origin": "added"
+            },
+            {
+                "id": "q4",
+                "question": "$\\alpha = 40°$. Wie gross ist sein Nebenwinkel $\\delta$?",
+                "options": ["$40°$", "$50°$", "$320°$", "$140°$"],
+                "answer": 3,
+                "hint": "Nebenwinkel ergänzen sich zu 180°.",
+                "explanation": "$180° - 40° = 140°$. 50° wäre die Ergänzung zu 90°.",
+                "origin": "photo"
+            },
+            {
+                "id": "q5",
+                "question": "Wann sind Stufenwinkel gleich gross?",
+                "options": [
+                    "Immer, wenn eine Gerade zwei andere schneidet",
+                    "Nur, wenn die beiden geschnittenen Geraden parallel sind",
+                    "Nur, wenn die schneidende Gerade senkrecht steht",
+                    "Nur bei spitzen Winkeln"
+                ],
+                "answer": 1,
+                "hint": "Denk an die Figur: Was müssen g und h sein?",
+                "explanation": "Die Regel gilt nur an Parallelen. Schneiden sich g und h irgendwo, sind die Stufenwinkel verschieden gross.",
+                "origin": "photo"
+            }
+        ],
+        "sorting": null,
+        "flashcards": {
+            "instructions": "Erst überlegen, dann umdrehen.",
+            "entries": [
+                {
+                    "id": "f1",
+                    "front": "Stufenwinkel",
+                    "back": "Liegen an zwei Parallelen auf der gleichen Seite der schneidenden Geraden an der gleichen Stelle (Form F). Sie sind gleich gross.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "f2",
+                    "front": "Wechselwinkel",
+                    "back": "Liegen an zwei Parallelen auf verschiedenen Seiten der schneidenden Geraden, schräg gegenüber (Form Z). Sie sind gleich gross.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "f3",
+                    "front": "Nebenwinkel",
+                    "back": "Liegen nebeneinander an einer Geraden und ergänzen sich zu 180°.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "f4",
+                    "front": "Scheitelwinkel",
+                    "back": "Liegen sich an einem Schnittpunkt gegenüber und sind gleich gross.",
+                    "origin": "added"
+                },
+                {
+                    "id": "f5",
+                    "front": "Parallele Geraden",
+                    "back": "Haben überall den gleichen Abstand und schneiden sich nie. Man schreibt $g \\parallel h$.",
+                    "origin": "photo"
+                }
+            ]
+        },
+        "cloze": {
+            "instructions": "Ergänze die Lücken.",
+            "segments": [
+                {
+                    "text": "Schneidet eine Gerade zwei Parallelen, sind Stufenwinkel und "
+                },
+                {
+                    "id": "g1",
+                    "answers": ["Wechselwinkel"]
+                },
+                {
+                    "text": " gleich gross. Zwei Nebenwinkel ergeben zusammen "
+                },
+                {
+                    "id": "g2",
+                    "answers": ["180°", "180", "180 Grad"]
+                },
+                {
+                    "text": ". Misst ein Winkel 70°, so misst sein Nebenwinkel "
+                },
+                {
+                    "id": "g3",
+                    "answers": ["110°", "110", "110 Grad"]
+                },
+                {
+                    "text": "."
+                }
+            ],
+            "origin": "photo"
+        },
+        "exercises": {
+            "instructions": "Die Geraden g und h sind parallel. Gib die Winkel in Grad an, das Zeichen ° darfst du weglassen.",
+            "entries": [
+                {
+                    "id": "a1",
+                    "question": "$\\alpha = 55°$. Wie gross ist der Stufenwinkel $\\beta$?",
+                    "kind": "number",
+                    "answer": "55",
+                    "tolerance": null,
+                    "unit": "°",
+                    "hint": "Stufenwinkel an Parallelen sind gleich gross.",
+                    "solution_path": "$\\beta = \\alpha = 55°$, weil Stufenwinkel an Parallelen gleich gross sind."
+                },
+                {
+                    "id": "a2",
+                    "question": "$\\alpha = 55°$. Wie gross ist der Nebenwinkel $\\delta$?",
+                    "kind": "number",
+                    "answer": "125",
+                    "tolerance": null,
+                    "unit": "°",
+                    "hint": "Nebenwinkel ergänzen sich zu 180°.",
+                    "solution_path": "$\\delta = 180° - 55° = 125°$."
+                },
+                {
+                    "id": "a3",
+                    "question": "Ein Wechselwinkel misst 118°. Wie gross ist der andere?",
+                    "kind": "number",
+                    "answer": "118",
+                    "tolerance": null,
+                    "unit": "°",
+                    "hint": "Wechselwinkel bilden ein Z und sind an Parallelen gleich gross.",
+                    "solution_path": "Wechselwinkel an Parallelen sind gleich gross: $118°$."
+                },
+                {
+                    "id": "a4",
+                    "question": "$\\gamma$ ist Wechselwinkel zu $\\alpha$ und misst 47°. Wie gross ist der Nebenwinkel von $\\alpha$?",
+                    "kind": "number",
+                    "answer": "133",
+                    "tolerance": null,
+                    "unit": "°",
+                    "hint": "Rechne zuerst $\\alpha$ aus.",
+                    "solution_path": "$\\alpha = \\gamma = 47°$ (Wechselwinkel). Nebenwinkel: $180° - 47° = 133°$."
+                }
+            ]
+        },
+        "find_the_mistake": null
+    },
+    "reflect": {
+        "question": "Woran erkennst du auf einem Stadtplan, ob zwei Strassen parallel sind, wenn eine dritte Strasse beide kreuzt?"
+    }
+}

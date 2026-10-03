@@ -7,82 +7,90 @@ import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 
 export default defineConfig({
-    plugins: lazyPlugins(() => [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.ts'],
-            refresh: true,
-            fonts: [
-                bunny('Atkinson Hyperlegible', {
-                    weights: [400, 700],
-                    styles: ['normal', 'italic'],
-                }),
-                bunny('Bricolage Grotesque', {
-                    weights: [500, 700],
-                }),
-            ],
-        }),
-        inertia(),
-        tailwindcss(),
-        vue({
-            template: {
-                transformAssetUrls: {
-                    base: null,
-                    includeAbsolute: false,
-                },
-            },
-        }),
-        wayfinder({
-            formVariants: true,
-        }),
-    ]),
-    server: {
-        watch: {
-            ignored: [
-                '**/.agents/**',
-                '**/.claude/**',
-                '**/.cursor/**',
-                '**/.junie/**',
-                '**/vendor/**',
-            ],
-        },
-    },
-    lint: {
-        ignorePatterns: [
-            'docs/**',
-            'vendor/**',
-            'node_modules/**',
-            'public/**',
-            'bootstrap/ssr/**',
-            'tailwind.config.js',
-            'resources/js/actions/**',
-            'resources/js/components/ui/*',
-            'resources/js/routes/**',
-            'resources/js/wayfinder/**',
-        ],
-        options: {
-            denyWarnings: true,
-            typeAware: true,
-        },
-    },
-    fmt: {
-        printWidth: 80,
-        tabWidth: 4,
-        singleQuote: true,
-        semi: true,
-        singleAttributePerLine: false,
-        htmlWhitespaceSensitivity: 'css',
-        ignorePatterns: [
-            '.github/**',
-            'docs/**',
-            'claude-code-prompt-lernseiten-app.md',
-            'public/build/**',
-            'composer.json',
-            'resources/js/components/ui/*',
-            'resources/views/mail/*',
-        ],
-        sortTailwindcss: {
-            functions: ['clsx', 'cn', 'cva'],
-            stylesheet: 'resources/css/app.css',
-        },
-    },
+	plugins: lazyPlugins(() => [
+		laravel({
+			input: ['resources/css/app.css', 'resources/js/app.ts'],
+			refresh: true,
+			fonts: [
+				bunny('Atkinson Hyperlegible', {
+					weights: [400, 700],
+					styles: ['normal', 'italic'],
+				}),
+				bunny('Bricolage Grotesque', {
+					weights: [500, 700],
+				}),
+			],
+		}),
+		inertia(),
+		tailwindcss(),
+		vue({
+			template: {
+				transformAssetUrls: {
+					base: null,
+					includeAbsolute: false,
+				},
+			},
+		}),
+		wayfinder({
+			formVariants: true,
+		}),
+	]),
+	server: {
+		watch: {
+			ignored: [
+				'**/.agents/**',
+				'**/.claude/**',
+				'**/.cursor/**',
+				'**/.junie/**',
+				'**/vendor/**',
+			],
+		},
+	},
+	lint: {
+		ignorePatterns: [
+			'docs/**',
+			'vendor/**',
+			'node_modules/**',
+			'public/**',
+			'bootstrap/ssr/**',
+			'tailwind.config.js',
+			'resources/js/actions/**',
+			'resources/js/components/ui/*',
+			'resources/js/routes/**',
+			'resources/js/wayfinder/**',
+		],
+		options: {
+			denyWarnings: true,
+			typeAware: true,
+		},
+	},
+	fmt: {
+		printWidth: 80,
+		tabWidth: 4,
+		useTabs: true,
+		singleQuote: true,
+		semi: true,
+		singleAttributePerLine: false,
+		htmlWhitespaceSensitivity: 'css',
+		ignorePatterns: [
+			'.github/**',
+			'docs/**',
+			'claude-code-prompt-lernseiten-app.md',
+			'public/build/**',
+			'composer.json',
+			'resources/js/components/ui/*',
+			'resources/views/mail/*',
+		],
+		// JSON, YAML and Markdown keep spaces (YAML cannot use tabs).
+		overrides: [
+			{
+				files: ['**/*.json', '**/*.yaml', '**/*.yml', '**/*.md'],
+				options: { useTabs: false },
+			},
+		],
+		sortTailwindcss: {
+			functions: ['clsx', 'cn', 'cva'],
+			stylesheet: 'resources/css/app.css',
+		},
+	},
 });

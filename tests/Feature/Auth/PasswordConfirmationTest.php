@@ -9,25 +9,25 @@ use Tests\TestCase;
 
 class PasswordConfirmationTest extends TestCase
 {
-    use RefreshDatabase;
+	use RefreshDatabase;
 
-    public function test_confirm_password_screen_can_be_rendered()
-    {
-        $user = User::factory()->create();
+	public function test_confirm_password_screen_can_be_rendered()
+	{
+		$user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get(route('password.confirm'));
+		$response = $this->actingAs($user)->get(route('password.confirm'));
 
-        $response->assertOk();
+		$response->assertOk();
 
-        $response->assertInertia(fn (Assert $page) => $page
-            ->component('auth/ConfirmPassword'),
-        );
-    }
+		$response->assertInertia(fn (Assert $page) => $page
+			->component('auth/ConfirmPassword'),
+		);
+	}
 
-    public function test_password_confirmation_requires_authentication()
-    {
-        $response = $this->get(route('password.confirm'));
+	public function test_password_confirmation_requires_authentication()
+	{
+		$response = $this->get(route('password.confirm'));
 
-        $response->assertRedirect(route('login'));
-    }
+		$response->assertRedirect(route('login'));
+	}
 }

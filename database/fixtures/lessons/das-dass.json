@@ -1,0 +1,377 @@
+{
+    "meta": {
+        "title": "Das oder dass – welches passt?",
+        "instructions": "Lerne die Ersatzprobe: Wenn du «dieses», «jenes» oder «welches» einsetzen kannst, schreibst du «das».",
+        "topic": "das und dass",
+        "key_idea": "«das» ist Artikel oder Pronomen und lässt sich durch «dieses», «jenes» oder «welches» ersetzen; «dass» ist eine Konjunktion, leitet einen Nebensatz ein und lässt sich nicht ersetzen.",
+        "emoji": "✏️",
+        "palette": "violet"
+    },
+    "sections": [
+        {
+            "title": "Die Ersatzprobe",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": "«das» und «dass» klingen gleich, aber sie haben ganz verschiedene Aufgaben im Satz. Zum Glück gibt es einen einfachen Test, mit dem du fast immer richtig entscheidest: die Ersatzprobe.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "box",
+                    "title": "So geht die Ersatzprobe",
+                    "paragraphs": [
+                        "Setz an der Stelle «dieses», «jenes» oder «welches» ein. Passt eines davon, schreibst du «das» mit einem s. Passt keines, schreibst du «dass».",
+                        "Das Velo ist neu. → Dieses Velo ist neu. ✔ also «das»",
+                        "Das Buch, das ich lese, ist spannend. → Das Buch, welches ich lese … ✔ also «das»",
+                        "Ich hoffe, dass es klappt. → Ich hoffe, dieses es klappt. ✘ also «dass»"
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Drei Mal «das», ein Mal «dass»",
+            "blocks": [
+                {
+                    "type": "facts",
+                    "entries": [
+                        {
+                            "title": "Artikel",
+                            "text": "Begleitet ein Nomen: das Haus, das Velo. Ersatz: «dieses» (dieses Haus)."
+                        },
+                        {
+                            "title": "Demonstrativpronomen",
+                            "text": "Steht allein für etwas: Das stimmt nicht. Ersatz: «dieses» oder «jenes»."
+                        },
+                        {
+                            "title": "Relativpronomen",
+                            "text": "Leitet einen Nebensatz ein, der ein Nomen genauer beschreibt: das Lied, das ich mag. Ersatz: «welches»."
+                        },
+                        {
+                            "title": "Konjunktion «dass»",
+                            "text": "Leitet einen Nebensatz ein, oft nach sagen, denken, hoffen, wissen: Ich weiss, dass du kommst. Kein Ersatz möglich."
+                        }
+                    ],
+                    "origin": "photo"
+                },
+                {
+                    "type": "columns",
+                    "entries": [
+                        {
+                            "title": "das",
+                            "category": "cat1",
+                            "paragraphs": [
+                                "Lässt sich durch dieses, jenes oder welches ersetzen.",
+                                "Das Bild, das an der Wand hängt, habe ich gemalt."
+                            ]
+                        },
+                        {
+                            "title": "dass",
+                            "category": "cat2",
+                            "paragraphs": [
+                                "Lässt sich durch nichts ersetzen.",
+                                "Ich finde, dass das Bild gelungen ist."
+                            ]
+                        }
+                    ],
+                    "origin": "photo"
+                }
+            ]
+        },
+        {
+            "title": "Das Komma vor «dass»",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": "Vor «dass» steht immer ein Komma, denn mit «dass» beginnt ein Nebensatz. Auch vor dem Relativpronomen «das» steht ein Komma. Das Verb steht in beiden Nebensätzen am Schluss.",
+                    "origin": "photo"
+                },
+                {
+                    "type": "box",
+                    "title": "Achtung, Falle",
+                    "paragraphs": [
+                        "Ein Komma allein entscheidet nicht: Vor «das» und vor «dass» kann ein Komma stehen. Mach immer die Ersatzprobe.",
+                        "Er sagt, dass das stimmt. → Das erste lässt sich nicht ersetzen, das zweite schon (dieses stimmt)."
+                    ],
+                    "origin": "added"
+                }
+            ]
+        }
+    ],
+    "try_it": null,
+    "modules": {
+        "quiz": [
+            {
+                "id": "q1",
+                "question": "Welches Wort passt? «Ich glaube, ___ es morgen schneit.»",
+                "options": ["das", "dass", "dasss"],
+                "answer": 1,
+                "hint": "Versuch, «dieses» oder «welches» einzusetzen.",
+                "explanation": "«dieses» oder «welches» passt nicht, also ist es die Konjunktion «dass».",
+                "origin": "photo"
+            },
+            {
+                "id": "q2",
+                "question": "Welches Wort passt? «Das Lied, ___ im Radio läuft, kenne ich.»",
+                "options": ["dass", "das", "was"],
+                "answer": 1,
+                "hint": "Kannst du «welches» einsetzen?",
+                "explanation": "«Das Lied, welches im Radio läuft» – das Relativpronomen «das».",
+                "origin": "photo"
+            },
+            {
+                "id": "q3",
+                "question": "Welche Ersatzwörter zeigen, dass «das» richtig ist?",
+                "options": [
+                    "dieses, jenes, welches",
+                    "weil, wenn, ob",
+                    "er, sie, es",
+                    "und, oder, aber"
+                ],
+                "answer": 0,
+                "hint": null,
+                "explanation": "Wenn «dieses», «jenes» oder «welches» passt, schreibst du «das».",
+                "origin": "photo"
+            },
+            {
+                "id": "q4",
+                "question": "In welchem Satz ist «das» falsch geschrieben?",
+                "options": [
+                    "Das ist mein Platz.",
+                    "Ich hoffe, das du kommst.",
+                    "Das Kind, das lacht, ist meine Cousine.",
+                    "Siehst du das Haus?"
+                ],
+                "answer": 1,
+                "hint": "Mach bei jedem «das» die Ersatzprobe.",
+                "explanation": "«Ich hoffe, dieses du kommst» geht nicht. Richtig ist «Ich hoffe, dass du kommst.»",
+                "origin": "photo"
+            },
+            {
+                "id": "q5",
+                "question": "Was steht vor «dass» immer?",
+                "options": [
+                    "Ein Punkt",
+                    "Ein Komma",
+                    "Ein Doppelpunkt",
+                    "Nichts"
+                ],
+                "answer": 1,
+                "hint": null,
+                "explanation": "«dass» leitet einen Nebensatz ein, und vor dem Nebensatz steht ein Komma.",
+                "origin": "photo"
+            }
+        ],
+        "sorting": {
+            "instructions": "Welches Wort gehört in die Lücke? Sortiere die Sätze.",
+            "categories": [
+                {
+                    "id": "cat1",
+                    "label": "das",
+                    "sub": "ersetzbar"
+                },
+                {
+                    "id": "cat2",
+                    "label": "dass",
+                    "sub": "nicht ersetzbar"
+                }
+            ],
+            "terms": [
+                {
+                    "id": "s1",
+                    "text": "Ich weiss, ___ du müde bist.",
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s2",
+                    "text": "___ Fenster ist offen.",
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s3",
+                    "text": "Das Spiel, ___ wir spielen, ist neu.",
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s4",
+                    "text": "Sie sagt, ___ es regnet.",
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s5",
+                    "text": "Hast du ___ gehört?",
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s6",
+                    "text": "Es ist schön, ___ du da bist.",
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s7",
+                    "text": "Ich hoffe, ___ der Bus kommt.",
+                    "category": "cat2",
+                    "explanation": null,
+                    "origin": "photo"
+                },
+                {
+                    "id": "s8",
+                    "text": "Ist ___ dein Etui?",
+                    "category": "cat1",
+                    "explanation": null,
+                    "origin": "photo"
+                }
+            ]
+        },
+        "flashcards": {
+            "instructions": null,
+            "entries": [
+                {
+                    "id": "k1",
+                    "front": "Ersatzprobe",
+                    "back": "Passt «dieses», «jenes» oder «welches», schreibst du «das». Sonst «dass».",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k2",
+                    "front": "das als Artikel",
+                    "back": "Begleitet ein Nomen: das Haus, das Velo.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k3",
+                    "front": "das als Relativpronomen",
+                    "back": "Leitet einen Nebensatz zu einem Nomen ein: das Buch, das ich lese.",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k4",
+                    "front": "dass als Konjunktion",
+                    "back": "Leitet einen Nebensatz ein, oft nach sagen, hoffen, wissen: Ich hoffe, dass …",
+                    "origin": "photo"
+                },
+                {
+                    "id": "k5",
+                    "front": "Komma vor dass",
+                    "back": "Vor «dass» steht immer ein Komma, weil ein Nebensatz beginnt.",
+                    "origin": "photo"
+                }
+            ]
+        },
+        "cloze": {
+            "instructions": "Setz «das» oder «dass» ein.",
+            "segments": [
+                {
+                    "text": "Ich weiss, "
+                },
+                {
+                    "id": "g1",
+                    "answers": ["dass"]
+                },
+                {
+                    "text": " du recht hast. "
+                },
+                {
+                    "id": "g2",
+                    "answers": ["Das"]
+                },
+                {
+                    "text": " Fahrrad, "
+                },
+                {
+                    "id": "g3",
+                    "answers": ["das"]
+                },
+                {
+                    "text": " im Keller steht, gehört meiner Schwester. Sie hofft, "
+                },
+                {
+                    "id": "g4",
+                    "answers": ["dass"]
+                },
+                {
+                    "text": " es nicht rostet. "
+                },
+                {
+                    "id": "g5",
+                    "answers": ["Dass"]
+                },
+                {
+                    "text": " wir gewonnen haben, freut alle. Hast du "
+                },
+                {
+                    "id": "g6",
+                    "answers": ["das"]
+                },
+                {
+                    "text": " gesehen?"
+                }
+            ],
+            "origin": "photo",
+            "case_sensitive": true
+        },
+        "exercises": null,
+        "find_the_mistake": {
+            "instructions": "In jedem Satz ist ein Wort falsch. Tipp es an und schreib es richtig.",
+            "entries": [
+                {
+                    "id": "f1",
+                    "sentence": "Ich hoffe, das du morgen kommst.",
+                    "mistake_word": 2,
+                    "correction": "dass",
+                    "explanation": "«dieses» passt hier nicht: «Ich hoffe, dieses du kommst» ergibt keinen Sinn. Also «dass»."
+                },
+                {
+                    "id": "f2",
+                    "sentence": "Das Buch, dass auf dem Tisch liegt, gehört mir.",
+                    "mistake_word": 2,
+                    "correction": "das",
+                    "explanation": "«Das Buch, welches auf dem Tisch liegt» – das Relativpronomen schreibt man mit einem s."
+                },
+                {
+                    "id": "f3",
+                    "sentence": "Weisst du, das es heute regnet?",
+                    "mistake_word": 2,
+                    "correction": "dass",
+                    "explanation": "Nach «wissen» folgt ein Nebensatz mit der Konjunktion «dass»."
+                },
+                {
+                    "id": "f4",
+                    "sentence": "Er sagt, dass das Velo, dass er gekauft hat, rot ist.",
+                    "mistake_word": 5,
+                    "correction": "das",
+                    "explanation": "«das Velo, welches er gekauft hat» – hier passt «welches», also «das»."
+                },
+                {
+                    "id": "f5",
+                    "sentence": "Dass Haus am See ist schon alt.",
+                    "mistake_word": 0,
+                    "correction": "Das",
+                    "explanation": "«Dieses Haus am See» – ein Artikel, also «Das» mit einem s."
+                },
+                {
+                    "id": "f6",
+                    "sentence": "Ich glaube dass wir gewinnen.",
+                    "mistake_word": 1,
+                    "correction": "glaube,",
+                    "explanation": "Vor «dass» beginnt ein Nebensatz, darum braucht es ein Komma: «Ich glaube, dass wir gewinnen.»"
+                }
+            ]
+        }
+    },
+    "reflect": {
+        "question": "In der Schweiz sagt man oft «Ich glaube, es regnet» statt «Ich glaube, dass es regnet». Bedeuten die beiden Sätze dasselbe? Wann klingt welcher besser?"
+    }
+}

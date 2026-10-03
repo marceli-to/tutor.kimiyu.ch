@@ -7,65 +7,119 @@ use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
-    $this->child = Child::factory()->for($this->user)->create();
-    $this->lesson = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create();
+	$this->user = User::factory()->create();
+	$this->child = Child::factory()->for($this->user)->create();
+	$this->lesson = Lesson::factory()->for($this->child)->fromFixture('oekosystem')->create();
 });
 
 it('shows a lesson to the parent', function () {
-    $this->actingAs($this->user)
-        ->get(route('lessons.show', $this->lesson))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('lessons/Show')
-            ->where('lesson.content.meta.titel', 'Biotop + Biozönose = Ökosystem')
-            ->where('lesson.palette.light.accent', '#134E5E')
-            ->where('lesson.subject', 'Biologie')
-            ->has('lesson.hero.url')
-        );
+	$this->actingAs($this->user)
+		->get(route('lessons.show', $this->lesson))
+		->assertOk()
+		->assertInertia(fn (Assert $page) => $page
+			->component('lessons/Show')
+			->where('lesson.content.meta.title', 'Biotop + Biozönose = Ökosystem')
+			->where('lesson.palette.light.accent', '#134E5E')
+			->where('lesson.subject', 'Biologie')
+			->has('lesson.graphics.1.url')
+		);
+});
+
+it('shows a lesson without quiz to the parent and the child', function () {
+	$content = $this->lesson->content;
+	$content['modules']['quiz'] = null;
+	$this->lesson->update(['content' => $content]);
+
+	$this->actingAs($this->user)->get(route('lessons.show', $this->lesson))
+		->assertOk()
+		->assertInertia(fn (Assert $page) => $page
+			->where('lesson.content.modules.quiz', null)
+			->where('parent.canRegenerate.quiz', false)
+		);
+
+	$this->get(route('shared.show', [$this->child->share_token, $this->lesson]))
+		->assertOk()
+		->assertInertia(fn (Assert $page) => $page->where('lesson.content.modules.quiz', null));
 });
 
 it('hides a lesson from other parents', function () {
-    $this->actingAs(User::factory()->create())
-        ->get(route('lessons.show', $this->lesson))
-        ->assertForbidden();
+	$this->actingAs(User::factory()->create())
+		->get(route('lessons.show', $this->lesson))
+		->assertForbidden();
 });
 
 it('redirects guests to the login', function () {
-    $this->get(route('lessons.show', $this->lesson))
-        ->assertRedirect(route('login'));
+	$this->get(route('lessons.show', $this->lesson))
+		->assertRedirect(route('login'));
 });
 
 it('does not expose the child share token', function () {
-    expect($this->child->toArray())->not->toHaveKey('share_token')
-        ->and($this->child->share_token)->toHaveLength(40);
+	expect($this->child->toArray())->not->toHaveKey('share_token')
+		->and($this->child->share_token)->toHaveLength(40);
 });
 
-describe('hero document', function () {
-    it('needs a signed url', function () {
-        $this->get(route('lessons.hero', $this->lesson))->assertForbidden();
-    });
+describe('graphic document', function () {
+	it('needs a signed url', function () {
+		$this->get(route('lessons.graphic', [$this->lesson, 1]))->assertForbidden();
+	});
 
-    it('is served with a csp that blocks all network access', function () {
-        $response = $this->get(URL::signedRoute('lessons.hero', $this->lesson));
+	it('is served with a csp that blocks all network access', function () {
+		$response = $this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]));
 
-        $response->assertOk()
-            ->assertHeader('Content-Security-Policy')
-            ->assertSee('<div class="formula"', escape: false)
-            ->assertSee('--cat1:#8A5A24;', escape: false)
-            ->assertSee("parent.postMessage(msg,'*')", escape: false);
+		$response->assertOk()
+			->assertHeader('Content-Security-Policy')
+			->assertSee('<div class="formula"', escape: false)
+			->assertSee('--cat1:#8A5A24;', escape: false)
+			->assertSee("parent.postMessage(msg,'*')", escape: false);
 
-        $csp = $response->headers->get('Content-Security-Policy');
+		$csp = $response->headers->get('Content-Security-Policy');
 
-        expect($csp)->toContain("default-src 'none'")
-            ->toContain('font-src data:')
-            ->not->toContain('connect-src')
-            ->not->toContain('http');
-    });
+		expect($csp)->toContain("default-src 'none'")
+			->toContain('font-src data:')
+			->not->toContain('connect-src')
+			->not->toContain('http');
+	});
 
-    it('returns 404 when the lesson has no hero', function () {
-        $this->lesson->update(['hero' => null]);
+	it('returns 404 when the lesson has no graphic', function () {
+		$this->lesson->graphic(1)->update(['graphic' => null]);
 
-        $this->get(URL::signedRoute('lessons.hero', $this->lesson))->assertNotFound();
-    });
+		$this->get(URL::signedRoute('lessons.graphic', [$this->lesson, 1]))->assertNotFound();
+	});
+});
+
+it('passes the speech language and the profile only for a foreign language lesson', function (string $subject, ?string $lang, string $profile) {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create(['subject' => $subject]);
+
+	$this->get(route('shared.show', [$this->child->share_token, $lesson]))
+		->assertOk()
+		->assertInertia(fn (Assert $page) => $page
+			->where('lesson.speechLang', $lang)
+			->where('lesson.profile', $profile)
+		);
+
+	$this->actingAs($this->user)->get(route('lessons.show', $lesson))
+		->assertInertia(fn (Assert $page) => $page->where('lesson.speechLang', $lang));
+})->with([
+	['Französisch', 'fr-FR', 'languages'],
+	['Deutsch', null, 'german'],
+	['Biologie', null, 'science'],
+]);
+
+it('renders formulas only for math, geometry and science lessons', function (string $subject, bool $math) {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => $subject]);
+
+	$this->get(route('shared.show', [$this->child->share_token, $lesson]))
+		->assertInertia(fn (Assert $page) => $page->where('lesson.math', $math));
+})->with([
+	['Mathematik', true],
+	['Geometrie', true],
+	['Biologie', true],
+	['Geschichte', false],
+	['Französisch', false],
+]);
+
+it('shows a lesson without a graphic fixture', function () {
+	$lesson = Lesson::factory()->for($this->child)->fromFixture('passe-compose')->create(['subject' => 'Französisch']);
+
+	expect($lesson->graphics()->count())->toBe(0);
 });
