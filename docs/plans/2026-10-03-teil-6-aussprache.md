@@ -147,5 +147,11 @@ Steps: TDD, full checks (`composer format:check`, tests, phpstan, `npm run types
 - Task 4: `Lesson::speechVoice()` holds the voice lookup (used by `speaksWithElevenLabs()`, the action and `LessonView`). A clip row without its file answers 404, so the button falls back to the browser voice.
 - The progress display gets `lesson.speaks` and shows «Aussprache aufnehmen» only then.
 
+## As built (Tasks 5–7, 2026-10-03)
+
+- Task 5: `resources/js/lib/speech.ts` holds the one page-wide player; an interrupted play (`AbortError`, the next word was tapped) does not fall back to the browser voice.
+- Task 6: after an edit, `UpdateLessonContent` dispatches a queued closure instead of the `SpeakLesson` job: a `LessonStep` would set `step` on a finished page. The command prints the credits left from `GET /v1/user/subscription` (ElevenLabs' counter lags a few minutes). The Kosten page shows credits per month and per step.
+- First real run: lesson 11, 41 clips, 475 credits.
+
 ## Open questions
 - **Conjugation tables:** not spoken today. Add later if wanted (`conjugation.forms[].form`, about 6 clips per verb).

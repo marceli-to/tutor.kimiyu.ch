@@ -41,6 +41,19 @@ php artisan lessons:check-schemas
 
 Der Befehl schickt jedes Schema, das die Prompts verwenden, mit dem Modell des jeweiligen Schritts und einem einzigen Ausgabe-Token an die API (kostet zusammen weniger als $0.01). Die API lehnt zu grosse Grammatiken ab («grammar is too large»), und die Grösse in Bytes sagt das nicht zuverlässig voraus. Jede Zeile muss `OK` zeigen; sonst endet der Befehl mit Exit-Code 1 und das betroffene Fachprofil braucht weniger Bausteine.
 
+### Aussprache (ElevenLabs)
+
+Fremdsprachige Wörter (Wortlisten, Vorderseite der Karteikarten) liest eine ElevenLabs-Stimme vor. Jedes Wort wird einmal erzeugt und von allen Lernseiten geteilt (Tabelle `speech_clips`, Dateien in `storage/app/private/speech`, muss beschreibbar sein). Ohne `ELEVENLABS_API_KEY` oder ohne Clip liest die Stimme des Browsers.
+
+Nach dem ersten Deploy mit Aussprache, und wenn Stimme oder Modell wechseln, die bestehenden Lernseiten nachholen:
+
+```bash
+php artisan lessons:speak        # alle Sprach-Lernseiten
+php artisan lessons:speak 11     # eine Lernseite
+```
+
+Der Befehl zeigt neue und wiederverwendete Clips, die verbrauchten Credits und die übrigen Credits des Monats (der Zähler von ElevenLabs hinkt einige Minuten nach). Der Gratis-Plan hat 10'000 Credits pro Monat (etwa 1 Credit pro Zeichen mit `eleven_v4`) und kann über die API nur die vorgefertigten Stimmen verwenden.
+
 ## Queue
 
 Hostpoint hat keinen dauerhaften Worker. Ein Cronjob im Hostpoint-Panel startet jede Minute den Scheduler:
@@ -67,12 +80,13 @@ php artisan tinker --execute 'App\Models\User::create(["name" => "Name", "email"
 - `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`
 - `LESSON_FAKE_AI=false`, `LESSON_CHECK_ENABLED`, `LESSON_DELETE_IMAGES`
 - Optional pro Schritt: `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` und `LESSON_EFFORT_ANALYSIS|MODULES|CHECK|GRAPHIC` (Standard siehe `config/lessons.php`: Module und Prüfung auf Sonnet, Grafik mit Effort `medium`)
+- `ELEVENLABS_API_KEY` (Rechte: Text to Speech, Voices lesen, User lesen); optional `ELEVENLABS_MODEL` (Standard `eleven_v4`), `ELEVENLABS_VOICE_FR|EN|IT` (Standard Französisch: «Alice»), `ELEVENLABS_PRICE_PER_1000_CHARACTERS` (Standard 0, Gratis-Plan)
 - `MAIL_MAILER=log` (keine E-Mails, Passwort-Reset funktioniert deshalb nicht)
 
 ## Logs und Fehler
 
 - Laravel-Log: `storage/logs/laravel-*.log`
-- Jeder API-Aufruf mit Tokens, Kosten und Fehlermeldung: Tabelle `generations`, in der App unter «Kosten»
+- Jeder API-Aufruf mit Tokens (Claude) oder Credits (ElevenLabs), Kosten und Fehlermeldung: Tabelle `generations`, in der App unter «Kosten»
 
 ## Sicherung
 
