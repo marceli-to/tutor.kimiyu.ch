@@ -31,8 +31,8 @@
       "_useForwardExpose-Dyw6_6xT.js"
     ]
   },
-  "_InputError-Cj006NzW.js": {
-    "file": "assets/InputError-Cj006NzW.js",
+  "_InputError-BdPrnEPi.js": {
+    "file": "assets/InputError-BdPrnEPi.js",
     "name": "InputError",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
@@ -50,36 +50,49 @@
       "_shared-DWrUlAEm.js"
     ]
   },
-  "_LessonPage-DPusY3n5.js": {
-    "file": "assets/LessonPage-DPusY3n5.js",
+  "_LessonPage-DvQTKExv.js": {
+    "file": "assets/LessonPage-DvQTKExv.js",
     "name": "LessonPage",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
       "_createLucideIcon-DRyeNfHY.js",
       "_sun-Dc7D_z08.js",
-      "resources/js/app.ts"
+      "resources/js/app.ts",
+      "_MathText-B9Hqo9Qg.js",
+      "_mistake-DIfAkMFS.js"
     ]
   },
-  "_PasskeyVerify-DKHhROUP.js": {
-    "file": "assets/PasskeyVerify-DKHhROUP.js",
+  "_MathText-B9Hqo9Qg.js": {
+    "file": "assets/MathText-B9Hqo9Qg.js",
+    "name": "MathText",
+    "imports": [
+      "_wayfinder-D4M8dmG7.js",
+      "resources/js/app.ts"
+    ],
+    "dynamicImports": [
+      "node_modules/katex/dist/katex.mjs"
+    ]
+  },
+  "_PasskeyVerify-BZyHjs2A.js": {
+    "file": "assets/PasskeyVerify-BZyHjs2A.js",
     "name": "PasskeyVerify",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_vue-bDQGjlzS.js",
-      "_InputError-Cj006NzW.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js"
+      "_Spinner-CbJ6WLM8.js"
     ]
   },
-  "_PasswordInput-mmTGxRa9.js": {
-    "file": "assets/PasswordInput-mmTGxRa9.js",
+  "_PasswordInput-C4a5sOQZ.js": {
+    "file": "assets/PasswordInput-C4a5sOQZ.js",
     "name": "PasswordInput",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_createLucideIcon-DRyeNfHY.js",
-      "_InputError-Cj006NzW.js"
+      "_InputError-BdPrnEPi.js"
     ]
   },
   "_Presence-D2V1PydY.js": {
@@ -91,8 +104,8 @@
       "_useForwardExpose-Dyw6_6xT.js"
     ]
   },
-  "_Spinner-BmP0wSnn.js": {
-    "file": "assets/Spinner-BmP0wSnn.js",
+  "_Spinner-CbJ6WLM8.js": {
+    "file": "assets/Spinner-CbJ6WLM8.js",
     "name": "Spinner",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
@@ -206,8 +219,8 @@
       "_wayfinder-D4M8dmG7.js"
     ]
   },
-  "_dialog-CmcBIt-z.js": {
-    "file": "assets/dialog-CmcBIt-z.js",
+  "_dialog-DGEFff-c.js": {
+    "file": "assets/dialog-DGEFff-c.js",
     "name": "dialog",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
@@ -222,8 +235,8 @@
     "file": "assets/fonts-D_uCgRZ8.css",
     "src": "_fonts-D_uCgRZ8.css"
   },
-  "_login-DuVNBLf_.js": {
-    "file": "assets/login-DuVNBLf_.js",
+  "_login-4bA7AK0W.js": {
+    "file": "assets/login-4bA7AK0W.js",
     "name": "login",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
@@ -233,12 +246,26 @@
       "resources/js/app.ts"
     ]
   },
+  "_mistake-DIfAkMFS.js": {
+    "file": "assets/mistake-DIfAkMFS.js",
+    "name": "mistake",
+    "imports": [
+      "_wayfinder-D4M8dmG7.js"
+    ]
+  },
   "_password-CKhhKqot.js": {
     "file": "assets/password-CKhhKqot.js",
     "name": "password",
     "imports": [
       "_wayfinder-D4M8dmG7.js",
       "_confirm-DgfyIuwP.js"
+    ]
+  },
+  "_plus-18M0I1tk.js": {
+    "file": "assets/plus-18M0I1tk.js",
+    "name": "plus",
+    "imports": [
+      "_createLucideIcon-DRyeNfHY.js"
     ]
   },
   "_shared-BUFhxw05.js": {
@@ -302,8 +329,258 @@
     "file": "assets/wayfinder-D4M8dmG7.js",
     "name": "wayfinder"
   },
+  "node_modules/katex/dist/fonts/KaTeX_AMS-Regular.ttf": {
+    "file": "assets/KaTeX_AMS-Regular-DRggAlZN.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_AMS-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_AMS-Regular.woff": {
+    "file": "assets/KaTeX_AMS-Regular-DMm9YOAa.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_AMS-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_AMS-Regular.woff2": {
+    "file": "assets/KaTeX_AMS-Regular-BQhdFMY1.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_AMS-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Bold.ttf": {
+    "file": "assets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Bold.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Bold.woff": {
+    "file": "assets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Bold.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Bold.woff2": {
+    "file": "assets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Bold.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Regular.ttf": {
+    "file": "assets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Regular.woff": {
+    "file": "assets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Regular.woff2": {
+    "file": "assets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Caligraphic-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Fraktur-Bold.ttf": {
+    "file": "assets/KaTeX_Fraktur-Bold-BdnERNNW.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Fraktur-Bold.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Fraktur-Bold.woff": {
+    "file": "assets/KaTeX_Fraktur-Bold-BsDP51OF.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Fraktur-Bold.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Fraktur-Bold.woff2": {
+    "file": "assets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Fraktur-Bold.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Fraktur-Regular.ttf": {
+    "file": "assets/KaTeX_Fraktur-Regular-CB_wures.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Fraktur-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Fraktur-Regular.woff": {
+    "file": "assets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Fraktur-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Fraktur-Regular.woff2": {
+    "file": "assets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Fraktur-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Bold.ttf": {
+    "file": "assets/KaTeX_Main-Bold-waoOVXN0.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Bold.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Bold.woff": {
+    "file": "assets/KaTeX_Main-Bold-Jm3AIy58.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Bold.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Bold.woff2": {
+    "file": "assets/KaTeX_Main-Bold-Cx986IdX.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Bold.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-BoldItalic.ttf": {
+    "file": "assets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-BoldItalic.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-BoldItalic.woff": {
+    "file": "assets/KaTeX_Main-BoldItalic-SpSLRI95.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-BoldItalic.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-BoldItalic.woff2": {
+    "file": "assets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-BoldItalic.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Italic.ttf": {
+    "file": "assets/KaTeX_Main-Italic-3WenGoN9.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Italic.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Italic.woff": {
+    "file": "assets/KaTeX_Main-Italic-BMLOBm91.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Italic.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Italic.woff2": {
+    "file": "assets/KaTeX_Main-Italic-NWA7e6Wa.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Italic.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Regular.ttf": {
+    "file": "assets/KaTeX_Main-Regular-ypZvNtVU.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Regular.woff": {
+    "file": "assets/KaTeX_Main-Regular-Dr94JaBh.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Main-Regular.woff2": {
+    "file": "assets/KaTeX_Main-Regular-B22Nviop.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Main-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Math-BoldItalic.ttf": {
+    "file": "assets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Math-BoldItalic.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Math-BoldItalic.woff": {
+    "file": "assets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Math-BoldItalic.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Math-BoldItalic.woff2": {
+    "file": "assets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Math-BoldItalic.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Math-Italic.ttf": {
+    "file": "assets/KaTeX_Math-Italic-flOr_0UB.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Math-Italic.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Math-Italic.woff": {
+    "file": "assets/KaTeX_Math-Italic-DA0__PXp.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Math-Italic.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Math-Italic.woff2": {
+    "file": "assets/KaTeX_Math-Italic-t53AETM-.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Math-Italic.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Bold.ttf": {
+    "file": "assets/KaTeX_SansSerif-Bold-CFMepnvq.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Bold.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Bold.woff": {
+    "file": "assets/KaTeX_SansSerif-Bold-DbIhKOiC.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Bold.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Bold.woff2": {
+    "file": "assets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Bold.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Italic.ttf": {
+    "file": "assets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Italic.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Italic.woff": {
+    "file": "assets/KaTeX_SansSerif-Italic-DN2j7dab.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Italic.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Italic.woff2": {
+    "file": "assets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Italic.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Regular.ttf": {
+    "file": "assets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Regular.woff": {
+    "file": "assets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_SansSerif-Regular.woff2": {
+    "file": "assets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_SansSerif-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Script-Regular.ttf": {
+    "file": "assets/KaTeX_Script-Regular-C5JkGWo-.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Script-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Script-Regular.woff": {
+    "file": "assets/KaTeX_Script-Regular-D5yQViql.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Script-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Script-Regular.woff2": {
+    "file": "assets/KaTeX_Script-Regular-D3wIWfF6.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Script-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size1-Regular.ttf": {
+    "file": "assets/KaTeX_Size1-Regular-Dbsnue_I.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size1-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size1-Regular.woff": {
+    "file": "assets/KaTeX_Size1-Regular-C195tn64.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size1-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size1-Regular.woff2": {
+    "file": "assets/KaTeX_Size1-Regular-mCD8mA8B.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size1-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size2-Regular.ttf": {
+    "file": "assets/KaTeX_Size2-Regular-B7gKUWhC.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size2-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size2-Regular.woff": {
+    "file": "assets/KaTeX_Size2-Regular-oD1tc_U0.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size2-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size2-Regular.woff2": {
+    "file": "assets/KaTeX_Size2-Regular-Dy4dx90m.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size2-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size3-Regular.ttf": {
+    "file": "assets/KaTeX_Size3-Regular-DgpXs0kz.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size3-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size3-Regular.woff": {
+    "file": "assets/KaTeX_Size3-Regular-CTq5MqoE.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size3-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size3-Regular.woff2": {
+    "file": "assets/KaTeX_Size3-Regular-gV2CO0n9.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size3-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size4-Regular.ttf": {
+    "file": "assets/KaTeX_Size4-Regular-DWFBv043.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size4-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size4-Regular.woff": {
+    "file": "assets/KaTeX_Size4-Regular-BF-4gkZK.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size4-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Size4-Regular.woff2": {
+    "file": "assets/KaTeX_Size4-Regular-Dl5lxZxV.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Size4-Regular.woff2"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Typewriter-Regular.ttf": {
+    "file": "assets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Typewriter-Regular.ttf"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Typewriter-Regular.woff": {
+    "file": "assets/KaTeX_Typewriter-Regular-C0xS9mPB.woff",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Typewriter-Regular.woff"
+  },
+  "node_modules/katex/dist/fonts/KaTeX_Typewriter-Regular.woff2": {
+    "file": "assets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2",
+    "src": "node_modules/katex/dist/fonts/KaTeX_Typewriter-Regular.woff2"
+  },
+  "node_modules/katex/dist/katex.min.css": {
+    "file": "assets/katex-BtasELpM.css",
+    "src": "node_modules/katex/dist/katex.min.css"
+  },
+  "node_modules/katex/dist/katex.mjs": {
+    "file": "assets/katex-BkHZDqhu.js",
+    "name": "katex",
+    "src": "node_modules/katex/dist/katex.mjs",
+    "isDynamicEntry": true
+  },
   "resources/css/app.css": {
-    "file": "assets/app-CoLZbtMK.css",
+    "file": "assets/app-BLPBxMui.css",
     "name": "app",
     "names": [
       "app.css"
@@ -312,7 +589,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-DrKrHm-L.js",
+    "file": "assets/app-YS8lSECC.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -353,17 +630,18 @@
     ]
   },
   "resources/js/pages/Costs.vue": {
-    "file": "assets/Costs-BEM4OrG0.js",
+    "file": "assets/Costs-DMGansWA.js",
     "name": "Costs",
     "src": "resources/js/pages/Costs.vue",
     "isDynamicEntry": true,
     "imports": [
       "_wayfinder-D4M8dmG7.js",
-      "resources/js/app.ts"
+      "resources/js/app.ts",
+      "_MathText-B9Hqo9Qg.js"
     ]
   },
   "resources/js/pages/Dashboard.vue": {
-    "file": "assets/Dashboard-CghaEX8B.js",
+    "file": "assets/Dashboard-Ds6stUWS.js",
     "name": "Dashboard",
     "src": "resources/js/pages/Dashboard.vue",
     "isDynamicEntry": true,
@@ -371,12 +649,13 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "resources/js/app.ts",
+      "_MathText-B9Hqo9Qg.js",
       "_CopyLink-8Dyw7YKf.js",
       "_badge-DOuVNovA.js"
     ]
   },
   "resources/js/pages/Privacy.vue": {
-    "file": "assets/Privacy-8E9hmBzF.js",
+    "file": "assets/Privacy-p3GWClEw.js",
     "name": "Privacy",
     "src": "resources/js/pages/Privacy.vue",
     "isDynamicEntry": true,
@@ -386,7 +665,7 @@
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-C67cXVVs.js",
+    "file": "assets/Welcome-axkzoRi8.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,
@@ -397,7 +676,7 @@
     ]
   },
   "resources/js/pages/auth/ConfirmPassword.vue": {
-    "file": "assets/ConfirmPassword-BKK62wJb.js",
+    "file": "assets/ConfirmPassword-VRPtqMpD.js",
     "name": "ConfirmPassword",
     "src": "resources/js/pages/auth/ConfirmPassword.vue",
     "isDynamicEntry": true,
@@ -405,15 +684,15 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_Label-LvCh0oen.js",
-      "_PasswordInput-mmTGxRa9.js",
-      "_InputError-Cj006NzW.js",
-      "_Spinner-BmP0wSnn.js",
+      "_PasswordInput-C4a5sOQZ.js",
+      "_InputError-BdPrnEPi.js",
+      "_Spinner-CbJ6WLM8.js",
       "_confirm-DgfyIuwP.js",
-      "_PasskeyVerify-DKHhROUP.js"
+      "_PasskeyVerify-BZyHjs2A.js"
     ]
   },
   "resources/js/pages/auth/ForgotPassword.vue": {
-    "file": "assets/ForgotPassword-DXNCowcc.js",
+    "file": "assets/ForgotPassword-vXjTBUES.js",
     "name": "ForgotPassword",
     "src": "resources/js/pages/auth/ForgotPassword.vue",
     "isDynamicEntry": true,
@@ -421,15 +700,15 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_Label-LvCh0oen.js",
-      "_InputError-Cj006NzW.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js",
+      "_Spinner-CbJ6WLM8.js",
       "_TextLink-BgNI0Zzi.js",
       "_password-CKhhKqot.js"
     ]
   },
   "resources/js/pages/auth/Login.vue": {
-    "file": "assets/Login-Cg3WqqT2.js",
+    "file": "assets/Login-CAZexHFK.js",
     "name": "Login",
     "src": "resources/js/pages/auth/Login.vue",
     "isDynamicEntry": true,
@@ -441,18 +720,18 @@
       "_useForwardPropsEmits-DiMJGzZX.js",
       "_Label-LvCh0oen.js",
       "_check-BOFrLlw_.js",
-      "_PasswordInput-mmTGxRa9.js",
+      "_PasswordInput-C4a5sOQZ.js",
       "_shared-DWrUlAEm.js",
-      "_InputError-Cj006NzW.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js",
-      "_PasskeyVerify-DKHhROUP.js",
+      "_Spinner-CbJ6WLM8.js",
+      "_PasskeyVerify-BZyHjs2A.js",
       "_TextLink-BgNI0Zzi.js",
       "_password-CKhhKqot.js"
     ]
   },
   "resources/js/pages/auth/ResetPassword.vue": {
-    "file": "assets/ResetPassword-D3nE9wR-.js",
+    "file": "assets/ResetPassword-BSg1k2cR.js",
     "name": "ResetPassword",
     "src": "resources/js/pages/auth/ResetPassword.vue",
     "isDynamicEntry": true,
@@ -460,26 +739,26 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_Label-LvCh0oen.js",
-      "_PasswordInput-mmTGxRa9.js",
-      "_InputError-Cj006NzW.js",
-      "_Spinner-BmP0wSnn.js",
+      "_PasswordInput-C4a5sOQZ.js",
+      "_InputError-BdPrnEPi.js",
+      "_Spinner-CbJ6WLM8.js",
       "_password-CKhhKqot.js"
     ]
   },
   "resources/js/pages/auth/TwoFactorChallenge.vue": {
-    "file": "assets/TwoFactorChallenge-BUrvBC3V.js",
+    "file": "assets/TwoFactorChallenge-DsvkXbtc.js",
     "name": "TwoFactorChallenge",
     "src": "resources/js/pages/auth/TwoFactorChallenge.vue",
     "isDynamicEntry": true,
     "imports": [
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
-      "_InputError-Cj006NzW.js",
-      "_login-DuVNBLf_.js"
+      "_InputError-BdPrnEPi.js",
+      "_login-4bA7AK0W.js"
     ]
   },
   "resources/js/pages/auth/VerifyEmail.vue": {
-    "file": "assets/VerifyEmail-DpOnLKIU.js",
+    "file": "assets/VerifyEmail-CHsQO5pH.js",
     "name": "VerifyEmail",
     "src": "resources/js/pages/auth/VerifyEmail.vue",
     "isDynamicEntry": true,
@@ -487,13 +766,13 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js",
+      "_Spinner-CbJ6WLM8.js",
       "_TextLink-BgNI0Zzi.js",
       "_verification-V2X2OgRy.js"
     ]
   },
   "resources/js/pages/children/Index.vue": {
-    "file": "assets/Index-CGawyfyC.js",
+    "file": "assets/Index-JnHG_suK.js",
     "name": "Index",
     "src": "resources/js/pages/children/Index.vue",
     "isDynamicEntry": true,
@@ -502,24 +781,25 @@
       "_button-B3hvPmZR.js",
       "_DialogTrigger-BluCxG7P.js",
       "_Label-LvCh0oen.js",
-      "_InputError-Cj006NzW.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
       "_CopyLink-8Dyw7YKf.js",
-      "_dialog-CmcBIt-z.js"
+      "_dialog-DGEFff-c.js"
     ]
   },
   "resources/js/pages/children/Progress.vue": {
-    "file": "assets/Progress-vvopq2KK.js",
+    "file": "assets/Progress-BxAoVRGG.js",
     "name": "Progress",
     "src": "resources/js/pages/children/Progress.vue",
     "isDynamicEntry": true,
     "imports": [
       "_wayfinder-D4M8dmG7.js",
-      "resources/js/app.ts"
+      "resources/js/app.ts",
+      "_MathText-B9Hqo9Qg.js"
     ]
   },
   "resources/js/pages/lessons/Create.vue": {
-    "file": "assets/Create-Jv7uj36X.js",
+    "file": "assets/Create-CVSoi6y8.js",
     "name": "Create",
     "src": "resources/js/pages/lessons/Create.vue",
     "isDynamicEntry": true,
@@ -527,13 +807,15 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_Label-LvCh0oen.js",
-      "_InputError-Cj006NzW.js",
+      "_createLucideIcon-DRyeNfHY.js",
+      "_plus-18M0I1tk.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js"
+      "_Spinner-CbJ6WLM8.js"
     ]
   },
   "resources/js/pages/lessons/Edit.vue": {
-    "file": "assets/Edit-B0jvgMue.js",
+    "file": "assets/Edit-D7RAq4Fn.js",
     "name": "Edit",
     "src": "resources/js/pages/lessons/Edit.vue",
     "isDynamicEntry": true,
@@ -541,15 +823,16 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_Label-LvCh0oen.js",
-      "_createLucideIcon-DRyeNfHY.js",
+      "_plus-18M0I1tk.js",
       "_trash-C_ai_1Z2.js",
-      "_InputError-Cj006NzW.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js"
+      "_Spinner-CbJ6WLM8.js",
+      "_mistake-DIfAkMFS.js"
     ]
   },
   "resources/js/pages/lessons/Show.vue": {
-    "file": "assets/Show-DS4manN4.js",
+    "file": "assets/Show-4qzshG23.js",
     "name": "Show",
     "src": "resources/js/pages/lessons/Show.vue",
     "isDynamicEntry": true,
@@ -557,17 +840,18 @@
       "_wayfinder-D4M8dmG7.js",
       "_button-B3hvPmZR.js",
       "_createLucideIcon-DRyeNfHY.js",
-      "_LessonPage-DPusY3n5.js",
+      "_LessonPage-DvQTKExv.js",
       "_check-BOFrLlw_.js",
       "_circle-alert-CtyHT6Lq.js",
       "resources/js/app.ts",
+      "_MathText-B9Hqo9Qg.js",
       "_CopyLink-8Dyw7YKf.js",
       "_badge-DOuVNovA.js",
-      "_dialog-CmcBIt-z.js"
+      "_dialog-DGEFff-c.js"
     ]
   },
   "resources/js/pages/settings/Appearance.vue": {
-    "file": "assets/Appearance-BrpkeEq-.js",
+    "file": "assets/Appearance-e8_86sCy.js",
     "name": "Appearance",
     "src": "resources/js/pages/settings/Appearance.vue",
     "isDynamicEntry": true,
@@ -579,7 +863,7 @@
     ]
   },
   "resources/js/pages/settings/Profile.vue": {
-    "file": "assets/Profile-Cg5gRKLa.js",
+    "file": "assets/Profile-BPxgzDgy.js",
     "name": "Profile",
     "src": "resources/js/pages/settings/Profile.vue",
     "isDynamicEntry": true,
@@ -588,15 +872,15 @@
       "_button-B3hvPmZR.js",
       "_DialogTrigger-BluCxG7P.js",
       "_Label-LvCh0oen.js",
-      "_PasswordInput-mmTGxRa9.js",
-      "_InputError-Cj006NzW.js",
+      "_PasswordInput-C4a5sOQZ.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
       "_verification-V2X2OgRy.js",
-      "_dialog-CmcBIt-z.js"
+      "_dialog-DGEFff-c.js"
     ]
   },
   "resources/js/pages/settings/Security.vue": {
-    "file": "assets/Security-Ctj9Pz2k.js",
+    "file": "assets/Security-pRIgVuy5.js",
     "name": "Security",
     "src": "resources/js/pages/settings/Security.vue",
     "isDynamicEntry": true,
@@ -609,34 +893,36 @@
       "_check-BOFrLlw_.js",
       "_circle-alert-CtyHT6Lq.js",
       "_copy-QgMv9N4g.js",
-      "_PasswordInput-mmTGxRa9.js",
+      "_PasswordInput-C4a5sOQZ.js",
       "_vue-bDQGjlzS.js",
       "_trash-C_ai_1Z2.js",
-      "_InputError-Cj006NzW.js",
+      "_InputError-BdPrnEPi.js",
       "resources/js/app.ts",
-      "_Spinner-BmP0wSnn.js",
-      "_login-DuVNBLf_.js",
-      "_dialog-CmcBIt-z.js"
+      "_Spinner-CbJ6WLM8.js",
+      "_login-4bA7AK0W.js",
+      "_dialog-DGEFff-c.js"
     ]
   },
   "resources/js/pages/shared/Index.vue": {
-    "file": "assets/Index-CO3tnMjl.js",
+    "file": "assets/Index-CIqg3_e8.js",
     "name": "Index",
     "src": "resources/js/pages/shared/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "_wayfinder-D4M8dmG7.js",
+      "_MathText-B9Hqo9Qg.js",
       "_shared-BUFhxw05.js"
     ]
   },
   "resources/js/pages/shared/Show.vue": {
-    "file": "assets/Show-CuS-vZ7L.js",
+    "file": "assets/Show-CHiOHJkL.js",
     "name": "Show",
     "src": "resources/js/pages/shared/Show.vue",
     "isDynamicEntry": true,
     "imports": [
       "_wayfinder-D4M8dmG7.js",
-      "_LessonPage-DPusY3n5.js",
+      "_LessonPage-DvQTKExv.js",
+      "_MathText-B9Hqo9Qg.js",
       "_shared-BUFhxw05.js"
     ]
   }
