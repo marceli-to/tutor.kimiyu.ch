@@ -29,6 +29,7 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="ANTHROPIC_API_KEY" value=""/>
+        <env name="ELEVENLABS_API_KEY" value=""/>
         <env name="LESSON_FAKE_AI" value="false"/>
         <env name="LESSON_CHECK_ENABLED" value="true"/>
         <env name="LESSON_DELETE_IMAGES" value="true"/>

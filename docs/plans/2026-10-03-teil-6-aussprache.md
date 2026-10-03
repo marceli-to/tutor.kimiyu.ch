@@ -10,7 +10,7 @@
 
 **Architecture:**
 - **What is spoken:** exactly what has a speaker button today: `vocabulary` block entries (`foreign`) and flashcard fronts (`modules.flashcards.cards[].front`), only in a `languages` lesson with a `speechLang` (`Profile::speechLang()`).
-- **Spoken text** is computed in PHP (`App\Lessons\Speech::spokenText()`): the part before the first «(» or «/», trimmed («parlé (parler)» → «parlé»). This is today's rule from `SpeakButton.vue`. It moves to PHP because the clip is keyed by it; the Vue component keeps its copy only for the browser fallback.
+- **Spoken text** is computed in PHP (`App\Lessons\Speech\Texts::spokenText()`): the part before the first «(» or «/», trimmed («parlé (parler)» → «parlé»). This is today's rule from `SpeakButton.vue`. It moves to PHP because the clip is keyed by it; the Vue component keeps its copy only for the browser fallback.
 - **Clips are shared** across lessons and accounts: table `speech_clips`, unique `hash` = sha256 of `lang|voice_id|model|spoken text`. «le livre» is generated once. Changing voice or model in the config produces new clips, old ones stay valid for nothing and can be deleted by hand.
 - **Storage:** private disk `speech` (`storage/app/private/speech`, file `{hash}.mp3`). Served by `GET audio/{hash}.mp3` (`SpeechClipController`, throttled, `Cache-Control: public, max-age=31536000, immutable`). No signed URL: the files contain single words, nothing personal, and the hash isn't guessable. No `storage:link` needed (Hostpoint).
 - **Generation:** new job `SpeakLesson` (step `speech`) in `GenerationPipeline::write()` after `CheckLesson`, before the graphics. Action `App\Actions\Generation\SpeakLesson`:
@@ -23,10 +23,13 @@
 - **Frontend:** `LessonView::page()` adds `speechClips`: a map from the original text (`entry.foreign`, `card.front`) to the clip URL. `SpeakButton` gets an optional `src`: if set, it plays the file with `new Audio(src)` (and shows the button even without a browser voice); otherwise it uses the browser voice as today. If playback fails (`play()` rejects or `error` event), it falls back to the browser voice.
 - **Costs:** each ElevenLabs call is logged in `generations` with step `speech`, model = ElevenLabs model id, a new nullable column `characters`, and `cost_usd` = characters × `config('speech.price_per_1000_characters') / 1000` (default 0 on the free plan). The Kosten page shows characters used this month next to the USD sums, so Marcel can compare with the remaining credits.
 
-**ElevenLabs API** (verify every detail against the current docs in Task 1, don't trust this from memory):
-- `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_64`
-- header `xi-api-key: {key}`, JSON body `{"text": "...", "model_id": "eleven_multilingual_v2", "language_code": "fr"}` (check which models accept `language_code`; without it a short word like «chat» may be read in English).
-- response: the MP3 bytes. Check whether a header reports the characters charged (e.g. `character-cost`); otherwise count `mb_strlen($text)`.
+**ElevenLabs API** (checked against the docs 2026-10-03):
+- `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_64`, header `xi-api-key: {key}`, JSON body `{"text": "...", "model_id": "..."}`. The response is the MP3 bytes.
+- `language_code` is **not supported by `eleven_multilingual_v2`** (the docs say so). Send it only for models that accept it (`config('speech.language_code_models')`); with v2 a short word like «chat» may come out English, which Task 1 checks by listening.
+- **Models** (API price per 1000 characters, October 2026): `eleven_v4` $0.022 (promotion until Oct 12, then about $0.08), `eleven_v4_turbo` $0.011, `eleven_multilingual_v2` $0.08, `eleven_flash_v2_5` $0.04 (half the credits of v2). Docs recommend `eleven_v4` or `eleven_multilingual_v2` for quality. The credits per character for v4 are not documented; measure them in Task 1.
+- **No cost header:** the docs name none. Count `mb_strlen($text)` × the model's credit factor (`config('speech.credits_per_character')`).
+- **Quota exhausted:** 401 or 429 with `detail.status` / `error_code` `quota_exceeded` (reports differ). Treat both as «quota exceeded» and stop. Quota resets on the 1st of the month (UTC).
+- Remaining credits: `GET /v1/user/subscription` (`character_count`, `character_limit`); used by the backfill command to print what is left.
 - Called with Laravel's `Http` client (`Http::fake()` in tests, never the real API).
 
 **Tech Stack:** Laravel 13, Pest 4, Inertia 3 + Vue 3. No new Composer or npm packages.
@@ -50,8 +53,8 @@
 	- `voices` per language base: `fr` ← `ELEVENLABS_VOICE_FR`, `en` ← `ELEVENLABS_VOICE_EN`, `it` ← `ELEVENLABS_VOICE_IT` (no defaults; Marcel picks voices in the ElevenLabs voice library);
 	- `max_characters_per_lesson` (1500), `price_per_1000_characters` (0.0).
 - `.env.example`: the new variables, empty.
-- New `app/Lessons/Speech/ElevenLabs.php`: `synthesize(string $text, string $lang, string $voiceId): SpeechResult` (bytes + characters charged). Throws `SpeechFailed` with a `quotaExceeded` flag.
-- Tests: `tests/Unit/Lessons/ElevenLabsTest.php` with `Http::fake()`: request URL, header, body; characters from the header or the text length; quota error → `quotaExceeded`; other error → `SpeechFailed`.
+- New `app/Lessons/Speech/ElevenLabs.php`: `synthesize(string $text, string $lang, string $voiceId): SpeechResult` (bytes + credits). Throws `SpeechFailed` with a `quotaExceeded` flag.
+- Tests: `tests/Unit/Lessons/ElevenLabsTest.php` with `Http::fake()`: request URL, header, body; credits = characters × the model's factor; quota error → `quotaExceeded`; other error → `SpeechFailed`.
 
 Steps:
 1. Read the current ElevenLabs API docs (text-to-speech endpoint, `language_code` support per model, cost header, quota error shape, rate limits). Correct this plan where it differs.
@@ -65,10 +68,10 @@ Steps:
 - New migration `add_characters_to_generations_table`: `characters` unsigned int nullable.
 - New model `App\Models\SpeechClip` (`path()` → `{hash}.mp3`, `url()` → route).
 - `config/filesystems.php`: disk `speech` (private, `storage/app/private/speech`, `serve` false).
-- New `app/Lessons/Speech.php`: `spokenText(string $text): string`, `texts(array $content): list<string>` (vocabulary entries + flashcard fronts, unique, original texts), `hash(string $spoken, string $lang, string $voiceId, string $model): string`.
-- Tests: `tests/Unit/Lessons/SpeechTest.php` (spoken text rule with the examples from `SpeakButton.vue`; texts from a fixture lesson of the `languages` profile; hash changes with voice/model).
+- New `app/Lessons/Speech/Texts.php`: `spokenText(string $text): string`, `texts(array $content): list<string>` (vocabulary entries + flashcard fronts, unique, original texts), `hash(string $spoken, string $lang, string $voiceId, string $model): string`.
+- Tests: `tests/Unit/Lessons/SpeechTextsTest.php` (spoken text rule with the examples from `SpeakButton.vue`; texts from a fixture lesson of the `languages` profile; hash changes with voice/model).
 
-Steps: back up the DB, test both migrations on a copy, migrate. TDD `Speech`, commit.
+Steps: back up the DB, test both migrations on a copy, migrate. TDD `Texts`, commit.
 
 ### Task 3: `SpeakLesson` action and job
 
@@ -93,7 +96,7 @@ Steps: tests first, implement, full suite + phpstan, commit.
 **Files:**
 - New `app/Http/Controllers/SpeechClipController.php` (invokable): find by hash or 404, stream the file from the `speech` disk with `audio/mpeg` and the immutable cache header.
 - `routes/web.php`: `Route::get('audio/{hash}.mp3', SpeechClipController::class)->where('hash', '[0-9a-f]{64}')->middleware('throttle:120,1')->name('speech.clip')`, outside the auth group (children use the shared link without login).
-- `app/Lessons/LessonView.php`: `speechClips` = map original text → clip URL, for the texts of `Speech::texts()` that have a clip with the current voice/model. Empty map when off.
+- `app/Lessons/LessonView.php`: `speechClips` = map original text → clip URL, for the texts of `Texts::texts()` that have a clip with the current voice/model. Empty map when off.
 - Tests: controller (200 with headers, 404 for an unknown hash, works without login); `LessonView` props for a language lesson with and without clips; shared child view gets the same map.
 
 Steps: TDD, commit.
@@ -128,8 +131,13 @@ Steps: TDD, full checks (`composer format:check`, tests, phpstan, `npm run types
 - Edit a word: after saving, the new word plays the new clip within a minute (queue worker running).
 - Credits on the ElevenLabs dashboard match the Kosten page.
 
-## Open questions
+## Decisions (Task 1, 2026-10-03)
 
-- **Voice:** which French (and later English/Italian) voice? Pick in Task 1 by listening.
-- **Model:** `eleven_multilingual_v2` (better, 1 credit/char) or Flash v2.5 (half price, slightly flatter)? Decide after listening to both in Task 1.
+- **Free plan: no library voices via the API** («Free users cannot use library voices via the API», HTTP 402), even when added to the account (tried «Dorian», «Anaïs»). Only the premade voices work.
+- **Voice «Alice»** (`Xb7hH8MSUJpSbSDYk0k2`, premade, British, speaks French), **model `eleven_v4`** with `language_code: fr`. Picked by Marcel from 12 test clips (4 premade voices × v4 / multilingual v2 / Flash v2.5).
+- **Credits measured:** 12 clips of 22 characters used 220 credits → v4 and multilingual v2 1 credit per character, Flash v2.5 0.5.
+- A native voice later (paid plan) only needs `ELEVENLABS_VOICE_FR`; the hash includes the voice, so all words are generated again.
+- Task 2 names the text helper `App\Lessons\Speech\Texts` (next to `ElevenLabs`, `SpeechResult`, `SpeechFailed` in `app/Lessons/Speech/`) instead of `App\Lessons\Speech`.
+
+## Open questions
 - **Conjugation tables:** not spoken today. Add later if wanted (`conjugation.forms[].form`, about 6 clips per verb).

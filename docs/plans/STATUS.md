@@ -5,7 +5,7 @@
 - **Datum:** 2026-10-03
 - **Branch:** `main` (`feature/neue-lernseite` merged 2026-10-03, not deployed)
 - **Last commit:** «Teil 3a: Planen und Schreiben getrennt»
-- **Checks:** 759 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Checks:** 766 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (7 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
@@ -39,7 +39,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- Done: status `planned` («Plan prüfen»), `lessons.plan` / `plan_confirmed_at` / `review_plan` (migrated); the analysis also returns `title`, `key_idea`, `sections` (schema probe OK, 2134 bytes); plan binding in the page prompt, key idea/sections/note/struck additions in `Prompts::context()`.
 	- `AnalyzeLesson` split into `PlanLesson` (analysis → plan) and `WriteLesson` (page, modules, repair; title from the plan). `GenerationPipeline::start()` → graphics only / `write()` / `plan()`; graphic jobs only for planned graphics. Retry after a write failure skips planning.
 	- Until Task 4: without review the `PlanLesson` job sets `plan_confirmed_at` itself; `review_plan` isn't in the form yet (Task 6), so every lesson runs through.
-2. **Teil 6 – Aussprache mit ElevenLabs** (`docs/plans/2026-10-03-teil-6-aussprache.md`): plan written, not started. Clips per word generated once and shared (`speech_clips`), browser voice stays as fallback, never fails a lesson. Marcel has 10'000 credits (~20–30 lessons on multilingual v2). Open: voice and model (decide by listening in Task 1), check the free plan's licence terms.
+2. **Teil 6 – Aussprache mit ElevenLabs** (`docs/plans/2026-10-03-teil-6-aussprache.md`): Task 1 done (`config/speech.php`, client `app/Lessons/Speech/ElevenLabs.php`), Tasks 2–8 open. Clips per word generated once and shared (`speech_clips`), browser voice stays as fallback, never fails a lesson. Free plan, 10'000 credits/month (~30 lessons); `ELEVENLABS_API_KEY` is in the local `.env` (needs read permissions for voices and user).
 3. **Deploy** `main` (see `docs/deployment.md`).
 
 Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step); check corrections can't fill null fields (`tolerance`, `unit`) and a corrected mistake sentence keeps its old `mistake_word`; PHP/TS answer checkers have no shared parity tests (no JS test runner).
@@ -56,6 +56,7 @@ Known smaller follow-ups (not blocking): graphics mode and models per profile (d
 - 2026-10-03: Math «Übungen» selectable, count by scope (8/12/20) instead of a fixed 20.
 - 2026-10-03: Teil 3a: the existing analysis call becomes the planning call (adds title, key idea, sections); no extra photo read.
 - 2026-10-03: `public/build` stays in git (Hostpoint has no Node); merged `feature/neue-lernseite` into `main`.
+- 2026-10-03: Aussprache: ElevenLabs voice «Alice» (premade) with `eleven_v4`; the free plan can't use library voices via the API (native French voices need a paid plan).
 - 2026-10-03: Project status lives in this file; updated after every completed task (`CLAUDE.md`).
 
 ## Für Marcel zu testen / zu tun
