@@ -4,7 +4,7 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** «Formeln in Titeln, Abstand nach Bausteinen»
+- **Last commit:** «Docs: Teil 5»
 - **Checks:** 735 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (6 files, gitignored) can be deleted once everything works.
 
@@ -21,7 +21,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 - **Formular Einfach | Erweitert** (`einfach-erweitert.md`): presets (Kurz & schnell / Normal / Prüfung / Wie letztes Mal), AI detects the subject.
 - **Analysis split** into two API calls (`analysis` + `page`) because the API rejected the schema as too large.
 - **Code style refactor** (`code-style.md`): English keys/values (data migrated), actions + page-data classes (controllers 1048 → 391 lines), English names and comments, tabs, PHP-CS-Fixer instead of Pint.
-- **Teil 5 – Fachprofile** (`teil-5-fachprofile.md`), Tasks 1–4:
+- **Teil 5 – Fachprofile** (`teil-5-fachprofile.md`), Tasks 1–6 (design doc section «Umsetzung» has blocks/modules per profile and probe sizes):
 	- Framework: `App\Lessons\Profile` (science, general, languages, math, geometry, german), resolved from subject unless the parent picks one; schemas filtered per profile.
 	- Languages: `vocabulary`, `conjugation`, speech via browser, «almost» for missing accents (`AnswerResult`).
 	- Math: KaTeX (lazy-loaded), `worked_solution`, `exercises` module with Swiss number/fraction/unit checking (`ExerciseAnswer`).
@@ -33,12 +33,11 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 
 ## Offen
 
-1. **Teil 5, Task 6 – Docs:** mark Teil 5 implemented in the design doc, list per-profile blocks/modules and probe sizes.
-2. **Final review** of Teil 5 (code-reviewer subagent), fix findings.
-3. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
-4. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
+1. **Final review** of Teil 5 (code-reviewer subagent), fix findings.
+2. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
+3. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
 
-Known smaller follow-ups (not blocking): `check.md` doesn't verify figure coordinates against angles in the text; parents can't switch off `exercises` in math lessons; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step).
+Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step).
 
 ## Entscheide
 

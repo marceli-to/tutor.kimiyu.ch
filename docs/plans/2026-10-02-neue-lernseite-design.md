@@ -239,6 +239,8 @@ Plan: `2026-10-02-einfach-erweitert.md`. Entscheide (Auftraggeber, 2026-10-02): 
 
 ## Teil 5 – Fachprofile
 
+Umgesetzt (2026-10-03), Plan: `docs/plans/2026-10-02-teil-5-fachprofile.md`. Abweichungen und Entscheide unten unter «Umsetzung». Die deutschen Namen in diesem Abschnitt heissen im Code englisch (`vocabulary`, `conjugation`, `worked_solution`, `exercises`, `figure`, `find_the_mistake`, Profile `science|general|languages|math|geometry|german`).
+
 Das System ist heute auf Naturwissenschaften zugeschnitten (Referenzen Fotosynthese/Ökosystem, «probieren/Experimente», Sortieren nach Kategorien, Grafik-Muster). Statt eigener Templates gibt es **Fachprofile**: gleicher Seitenaufbau, gleiche Bausteine, aber pro Profil:
 
 1. **Prompt-Zusatz** für Analyse/Planung, Module und Prüfung (`resources/prompts/profile/<profil>.md`), inkl. eines kurzen Beispiels.
@@ -289,6 +291,31 @@ Das System ist heute auf Naturwissenschaften zugeschnitten (Referenzen Fotosynth
 - Bearbeiten-Ansicht: Editoren für `vokabeln`, `konjugation`, `rechenweg`, `aufgaben`, `fehler_finden`; `figur` vorerst nur entfernen, nicht bearbeiten.
 - Lernstand: `aufgaben` und `fehler_finden` speichern Versuche wie Quiz.
 - Fixtures: je Profil eine Beispielseite (z. B. «Passé composé», «Dreisatz», «Winkel an Parallelen», «Das und dass») für Tests, Fake-Modell und als Prompt-Beispiel.
+
+### Umsetzung (Entscheide)
+
+- **Profil:** `App\Lessons\Profile` (Enum). `lessons.profile` wird nur gespeichert, wenn die Eltern im erweiterten Formular eines wählen; sonst wird es nach Schritt 1 der Analyse aus dem (erkannten) Fach abgeleitet (`config('lessons.profiles')`, unbekannte Fächer → `general`).
+- **Schema pro Profil:** An die API gehen nur die Blöcke und Module des Profils (`Schemas::page(Profile)`, `Schemas::modules(Profile)`); nicht erlaubte Module setzt `AnalyzeLesson` danach auf `null`. Grund ist die Grössengrenze der API für Structured Outputs (siehe Tabelle). `ContentValidator` weist fremde Blöcke/Module nur bei frischen Seiten ab (strict); alte Inhalte bleiben anzeigbar.
+- **Kein `try_it`** ausser in `science` (`Profile::allowsExperiments()`).
+- **Formeln:** KaTeX nur im Browser (`MathText.vue`, lazy geladen) und nur in `science`, `math`, `geometry`. Statt KaTeX auf dem Server prüft `ContentValidator::checkTex()` heuristisch: jedes `$` geschlossen, geschweifte Klammern ausgeglichen, keine `\(`/`\[`. Fehler → Reparatur.
+- **Sprachen:** Akzentfehler gelten als «fast richtig» (`AnswerResult`), zählen im Lernstand aber als falsch. Karteikarten mit Umschalter «Deutsch zuerst». Aussprache per `speechSynthesis` (`SpeakButton.vue`), Sprache aus `config('lessons.speech_langs')`, Button nur sichtbar, wenn der Browser eine passende Stimme hat.
+- **Mathematik:** `exercises` prüft Zahlen im Schweizer Format («1'250,5»), Brüche gekürzt, Einheiten optional (`ExerciseAnswer`). `exercises` ist ein Modul, das die Eltern wählen (`Lesson::MODULES`, standardmässig an); Anzahl nach Umfang 8 / 12 / 20. Mathematik und Geometrie haben dafür kein `sorting`.
+- **Geometrie:** `figure` ohne Flächen (`areas`) und Geometrie ohne `facts`: mit beidem lehnt die API das Schema als zu gross ab. Figuren lassen sich in der Bearbeiten-Ansicht nur entfernen.
+- **Deutsch:** `find_the_mistake` (Prüfung `MistakeAnswer`, im Browser gespiegelt in `lib/mistake.ts`), `cloze.case_sensitive` nur im Schema von `german`.
+- **Nicht umgesetzt:** Grafik-Modus und Modelle pro Profil. Der Grafik-Modus bleibt eine Wahl im Formular; die Prompts für Sprachen und Deutsch sagen, dass es meist keine Grafik braucht. Die Modelle bleiben pro Schritt (Teil 4).
+
+**Blöcke und Module pro Profil** (Basis-Blöcke: `paragraph`, `formula`, `facts`, `columns`, `box`, `graphic`; Basis-Module: `quiz`, `sorting`, `flashcards`, `cloze`)
+
+| Profil | Blöcke | Module | Schema Seite / Module (Bytes) |
+| --- | --- | --- | --- |
+| `science` | Basis (+ `try_it`) | Basis | 3692 / 2912 |
+| `general` | Basis | Basis | 3410 / 2912 |
+| `languages` | Basis ohne `formula`, + `vocabulary`, `conjugation` | Basis | 4141 / 2912 |
+| `math` | Basis ohne `columns`, + `worked_solution` | `quiz`, `flashcards`, `cloze`, `exercises` | 3405 / 2719 |
+| `geometry` | Basis ohne `columns`, `facts`, + `worked_solution`, `figure` | wie `math` | 4116 / 2719 |
+| `german` | Basis | Basis + `find_the_mistake` | 3410 / 3637 |
+
+Alle Schemas mit `php artisan lessons:check-schemas` gegen die echte API geprüft (2026-10-03, alle OK). Die Bytes sagen die Grenze nicht voraus: Mathematik-Module mit allen fünf Modulen scheiterten bei 3647 Bytes, die Geometrie-Seite scheiterte mit `facts` bei 4558 Bytes.
 
 ---
 
