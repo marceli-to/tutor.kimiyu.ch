@@ -2,8 +2,10 @@
 
 namespace App\Lessons;
 
+use App\Lessons\Speech\Texts;
 use App\Models\Lesson;
 use App\Models\LessonGraphic;
+use App\Models\SpeechClip;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -37,6 +39,8 @@ class LessonView
 			'profile' => $profile->value,
 			// Read-aloud button for foreign words; null: no button
 			'speechLang' => $lesson->speechLang(),
+			// Original text → ElevenLabs clip; words without a clip use the browser voice
+			'speechClips' => self::speechClips($lesson),
 			// TeX between $…$ becomes a formula; elsewhere a «$» stays a dollar sign
 			'math' => $profile->rendersMath(),
 			'level' => $lesson->level,
@@ -44,6 +48,31 @@ class LessonView
 			'palette' => $lesson->content ? Palettes::get($lesson->content['meta']['palette'] ?? null) : null,
 			'graphics' => $graphics,
 		];
+	}
+
+	/**
+	 * Clips with the current voice and model, by the original text the page shows.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function speechClips(Lesson $lesson): array
+	{
+		if ($lesson->content === null || ! $lesson->speaksWithElevenLabs()) {
+			return [];
+		}
+
+		$lang = (string) $lesson->speechLang();
+		$voiceId = (string) $lesson->speechVoice();
+		$model = (string) config('speech.model');
+
+		$hashes = [];
+		foreach (Texts::texts($lesson->content) as $text) {
+			$hashes[$text] = Texts::hash(Texts::spokenText($text), $lang, $voiceId, $model);
+		}
+
+		$clips = SpeechClip::whereIn('hash', array_values($hashes))->get()->keyBy('hash');
+
+		return array_filter(array_map(fn (string $hash) => $clips->get($hash)?->url(), $hashes));
 	}
 
 	/**

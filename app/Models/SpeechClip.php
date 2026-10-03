@@ -26,4 +26,9 @@ class SpeechClip extends Model
 	{
 		return "{$this->hash}.mp3";
 	}
+
+	public function url(): string
+	{
+		return route('speech.clip', $this->hash);
+	}
 }

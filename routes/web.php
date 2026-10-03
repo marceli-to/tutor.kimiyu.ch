@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonContentController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\SharedLessonController;
+use App\Http\Controllers\SpeechClipController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -44,6 +45,12 @@ Route::get('lernseiten/{lesson}/grafik/{number}', [LessonController::class, 'gra
 	->whereNumber('number')
 	->middleware('signed')
 	->name('lessons.graphic');
+
+// Spoken foreign words, also for children without login
+Route::get('audio/{hash}.mp3', SpeechClipController::class)
+	->where('hash', '[0-9a-f]{64}')
+	->middleware('throttle:120,1')
+	->name('speech.clip');
 
 // For children: unguessable link per child, only published pages, no login
 Route::middleware(['noindex', 'throttle:60,1'])->group(function () {

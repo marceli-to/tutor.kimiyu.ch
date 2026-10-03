@@ -31,7 +31,7 @@ class SpeakLesson
 		}
 
 		$lang = (string) $lesson->speechLang();
-		$voiceId = (string) config('speech.voices.'.strtolower(explode('-', $lang)[0]));
+		$voiceId = (string) $lesson->speechVoice();
 		$model = (string) config('speech.model');
 		$disk = Storage::disk('speech');
 		$characters = 0;

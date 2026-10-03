@@ -144,6 +144,7 @@ Steps: TDD, full checks (`composer format:check`, tests, phpstan, `npm run types
 - `Lesson::speechLang()` and `Lesson::speaksWithElevenLabs()` (language lesson + key + voice for the language). The pipeline adds `SpeakLesson` only when the latter is true (in `write()` and in `start()` with finished content, via `finishingJobs()`), so other lessons' chains are unchanged.
 - The action stops at the **first** error of any kind, not only on quota: a wrong key, a library voice on the free plan or a missing voice would fail for every word. Failed calls are logged with status `error` and 0 credits.
 - A clip whose file is missing is generated again (`updateOrCreate` on the hash).
+- Task 4: `Lesson::speechVoice()` holds the voice lookup (used by `speaksWithElevenLabs()`, the action and `LessonView`). A clip row without its file answers 404, so the button falls back to the browser voice.
 - The progress display gets `lesson.speaks` and shows «Aussprache aufnehmen» only then.
 
 ## Open questions

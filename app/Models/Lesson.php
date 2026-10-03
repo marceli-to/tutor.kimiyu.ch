@@ -150,15 +150,22 @@ class Lesson extends Model
 	}
 
 	/**
+	 * ElevenLabs voice for the lesson's language; null: no voice configured or not a language lesson.
+	 */
+	public function speechVoice(): ?string
+	{
+		$lang = $this->speechLang();
+		$voice = $lang !== null ? config('speech.voices.'.strtolower(explode('-', $lang)[0])) : null;
+
+		return filled($voice) ? (string) $voice : null;
+	}
+
+	/**
 	 * Whether ElevenLabs reads this lesson's words: a language lesson with a key and a voice for its language.
 	 */
 	public function speaksWithElevenLabs(): bool
 	{
-		$lang = $this->speechLang();
-
-		return $lang !== null
-			&& filled(config('speech.key'))
-			&& filled(config('speech.voices.'.strtolower(explode('-', $lang)[0])));
+		return filled(config('speech.key')) && $this->speechVoice() !== null;
 	}
 
 	/**
