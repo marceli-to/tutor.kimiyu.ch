@@ -40,6 +40,8 @@ const props = defineProps<{
 		fromTopic: boolean;
 		// Positions of the graphics being built (for the progress display)
 		plannedGraphics: number[];
+		// ElevenLabs reads the foreign words (for the progress display)
+		speaks: boolean;
 		subject: string;
 		profile: LessonProfile;
 		speechLang: string | null;
@@ -102,6 +104,7 @@ watch(generating, (active) => (active ? start() : stop()));
 		:error="lesson.error"
 		:can-retry="lesson.canRetry"
 		:planned-graphics="lesson.plannedGraphics"
+		:speaks="lesson.speaks"
 	/>
 
 	<template v-else>

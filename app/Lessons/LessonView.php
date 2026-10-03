@@ -36,7 +36,7 @@ class LessonView
 			'subject' => $lesson->subjectLabel(),
 			'profile' => $profile->value,
 			// Read-aloud button for foreign words; null: no button
-			'speechLang' => $profile->speechLang($lesson->subject),
+			'speechLang' => $lesson->speechLang(),
 			// TeX between $…$ becomes a formula; elsewhere a «$» stays a dollar sign
 			'math' => $profile->rendersMath(),
 			'level' => $lesson->level,

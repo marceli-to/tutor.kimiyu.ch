@@ -49,6 +49,8 @@ class LessonPage
 				'canRetry' => GenerationPipeline::canRetry($this->lesson),
 				'fromTopic' => $this->lesson->isFromTopic(),
 				'plannedGraphics' => self::plannedGraphics($this->lesson),
+				// The progress shows the pronunciation step only when it runs
+				'speaks' => $this->lesson->speaksWithElevenLabs(),
 				'checkNotes' => $this->lesson->check_notes ?? [],
 			],
 		];

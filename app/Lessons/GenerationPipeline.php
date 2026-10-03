@@ -10,6 +10,7 @@ use App\Jobs\LessonStep;
 use App\Jobs\PlanLesson;
 use App\Jobs\RegenerateGraphic;
 use App\Jobs\RegenerateQuiz;
+use App\Jobs\SpeakLesson;
 use App\Jobs\WriteLesson;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Bus;
@@ -21,12 +22,12 @@ use InvalidArgumentException;
 class GenerationPipeline
 {
 	/**
-	 * Create and retry: graphics only if the content exists, writing if the plan is confirmed, else planning.
+	 * Create and retry: pronunciation and graphics only if the content exists, writing if the plan is confirmed, else planning.
 	 */
 	public static function start(Lesson $lesson): void
 	{
 		match (true) {
-			$lesson->content !== null => self::dispatch($lesson, 'queued', self::graphicJobs($lesson)),
+			$lesson->content !== null => self::dispatch($lesson, 'queued', self::finishingJobs($lesson)),
 			$lesson->plan_confirmed_at !== null => self::write($lesson),
 			default => self::plan($lesson),
 		};
@@ -41,7 +42,7 @@ class GenerationPipeline
 	}
 
 	/**
-	 * Text part, modules, check and the planned graphics.
+	 * Text part, modules, check, pronunciation and the planned graphics.
 	 */
 	public static function write(Lesson $lesson): void
 	{
@@ -52,19 +53,20 @@ class GenerationPipeline
 		}
 
 		// «page» rather than «queued»: the progress shows the planning as done
-		self::dispatch($lesson, 'page', [...$jobs, ...self::graphicJobs($lesson)]);
+		self::dispatch($lesson, 'page', [...$jobs, ...self::finishingJobs($lesson)]);
 	}
 
 	/**
-	 * One job per planned graphic that isn't built yet, then the finish.
+	 * Pronunciation for a language lesson, one job per planned graphic that isn't built yet, then the finish.
 	 *
 	 * @return list<LessonStep>
 	 */
-	private static function graphicJobs(Lesson $lesson): array
+	private static function finishingJobs(Lesson $lesson): array
 	{
 		$positions = $lesson->graphics()->whereNotNull('plan')->whereNull('graphic')->pluck('position');
 
 		return [
+			...($lesson->speaksWithElevenLabs() ? [new SpeakLesson($lesson)] : []),
 			...$positions->map(fn (int $position) => new GenerateLessonGraphic($lesson, $position))->values()->all(),
 			new FinishLesson($lesson),
 		];

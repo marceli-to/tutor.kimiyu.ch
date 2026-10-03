@@ -139,5 +139,12 @@ Steps: TDD, full checks (`composer format:check`, tests, phpstan, `npm run types
 - A native voice later (paid plan) only needs `ELEVENLABS_VOICE_FR`; the hash includes the voice, so all words are generated again.
 - Task 2 names the text helper `App\Lessons\Speech\Texts` (next to `ElevenLabs`, `SpeechResult`, `SpeechFailed` in `app/Lessons/Speech/`) instead of `App\Lessons\Speech`.
 
+## As built (Task 3, 2026-10-03)
+
+- `Lesson::speechLang()` and `Lesson::speaksWithElevenLabs()` (language lesson + key + voice for the language). The pipeline adds `SpeakLesson` only when the latter is true (in `write()` and in `start()` with finished content, via `finishingJobs()`), so other lessons' chains are unchanged.
+- The action stops at the **first** error of any kind, not only on quota: a wrong key, a library voice on the free plan or a missing voice would fail for every word. Failed calls are logged with status `error` and 0 credits.
+- A clip whose file is missing is generated again (`updateOrCreate` on the hash).
+- The progress display gets `lesson.speaks` and shows «Aussprache aufnehmen» only then.
+
 ## Open questions
 - **Conjugation tables:** not spoken today. Add later if wanted (`conjugation.forms[].form`, about 6 clips per verb).

@@ -142,6 +142,26 @@ class Lesson extends Model
 	}
 
 	/**
+	 * Language for reading foreign words aloud (BCP 47); null: no speaker buttons.
+	 */
+	public function speechLang(): ?string
+	{
+		return $this->resolvedProfile()->speechLang($this->subject);
+	}
+
+	/**
+	 * Whether ElevenLabs reads this lesson's words: a language lesson with a key and a voice for its language.
+	 */
+	public function speaksWithElevenLabs(): bool
+	{
+		$lang = $this->speechLang();
+
+		return $lang !== null
+			&& filled(config('speech.key'))
+			&& filled(config('speech.voices.'.strtolower(explode('-', $lang)[0])));
+	}
+
+	/**
 	 * Upper bound of the sections for the scope, e.g. 3 for «1–3».
 	 */
 	public function maxSections(): int

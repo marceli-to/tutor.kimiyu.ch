@@ -14,6 +14,8 @@ const props = defineProps<{
 	canRetry: boolean;
 	// Positions of the graphics being built
 	plannedGraphics: number[];
+	// ElevenLabs reads the foreign words: one more step
+	speaks: boolean;
 }>();
 
 const fullSteps = [
@@ -54,7 +56,11 @@ const steps = computed(() => {
 				: 'Interaktive Grafik zeichnen',
 	}));
 
-	return [...fullSteps, ...graphicSteps];
+	const speechSteps = props.speaks
+		? [{ key: 'speech', label: 'Aussprache aufnehmen' }]
+		: [];
+
+	return [...fullSteps, ...speechSteps, ...graphicSteps];
 });
 
 const current = computed(() => {
