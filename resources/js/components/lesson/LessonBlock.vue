@@ -12,6 +12,8 @@ defineProps<{
 	graphics: LessonGraphics;
 	// Languages lesson: read-aloud button for the foreign words
 	speechLang?: string | null;
+	// Original text → ElevenLabs clip
+	speechClips?: Record<string, string>;
 }>();
 </script>
 
@@ -139,6 +141,7 @@ defineProps<{
 								v-if="speechLang"
 								:text="entry.foreign"
 								:lang="speechLang"
+								:src="speechClips?.[entry.foreign]"
 								class="-my-1"
 							/>
 						</span>

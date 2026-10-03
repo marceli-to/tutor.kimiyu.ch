@@ -30,6 +30,8 @@ const props = defineProps<{
 	profile: LessonProfile;
 	// Languages lesson with a known language: foreign words can be read aloud
 	speechLang: string | null;
+	// Original text → ElevenLabs clip; words without one use the browser voice
+	speechClips: Record<string, string>;
 	// Math, geometry and science: TeX between $…$ becomes a formula
 	math: boolean;
 	level: string;
@@ -105,6 +107,7 @@ function toggleTheme() {
 					:block="block"
 					:graphics="graphics"
 					:speech-lang="speechLang"
+					:speech-clips="speechClips"
 				/>
 			</section>
 
@@ -148,6 +151,7 @@ function toggleTheme() {
 					:data="modules.flashcards"
 					:reversible="profile === 'languages'"
 					:speech-lang="speechLang"
+					:speech-clips="speechClips"
 				/>
 			</section>
 

@@ -5,7 +5,7 @@
 - **Datum:** 2026-10-03
 - **Branch:** `main` (`feature/neue-lernseite` merged 2026-10-03, not deployed)
 - **Last commit:** «Teil 3a: Planen und Schreiben getrennt»
-- **Checks:** 807 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Checks:** 804 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (7 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
@@ -35,11 +35,11 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 
 ## Offen
 
-1. **Teil 3a – Plan bestätigen** (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`): Tasks 1–4 done, 4–8 open (confirm/replan backend, PlanReview page, form checkbox, expiry, docs).
+1. **Teil 3a – Plan bestätigen** (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`): Tasks 1–5 done, 4–8 open (confirm/replan backend, PlanReview page, form checkbox, expiry, docs).
 	- Done: status `planned` («Plan prüfen»), `lessons.plan` / `plan_confirmed_at` / `review_plan` (migrated); the analysis also returns `title`, `key_idea`, `sections` (schema probe OK, 2134 bytes); plan binding in the page prompt, key idea/sections/note/struck additions in `Prompts::context()`.
 	- `AnalyzeLesson` split into `PlanLesson` (analysis → plan) and `WriteLesson` (page, modules, repair; title from the plan). `GenerationPipeline::start()` → graphics only / `write()` / `plan()`; graphic jobs only for planned graphics. Retry after a write failure skips planning.
 	- Until Task 4: without review the `PlanLesson` job sets `plan_confirmed_at` itself; `review_plan` isn't in the form yet (Task 6), so every lesson runs through.
-2. **Teil 6 – Aussprache mit ElevenLabs** (`docs/plans/2026-10-03-teil-6-aussprache.md`): Tasks 1–4 done (`config/speech.php`, client `app/Lessons/Speech/ElevenLabs.php`, `Texts`, table `speech_clips`, `generations.credits`, disk `speech`; local DB migrated, backup `database.sqlite.bak-2026-10-03-speech`; job `SpeakLesson` after the check, only for language lessons with key and voice; `GET audio/{hash}.mp3` without login, `lesson.speechClips` map), Tasks 5–8 open (frontend, backfill command, docs). Clips per word generated once and shared (`speech_clips`), browser voice stays as fallback, never fails a lesson. Free plan, 10'000 credits/month (~30 lessons); `ELEVENLABS_API_KEY` is in the local `.env` (needs read permissions for voices and user).
+2. **Teil 6 – Aussprache mit ElevenLabs** (`docs/plans/2026-10-03-teil-6-aussprache.md`): Tasks 1–5 done (`config/speech.php`, client `app/Lessons/Speech/ElevenLabs.php`, `Texts`, table `speech_clips`, `generations.credits`, disk `speech`; local DB migrated, backup `database.sqlite.bak-2026-10-03-speech`; job `SpeakLesson` after the check, only for language lessons with key and voice; `GET audio/{hash}.mp3` without login, `lesson.speechClips` map; `SpeakButton` plays the clip via `lib/speech.ts`, browser voice as fallback), Tasks 6–8 open (backfill command + edits + Kosten page, docs, real check). Clips per word generated once and shared (`speech_clips`), browser voice stays as fallback, never fails a lesson. Free plan, 10'000 credits/month (~30 lessons); `ELEVENLABS_API_KEY` is in the local `.env` (needs read permissions for voices and user).
 3. **Deploy** `main` (see `docs/deployment.md`).
 
 Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step); check corrections can't fill null fields (`tolerance`, `unit`) and a corrected mistake sentence keeps its old `mistake_word`; PHP/TS answer checkers have no shared parity tests (no JS test runner).

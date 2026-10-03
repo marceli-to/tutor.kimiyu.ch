@@ -45,6 +45,7 @@ const props = defineProps<{
 		subject: string;
 		profile: LessonProfile;
 		speechLang: string | null;
+		speechClips: Record<string, string>;
 		// TeX between $…$ is rendered as a formula
 		math: boolean;
 		level: string;
@@ -127,6 +128,7 @@ watch(generating, (active) => (active ? start() : stop()));
 			:subject="lesson.subject"
 			:profile="lesson.profile"
 			:speech-lang="lesson.speechLang"
+			:speech-clips="lesson.speechClips"
 			:math="lesson.math"
 			:level="lesson.level"
 		>

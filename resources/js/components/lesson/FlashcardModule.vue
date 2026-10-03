@@ -12,6 +12,8 @@ const props = defineProps<{
 	reversible?: boolean;
 	// Reads the front (the foreign word) aloud
 	speechLang?: string | null;
+	// Original text → ElevenLabs clip
+	speechClips?: Record<string, string>;
 }>();
 
 const deck = ref(props.data.entries.slice());
@@ -91,6 +93,7 @@ function toggleGermanFirst() {
 				v-if="speechLang && showsFront"
 				:text="card.front"
 				:lang="speechLang"
+				:src="speechClips?.[card.front]"
 				class="absolute top-2 right-2"
 			/>
 		</div>
