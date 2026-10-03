@@ -20,7 +20,7 @@ type LessonItem = {
 	title: string;
 	math: boolean;
 	emoji: string | null;
-	status: 'draft' | 'generating' | 'review' | 'published' | 'failed';
+	status: 'draft' | 'generating' | 'planned' | 'review' | 'published' | 'failed';
 	statusLabel: string;
 	date: string | null;
 };
@@ -38,6 +38,7 @@ defineProps<{
 const badgeVariant = {
 	draft: 'secondary',
 	generating: 'secondary',
+	planned: 'default',
 	review: 'default',
 	published: 'outline',
 	failed: 'destructive',

@@ -37,13 +37,16 @@ use Illuminate\Support\Str;
  * @property list<array{area: string, change: string}>|null $check_notes
  * @property string|null $source_summary
  * @property list<string>|null $additions What the AI added from its own knowledge
+ * @property array{title: string, key_idea: string, sections: list<array{title: string, goal: string|null}>, note: string|null, removed_additions: list<string>}|null $plan
+ * @property Carbon|null $plan_confirmed_at The parents (or the pipeline without review) confirmed the plan
+ * @property bool $review_plan Stop after the planning step until the parents confirm the plan
  * @property string|null $error
  * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at Soft-deleted: photos are gone, the costs are kept
  */
-#[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'profile', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'error', 'published_at'])]
+#[Fillable(['status', 'step', 'title', 'subject', 'subject_detected', 'profile', 'level', 'topic', 'notes', 'prompt', 'photo_count', 'graphics_mode', 'purpose', 'scope', 'modules', 'schema_version', 'content', 'check_notes', 'source_summary', 'additions', 'plan', 'plan_confirmed_at', 'review_plan', 'error', 'published_at'])]
 class Lesson extends Model
 {
 	/** @use HasFactory<LessonFactory> */
@@ -73,6 +76,7 @@ class Lesson extends Model
 		'graphics_mode' => 'auto',
 		'purpose' => 'new',
 		'scope' => 'normal',
+		'review_plan' => false,
 	];
 
 	protected function casts(): array
@@ -86,6 +90,9 @@ class Lesson extends Model
 			'check_notes' => 'array',
 			'additions' => 'array',
 			'modules' => 'array',
+			'plan' => 'array',
+			'plan_confirmed_at' => 'datetime',
+			'review_plan' => 'boolean',
 			'published_at' => 'datetime',
 		];
 	}
@@ -132,6 +139,14 @@ class Lesson extends Model
 	public function resolvedProfile(): Profile
 	{
 		return $this->profile ?? Profile::forSubject($this->subject);
+	}
+
+	/**
+	 * Waiting for the parents to confirm the plan.
+	 */
+	public function isPlanned(): bool
+	{
+		return $this->status === LessonStatus::Planned;
 	}
 
 	/**
