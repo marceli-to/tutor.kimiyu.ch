@@ -35,7 +35,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 
 ## Offen
 
-1. **Teil 3a – Plan bestätigen**: plan written (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`, Tasks 1–9), not started. Waiting for Marcel to confirm the approach (analysis call becomes the planning call, no extra call).
+1. **Teil 3a – Plan bestätigen**: plan written (`docs/plans/2026-10-03-teil-3a-plan-bestaetigen.md`, Tasks 1–9), not started. Approach confirmed by Marcel; execute in a new session with superpowers:executing-plans.
 2. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
 
 Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step); check corrections can't fill null fields (`tolerance`, `unit`) and a corrected mistake sentence keeps its old `mistake_word`; PHP/TS answer checkers have no shared parity tests (no JS test runner).
@@ -50,6 +50,7 @@ Known smaller follow-ups (not blocking): graphics mode and models per profile (d
 - 2026-10-02: Slim controllers; actions with one `handle()`; page data in `app/Http/PageData/*::props()`; no trivial wrapper helpers.
 - 2026-10-02: Profiles: only blocks/modules of the lesson's profile are sent to the API; profile stored only when the parent picks it.
 - 2026-10-03: Math «Übungen» selectable, count by scope (8/12/20) instead of a fixed 20.
+- 2026-10-03: Teil 3a: the existing analysis call becomes the planning call (adds title, key idea, sections); no extra photo read.
 - 2026-10-03: Project status lives in this file; updated after every completed task (`CLAUDE.md`).
 
 ## Für Marcel zu testen / zu tun
