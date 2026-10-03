@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FigureBlock from '@/components/lesson/FigureBlock.vue';
 import GraphicFrame from '@/components/lesson/GraphicFrame.vue';
 import MathText from '@/components/lesson/MathText.vue';
 import OriginBadge from '@/components/lesson/OriginBadge.vue';
@@ -192,6 +193,8 @@ defineProps<{
 			<MathText :text="block.result" />
 		</p>
 	</div>
+
+	<FigureBlock v-else-if="block.type === 'figure'" :figure="block" />
 
 	<div
 		v-else-if="block.type === 'conjugation'"

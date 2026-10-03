@@ -167,9 +167,18 @@ describe('per profile', function () {
 			->and(str_contains($json, '"conjugation"'))->toBe($profile === Profile::Languages);
 	})->with(Profile::cases());
 
-	it('has worked solutions and exercises only in the math schemas', function (Profile $profile) {
-		expect(str_contains(json_encode(Schemas::part('page', $profile)), '"worked_solution"'))->toBe($profile === Profile::Math)
-			->and(array_key_exists('exercises', Schemas::modules($profile)['properties']))->toBe($profile === Profile::Math);
+	it('has worked solutions and exercises only in the math and geometry schemas', function (Profile $profile) {
+		$calculates = in_array($profile, [Profile::Math, Profile::Geometry], true);
+
+		expect(str_contains(json_encode(Schemas::part('page', $profile)), '"worked_solution"'))->toBe($calculates)
+			->and(array_key_exists('exercises', Schemas::modules($profile)['properties']))->toBe($calculates);
+	})->with(Profile::cases());
+
+	it('has figures only in the geometry schema, without filled areas', function (Profile $profile) {
+		$json = json_encode(Schemas::part('page', $profile));
+
+		expect(str_contains($json, '"figure"'))->toBe($profile === Profile::Geometry)
+			->and($json)->not->toContain('"areas"');
 	})->with(Profile::cases());
 
 	it('accepts the profile fixtures as content and as the text part of their profile', function (string $fixture) {

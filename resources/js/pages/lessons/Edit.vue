@@ -480,6 +480,18 @@ function save() {
 						</p>
 					</div>
 
+					<div v-else-if="block.type === 'figure'" class="space-y-1">
+						<p class="text-sm font-medium">
+							Figur<template v-if="block.title"
+								>: {{ block.title }}</template
+							>
+						</p>
+						<p class="text-sm text-muted-foreground">
+							Die Figur lässt sich hier nicht bearbeiten, nur
+							entfernen.
+						</p>
+					</div>
+
 					<Button
 						type="button"
 						variant="ghost"

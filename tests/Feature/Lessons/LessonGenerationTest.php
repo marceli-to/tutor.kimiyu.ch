@@ -1643,6 +1643,7 @@ describe('subject profiles', function () {
 			->not->toContain(LessonFactory::fixture($other)['meta']['title']);
 	})->with([
 		'math' => ['Mathematik', 'dreisatz', 'fotosynthese'],
+		'geometry' => ['Geometrie', 'winkel-parallelen', 'dreisatz'],
 		'science' => ['Biologie', 'fotosynthese', 'dreisatz'],
 		'languages without a graphic of its own' => ['Französisch', 'fotosynthese', 'dreisatz'],
 	]);
@@ -1715,6 +1716,39 @@ describe('subject profiles', function () {
 			->and(json_encode($page->schema))->toContain('"worked_solution"')->not->toContain('"columns"')
 			->and($modules->prompt)->toContain('Aufgaben (')
 			->and($modules->system)->toContain('solution_path');
+	});
+
+	it('builds a geometry page with a figure from its own example', function () {
+		$geometry = LessonFactory::fixture('winkel-parallelen');
+		$this->fake->push('analysis', analysis(['subject' => 'Geometrie', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => Arr::except(Prompts::page($geometry), 'try_it')]);
+		$this->fake->push('modules', ['modules' => $geometry['modules']]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto']);
+
+		$lesson = Lesson::sole();
+		$page = $this->fake->requestsFor('page')[0];
+		expect($lesson->status)->toBe(LessonStatus::Review)
+			->and($lesson->resolvedProfile())->toBe(Profile::Geometry)
+			->and($lesson->content['sections'][0]['blocks'][1]['type'])->toBe('figure')
+			->and($page->prompt)->toContain('Fachprofil: Geometrie')
+			->and($page->system)->toContain('"vertex"')->toContain('(Thema Winkel an Parallelen)')
+			->and(json_encode($page->schema))->toContain('"figure"')->not->toContain('"facts"');
+	});
+
+	it('repairs a fresh geometry page whose figure points to a missing point', function () {
+		$geometry = LessonFactory::fixture('winkel-parallelen');
+		$broken = Arr::except(Prompts::page($geometry), 'try_it');
+		$broken['sections'][0]['blocks'][1]['lines'][0]['to'] = 'Z';
+		$this->fake->push('analysis', analysis(['subject' => 'Geometrie', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => $broken]);
+		$this->fake->push('modules', ['modules' => $geometry['modules']]);
+		$this->fake->push('repair-page', ['page' => Arr::except(Prompts::page($geometry), 'try_it')]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto']);
+
+		expect($this->fake->requestsFor('repair-page')[0]->prompt)->toContain('Der Punkt «Z» ist nicht definiert.')
+			->and(Lesson::sole()->content['sections'][0]['blocks'][1]['lines'][0]['to'])->toBe('G2');
 	});
 
 	it('rejects broken tex in a fresh math page and repairs it', function () {

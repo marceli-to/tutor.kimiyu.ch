@@ -17,7 +17,7 @@ class LessonFactory extends Factory
 	public const FIXTURES = ['fotosynthese', 'oekosystem'];
 
 	// Hand-written examples of the subject profiles (a graphic only where it helps)
-	public const PROFILE_FIXTURES = ['passe-compose', 'dreisatz'];
+	public const PROFILE_FIXTURES = ['passe-compose', 'dreisatz', 'winkel-parallelen'];
 
 	/**
 	 * @return array<string, mixed>

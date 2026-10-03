@@ -44,7 +44,26 @@ export type LessonBlock = Origin &
 				steps: { text: string; reason?: string | null }[];
 				result: string;
 		  }
+		// Geometry profile: a figure the app draws from points, coordinates 0–100
+		| ({ type: 'figure' } & FigureData)
 	);
+
+export type FigureData = {
+	title?: string | null;
+	points: { id: string; x: number; y: number; label?: string | null }[];
+	lines: {
+		from: string;
+		to: string;
+		label?: string | null;
+		style: 'solid' | 'dashed';
+	}[];
+	angles: {
+		vertex: string;
+		from: string;
+		to: string;
+		label?: string | null;
+	}[];
+};
 
 export type QuizQuestion = Origin & {
 	id: string;

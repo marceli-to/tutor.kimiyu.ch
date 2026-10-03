@@ -410,3 +410,63 @@ describe('tex', function () {
 			->toContain('Im Feld modules.exercises.entries.0.solution_path ist ein «$» nicht geschlossen.');
 	});
 });
+
+describe('geometry', function () {
+	/**
+	 * The fixture's first figure block, changed by $change, and the errors of the validator.
+	 */
+	function figureErrors(Closure $change): array
+	{
+		$content = lessonFixture('winkel-parallelen');
+		$content['sections'][0]['blocks'][1] = $change($content['sections'][0]['blocks'][1]);
+
+		return ContentValidator::errors($content);
+	}
+
+	it('accepts the geometry fixture strictly with its profile', function () {
+		expect(lessonFixture('winkel-parallelen')['sections'][0]['blocks'][1]['type'])->toBe('figure')
+			->and(ContentValidator::errors(lessonFixture('winkel-parallelen'), strict: true, profile: Profile::Geometry))->toBe([]);
+	});
+
+	it('rejects figures on a fresh page of another profile but shows them on old pages', function () {
+		$content = lessonFixture('winkel-parallelen');
+
+		expect(ContentValidator::errors($content, strict: true, profile: Profile::Math))
+			->toContain('Das Fachprofil «Mathematik» hat keine Bausteine vom Typ «figure».')
+			->and(ContentValidator::errors($content))->toBe([]);
+	});
+
+	it('names the broken part of a figure', function (Closure $change, string $error) {
+		expect(figureErrors($change))->toContain($error);
+	})->with([
+		'unknown point in a line' => [
+			fn (array $figure) => [...$figure, 'lines' => [['from' => 'A', 'to' => 'Z', 'label' => null, 'style' => 'solid']]],
+			'Figur in sections.0.blocks.1: Der Punkt «Z» ist nicht definiert.',
+		],
+		'unknown point in an angle' => [
+			fn (array $figure) => [...$figure, 'angles' => [['vertex' => 'X', 'from' => 'A', 'to' => 'B', 'label' => null]]],
+			'Figur in sections.0.blocks.1: Der Punkt «X» ist nicht definiert.',
+		],
+		'coordinate out of range' => [
+			fn (array $figure) => array_replace_recursive($figure, ['points' => [0 => ['x' => 120]]]),
+			'Figur in sections.0.blocks.1: Der Punkt «G1» liegt ausserhalb von 0–100.',
+		],
+		'duplicate point id' => [
+			fn (array $figure) => array_replace_recursive($figure, ['points' => [1 => ['id' => $figure['points'][0]['id']]]]),
+			'Figur in sections.0.blocks.1: Die Punkt-ID «G1» kommt mehrfach vor.',
+		],
+	]);
+
+	it('checks the shape of a figure', function (Closure $change) {
+		expect(figureErrors($change))->toContain('Block sections.0.blocks.1 (Typ «figure») ist unvollständig oder hat falsche Felder.');
+	})->with([
+		'one point' => fn (array $figure) => [...$figure, 'points' => array_slice($figure['points'], 0, 1), 'lines' => [], 'angles' => []],
+		'13 points' => fn (array $figure) => [...$figure, 'points' => array_map(fn ($i) => ['id' => "P{$i}", 'x' => $i, 'y' => $i, 'label' => null], range(1, 13))],
+		'17 lines' => fn (array $figure) => [...$figure, 'lines' => array_fill(0, 17, $figure['lines'][0])],
+		'7 angles' => fn (array $figure) => [...$figure, 'angles' => array_fill(0, 7, $figure['angles'][0])],
+		'coordinate not a number' => fn (array $figure) => array_replace_recursive($figure, ['points' => [0 => ['x' => 'links']]]),
+		'unknown line style' => fn (array $figure) => array_replace_recursive($figure, ['lines' => [0 => ['style' => 'dotted']]]),
+		'no lines field' => fn (array $figure) => array_diff_key($figure, ['lines' => true]),
+		'title not text' => fn (array $figure) => [...$figure, 'title' => 5],
+	]);
+});

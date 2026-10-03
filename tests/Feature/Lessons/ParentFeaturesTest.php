@@ -290,6 +290,23 @@ describe('editing', function () {
 			->and($saved['modules']['exercises']['entries'][3]['tolerance'])->toBe(0.1);
 	});
 
+	it('keeps the figures of a geometry lesson and lets the parents remove one', function () {
+		$lesson = Lesson::factory()->for($this->child)->fromFixture('winkel-parallelen')->create(['subject' => 'Geometrie']);
+		$content = $lesson->content;
+		$figure = $content['sections'][0]['blocks'][1];
+		$save = fn (array $content) => $this->actingAs($this->user)->put(route('lessons.update', $lesson), [
+			'content' => $content,
+			'clozeMarkup' => ClozeParser::toMarkup($content['modules']['cloze']['segments']),
+		]);
+
+		$save($content)->assertSessionHasNoErrors();
+		expect($lesson->fresh()->content['sections'][0]['blocks'][1])->toBe($figure);
+
+		array_splice($content['sections'][0]['blocks'], 1, 1);
+		$save($content)->assertSessionHasNoErrors();
+		expect(array_column($lesson->fresh()->content['sections'][0]['blocks'], 'type'))->toBe(['paragraph', 'box']);
+	});
+
 	it('rejects an exercise solution the app cannot check', function () {
 		$lesson = Lesson::factory()->for($this->child)->fromFixture('dreisatz')->create(['subject' => 'Mathematik']);
 		$content = $lesson->content;

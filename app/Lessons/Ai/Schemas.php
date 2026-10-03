@@ -172,6 +172,14 @@ class Schemas
 				'steps' => ['type' => 'array', 'items' => self::object(['text' => $text, 'reason' => self::nullable($text)])],
 				'result' => $text,
 			]),
+			// Coordinates 0–100 in the viewBox; the app draws the SVG, the model never writes any.
+			// No filled areas: with them the geometry text part is too large for the API (probed 2026-10-03).
+			'figure' => $block('figure', [
+				'title' => self::nullable($text),
+				'points' => ['type' => 'array', 'items' => self::object(['id' => $text, 'x' => ['type' => 'number'], 'y' => ['type' => 'number'], 'label' => self::nullable($text)])],
+				'lines' => ['type' => 'array', 'items' => self::object(['from' => $text, 'to' => $text, 'label' => self::nullable($text), 'style' => ['type' => 'string', 'enum' => ['solid', 'dashed']]])],
+				'angles' => ['type' => 'array', 'items' => self::object(['vertex' => $text, 'from' => $text, 'to' => $text, 'label' => self::nullable($text)])],
+			]),
 		];
 
 		if ($profile !== null) {

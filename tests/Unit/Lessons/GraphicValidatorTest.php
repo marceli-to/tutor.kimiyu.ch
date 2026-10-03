@@ -12,6 +12,10 @@ it('accepts both fixture graphics', function (string $fixture) {
 	expect(GraphicValidator::errors(LessonFactory::fixture("$fixture.graphic")))->toBe([]);
 })->with(LessonFactory::FIXTURES);
 
+it('accepts the graphics of the profile fixtures', function (string $fixture) {
+	expect(GraphicValidator::errors(LessonFactory::fixture("$fixture.graphic")))->toBe([]);
+})->with(['dreisatz', 'winkel-parallelen']);
+
 it('allows the svg namespace but no other addresses', function () {
 	expect(GraphicValidator::errors(graphicFixture()))->toBe([])
 		->and(GraphicValidator::errors(graphicFixture(['markup' => '<img src="https://example.com/a.png">'])))

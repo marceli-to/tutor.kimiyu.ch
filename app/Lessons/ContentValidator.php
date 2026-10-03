@@ -19,7 +19,7 @@ class ContentValidator
 
 	// «graphic» places graphic 2 or 3 in a section; graphic 1 is always at the top.
 	// The blocks after it belong to subject profiles (see Profile::blocks()).
-	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation', 'worked_solution'];
+	public const BLOCK_TYPES = ['paragraph', 'formula', 'facts', 'columns', 'box', 'graphic', 'vocabulary', 'conjugation', 'worked_solution', 'figure'];
 
 	// «exercises» belongs to the math profile and is missing on older pages
 	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'];
@@ -296,6 +296,7 @@ class ContentValidator
 					'worked_solution' => $this->isText($block['task'] ?? null)
 						&& $this->isText($block['result'] ?? null)
 						&& $this->isList($block['steps'] ?? null, 2, 8, fn ($s) => $this->isText($s['text'] ?? null) && $this->isOptionalText($s['reason'] ?? null)),
+					'figure' => $this->checkFigure($block, $key),
 					default => false,
 				};
 
@@ -304,6 +305,55 @@ class ContentValidator
 				}
 			}
 		}
+	}
+
+	/**
+	 * Shape of a figure (false: the caller reports the block as incomplete), then its geometry:
+	 * unique point ids, lines and angles only between defined points, coordinates within the viewBox.
+	 *
+	 * @param  array<string, mixed>  $figure
+	 */
+	private function checkFigure(array $figure, string $key): bool
+	{
+		$isNumber = fn (mixed $value) => is_int($value) || is_float($value);
+
+		$valid = $this->isOptionalText($figure['title'] ?? null)
+			&& $this->isList($figure['points'] ?? null, 2, 12, fn ($p) => $this->isText($p['id'] ?? null)
+				&& $isNumber($p['x'] ?? null) && $isNumber($p['y'] ?? null)
+				&& $this->isOptionalText($p['label'] ?? null))
+			&& $this->isList($figure['lines'] ?? null, 0, 16, fn ($l) => $this->isText($l['from'] ?? null) && $this->isText($l['to'] ?? null)
+				&& $this->isOptionalText($l['label'] ?? null)
+				&& in_array($l['style'] ?? null, ['solid', 'dashed'], true))
+			&& $this->isList($figure['angles'] ?? null, 0, 6, fn ($a) => $this->isText($a['vertex'] ?? null)
+				&& $this->isText($a['from'] ?? null) && $this->isText($a['to'] ?? null)
+				&& $this->isOptionalText($a['label'] ?? null));
+
+		if (! $valid) {
+			return false;
+		}
+
+		$ids = array_column($figure['points'], 'id');
+
+		foreach (array_keys(array_filter(array_count_values($ids), fn ($n) => $n > 1)) as $id) {
+			$this->fail($key, "Figur in {$key}: Die Punkt-ID «{$id}» kommt mehrfach vor.");
+		}
+
+		foreach ($figure['points'] as $point) {
+			if ($point['x'] < 0 || $point['x'] > 100 || $point['y'] < 0 || $point['y'] > 100) {
+				$this->fail($key, "Figur in {$key}: Der Punkt «{$point['id']}» liegt ausserhalb von 0–100.");
+			}
+		}
+
+		$references = [
+			...array_merge(...array_map(fn ($l) => [$l['from'], $l['to']], $figure['lines'])),
+			...array_merge(...array_map(fn ($a) => [$a['vertex'], $a['from'], $a['to']], $figure['angles'])),
+		];
+
+		foreach (array_unique(array_diff($references, $ids)) as $id) {
+			$this->fail($key, "Figur in {$key}: Der Punkt «{$id}» ist nicht definiert.");
+		}
+
+		return true;
 	}
 
 	private function checkModules(): void
