@@ -53,6 +53,8 @@ it('reads fractions, decimals and whole numbers as fractions', function (string 
 	['0,75', 0.75],
 	['-1/2', -0.5],
 	['2', 2.0],
+	['1 1/2', 1.5],
+	['-2 3/4', -2.75],
 ]);
 
 it('rejects what is no fraction', function (string $input) {
@@ -101,6 +103,19 @@ it('accepts units with letters only after the number', function () {
 		->and(ExerciseAnswer::check($entry, '375 m'))->toBe(AnswerResult::Wrong);
 });
 
+it('accepts area and volume units written with a plain digit', function () {
+	$area = exercise(['answer' => '24', 'unit' => 'cm²']);
+	$volume = exercise(['answer' => '8', 'unit' => 'm³']);
+
+	expect(ExerciseAnswer::check($area, '24 cm²'))->toBe(AnswerResult::Correct)
+		->and(ExerciseAnswer::check($area, '24 cm2'))->toBe(AnswerResult::Correct)
+		->and(ExerciseAnswer::check($area, '24cm2'))->toBe(AnswerResult::Correct)
+		->and(ExerciseAnswer::check($area, '24 cm3'))->toBe(AnswerResult::Wrong)
+		->and(ExerciseAnswer::check($area, '24 cm'))->toBe(AnswerResult::Wrong)
+		->and(ExerciseAnswer::check($volume, '8 m3'))->toBe(AnswerResult::Correct)
+		->and(ExerciseAnswer::check(exercise(['answer' => '242']), '24 2'))->toBe(AnswerResult::Correct);
+});
+
 it('rejects a unit where the task has none', function () {
 	expect(ExerciseAnswer::check(exercise(['answer' => '12']), '12 kg'))->toBe(AnswerResult::Wrong)
 		->and(ExerciseAnswer::check(exercise(['answer' => '12']), '12'))->toBe(AnswerResult::Correct);
@@ -113,6 +128,7 @@ it('treats equal fractions as the same answer', function (string $input, AnswerR
 	['6/8', AnswerResult::Correct],
 	['0,75', AnswerResult::Correct],
 	['0.75', AnswerResult::Correct],
+	['0 3/4', AnswerResult::Correct],
 	['4/3', AnswerResult::Wrong],
 	['0,7', AnswerResult::Wrong],
 	['drei Viertel', AnswerResult::Wrong],

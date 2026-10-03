@@ -4,8 +4,8 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** «Docs: Teil 5»
-- **Checks:** 735 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Last commit:** «Teil 5: Review-Befunde behoben»
+- **Checks:** 741 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
 - **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (6 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
@@ -29,15 +29,16 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- Übungen: `exercises` is a module the parents choose (`Lesson::MODULES`), ticked by default and in every preset, used only by math and geometry; 8 / 12 / 20 per scope (validator max 20). Migration `2026_10_03_100000` adds it to stored choices (they used to get exercises anyway). Only foreign modules chosen → quiz.
 	- German (Task 5): `find_the_mistake` module (tap the wrong word, write the correction; checked by `MistakeAnswer`, mirrored in `lib/mistake.ts`), `cloze.case_sensitive` (german schema only), fixture `das-dass`, editors in Edit.vue. German keeps all base blocks/modules; probe: modules (german) 3637 bytes OK.
 	- `php artisan lessons:check-schemas` probes every schema against the real API.
+	- Final review done (2026-10-03), fixed: «24 cm2» counts for «cm²» (units with ²/³), mixed numbers («1 1/2») in fraction exercises, `mistake_word` follows its word when the sentence is edited (else null, must be tapped again; new sentences start with null), prefill doesn't solve punctuation-only mistakes, no «fast richtig» in case-sensitive German gaps, tolerance that is no number blocks saving.
+	- KaTeX is never loaded during SSR (hydration mismatch, `lib/math.ts`).
 - **Workflow:** `CLAUDE.md`, this file (loaded by a SessionStart hook in `.claude/settings.json`), `/handover` skill.
 
 ## Offen
 
-1. **Final review** of Teil 5 (code-reviewer subagent), fix findings.
-2. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
-3. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
+1. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
+2. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
 
-Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step).
+Known smaller follow-ups (not blocking): graphics mode and models per profile (design) not implemented; `check.md` doesn't verify figure coordinates against angles in the text; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step); check corrections can't fill null fields (`tolerance`, `unit`) and a corrected mistake sentence keeps its old `mistake_word`; PHP/TS answer checkers have no shared parity tests (no JS test runner).
 
 ## Entscheide
 
@@ -55,6 +56,7 @@ Known smaller follow-ups (not blocking): graphics mode and models per profile (d
 
 - **Restart the queue worker** (`php artisan queue:restart`) — code changed a lot since the last restart.
 - **Browser check** (nothing has been seen in a browser yet): form in both modes, presets, drag & drop/paste/reorder, quality warning thresholds (`lib/imageQuality.ts`), graphics custom mode, edit view (hide graphic, remove block), Lernstand; profile pages from the fixtures (passé composé, Dreisatz, Winkel an Parallelen) in light and dark mode — `FigureBlock` especially.
+- **Fehler finden (Edit view):** change a sentence → the selected wrong word follows it or must be tapped again; save without a word shows an error.
 - **Übungen:** tested by Marcel 2026-10-03, works well. Layout fixes after his test (formulas in titles on Übersicht/Kosten/tab, space after a box): check again.
 - **Real API runs:** one lesson per profile; check costs per step on `/kosten` against the old ~$1.05 per lesson.
 - **Deploy:** `deploy.sh` runs migrations; stop the queue during deploy (data migrations to English keys), restart it after; run `php artisan lessons:check-schemas` on the server once. Env vars for per-step models are now `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` (+ `LESSON_EFFORT_*`), optional.

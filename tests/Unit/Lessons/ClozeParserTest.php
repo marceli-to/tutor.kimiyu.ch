@@ -84,3 +84,8 @@ it('counts upper and lower case in a case sensitive cloze', function (string $an
 	'lower case' => ['das', AnswerResult::Wrong],
 	'upper case' => ['DAS', AnswerResult::Wrong],
 ]);
+
+it('counts accents and umlauts as mistakes in a case sensitive cloze', function () {
+	expect(ClozeParser::check('fur', ['für'], caseSensitive: true))->toBe(AnswerResult::Wrong)
+		->and(ClozeParser::check('fur', ['für']))->toBe(AnswerResult::Almost);
+});

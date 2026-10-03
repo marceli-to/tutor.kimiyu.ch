@@ -64,24 +64,33 @@ export function parseNumber(input: string): number | null {
 	);
 }
 
-// «3/4», «6 / 8» or a number such as «0,75»
+// «3/4», «6 / 8», a mixed number such as «1 1/2» or a number such as «0,75»
 export function parseFraction(input: string): number | null {
-	const match = /^\s*([+\-−]?\d+)\s*\/\s*(\d+)\s*$/.exec(input);
+	const match = /^\s*([+\-−]?)(?:(\d+)\s+)?(\d+)\s*\/\s*(\d+)\s*$/.exec(
+		input,
+	);
 
 	if (match) {
-		const denominator = Number(match[2]);
+		const denominator = Number(match[4]);
 
-		return denominator === 0
-			? null
-			: Number(match[1].replace('−', '-')) / denominator;
+		if (denominator === 0) {
+			return null;
+		}
+
+		const value = Number(match[2] ?? 0) + Number(match[3]) / denominator;
+
+		return match[1] === '' || match[1] === '+' ? value : -value;
 	}
 
 	return parseNumber(input);
 }
 
-// Case and a final dot don't matter: «Fr.», «fr» and «FR» are the same unit
+// Case and a final dot don't matter: «Fr.», «fr» and «FR» are the same unit; «cm2» stands for «cm²»
 function unit(value: string): string {
-	return normalize(value).replace(/\.+$/, '');
+	return normalize(value)
+		.replace(/\.+$/, '')
+		.replace(/²/g, '2')
+		.replace(/³/g, '3');
 }
 
 function same(
@@ -97,9 +106,9 @@ function same(
 }
 
 function checkNumber(answer: string, exercise: Exercise): boolean {
-	// The unit may stand before («Fr. 10.50») or after the number («10.50 Fr.») or be left out
+	// The unit may stand before («Fr. 10.50») or after the number («10.50 Fr.», «24 cm2») or be left out
 	const match =
-		/^\s*(\D*?)\s*([+\-−]?(?:\d|[.,](?=\d))[\d.,'’\s  ]*)(\D*)$/.exec(
+		/^\s*(\D*?)\s*([+\-−]?(?:\d|[.,](?=\d))[\d.,'’\s  ]*)(\D*(?:(?<=\p{L})[23])?)$/u.exec(
 			answer,
 		);
 

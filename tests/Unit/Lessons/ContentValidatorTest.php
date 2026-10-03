@@ -510,6 +510,7 @@ describe('german', function () {
 		'word beyond the sentence' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => 6]]]), 'modules.find_the_mistake.entries.0.mistake_word'],
 		'negative word' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => -1]]]), 'modules.find_the_mistake.entries.0.mistake_word'],
 		'word as string' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => '2']]]), 'modules.find_the_mistake.entries.0.mistake_word'],
+		'no word tapped' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['mistake_word' => null]]]), 'modules.find_the_mistake.entries.0.mistake_word'],
 		'correction same as the word' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['correction' => 'das']]]), 'modules.find_the_mistake.entries.0.correction'],
 		'no explanation' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['explanation' => '']]]), 'modules.find_the_mistake.entries.0.explanation'],
 		'duplicate id' => [fn (array $module) => array_replace_recursive($module, ['entries' => [1 => ['id' => 'q1']]]), 'modules'],

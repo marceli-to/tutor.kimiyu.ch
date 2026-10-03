@@ -88,7 +88,7 @@ class ClozeParser
 
 	/**
 	 * Correct as in normalize(); almost if it only matches without accents (é/e, à/a, ü/u).
-	 * Case sensitive in German spelling gaps («cloze.case_sensitive»).
+	 * German spelling gaps («cloze.case_sensitive») are exact: case counts and there is no almost.
 	 *
 	 * @param  list<string>  $solutions
 	 */
@@ -99,6 +99,10 @@ class ClozeParser
 
 		if (in_array($normalized, $solutions, true)) {
 			return AnswerResult::Correct;
+		}
+
+		if ($caseSensitive) {
+			return AnswerResult::Wrong;
 		}
 
 		$withoutAccents = self::withoutAccents($normalized);

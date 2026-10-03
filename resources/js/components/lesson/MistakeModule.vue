@@ -46,8 +46,12 @@ async function pick(mistake: Mistake, index: number) {
 		return;
 	}
 
+	const word = words(mistake.sentence)[index];
+
 	current.word = index;
-	current.value = bareWord(words(mistake.sentence)[index]);
+	// A mistake that is only extra punctuation («dass,» → «dass») must not be solved by the prefill
+	current.value =
+		bareWord(word) === mistake.correction.trim() ? word : bareWord(word);
 	current.result = null;
 	current.error = '';
 
@@ -224,7 +228,7 @@ function wordClass(mistake: Mistake, index: number): string {
 								statt
 								<strong>{{
 									words(mistake.sentence)[
-										mistake.mistake_word
+										mistake.mistake_word!
 									]
 								}}</strong
 								>.

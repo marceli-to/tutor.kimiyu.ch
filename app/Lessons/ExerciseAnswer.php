@@ -92,25 +92,31 @@ class ExerciseAnswer
 	}
 
 	/**
-	 * A fraction («3/4», «6 / 8») or a number («0,75») as its value.
+	 * A fraction («3/4», «6 / 8»), a mixed number («1 1/2») or a number («0,75») as its value.
 	 */
 	public static function fraction(string $value): ?float
 	{
-		if (preg_match('#^\s*([+\-−]?\d+)\s*/\s*(\d+)\s*$#u', $value, $match)) {
-			$denominator = (int) $match[2];
+		if (preg_match('#^\s*([+\-−]?)(?:(\d+)\s+)?(\d+)\s*/\s*(\d+)\s*$#u', $value, $match)) {
+			$denominator = (int) $match[4];
 
-			return $denominator === 0 ? null : (int) str_replace('−', '-', $match[1]) / $denominator;
+			if ($denominator === 0) {
+				return null;
+			}
+
+			$value = (int) $match[2] + (int) $match[3] / $denominator;
+
+			return in_array($match[1], ['-', '−'], true) ? -$value : $value;
 		}
 
 		return self::number($value);
 	}
 
 	/**
-	 * The unit may stand before («Fr. 10.50») or after the number («10.50 Fr.», «375km») or be left out.
+	 * The unit may stand before («Fr. 10.50») or after the number («10.50 Fr.», «375km», «24 cm2») or be left out.
 	 */
 	private static function checkNumber(string $answer, string $solution, float $tolerance, ?string $unit): bool
 	{
-		if (! preg_match("/^\\s*(\\D*?)\\s*([+\\-−]?(?:\\d|[.,](?=\\d))[\\d.,'’\\s\x{00A0}\x{202F}]*)(\\D*)$/u", $answer, $match)) {
+		if (! preg_match("/^\\s*(\\D*?)\\s*([+\\-−]?(?:\\d|[.,](?=\\d))[\\d.,'’\\s\x{00A0}\x{202F}]*)(\\D*(?:(?<=\\p{L})[23])?)$/u", $answer, $match)) {
 			return false;
 		}
 
@@ -131,11 +137,11 @@ class ExerciseAnswer
 	}
 
 	/**
-	 * Case and a final dot don't matter: «Fr.», «fr» and «FR» are the same unit.
+	 * Case and a final dot don't matter: «Fr.», «fr» and «FR» are the same unit; «cm2» stands for «cm²».
 	 */
 	private static function unit(string $unit): string
 	{
-		return rtrim(ClozeParser::normalize($unit), '.');
+		return str_replace(['²', '³'], ['2', '3'], rtrim(ClozeParser::normalize($unit), '.'));
 	}
 
 	private static function same(?float $value, ?float $expected, float $tolerance): bool

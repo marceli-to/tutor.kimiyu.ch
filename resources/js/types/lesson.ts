@@ -120,8 +120,8 @@ export type ExerciseModuleData = {
 export type Mistake = {
 	id: string;
 	sentence: string;
-	// 0-based index of the wrong word, words split on spaces
-	mistake_word: number;
+	// 0-based index of the wrong word, words split on spaces; null only in the edit view until a word is tapped
+	mistake_word: number | null;
 	correction: string;
 	explanation: string;
 };

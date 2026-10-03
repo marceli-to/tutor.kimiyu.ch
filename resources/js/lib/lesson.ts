@@ -32,7 +32,8 @@ function normalizeAnswer(value: string, caseSensitive = false): string {
 	);
 }
 
-// Must match App\Lessons\ClozeParser::check: correct as normalized, almost if only the accents differ
+// Must match App\Lessons\ClozeParser::check: correct as normalized, almost if only the accents differ;
+// German spelling gaps (caseSensitive) are exact, without almost
 export function checkAnswer(
 	value: string,
 	solutions: string[],
@@ -49,7 +50,7 @@ export function checkAnswer(
 
 	const bare = withoutAccents(answer);
 	const almost =
-		bare === ''
+		caseSensitive || bare === ''
 			? undefined
 			: solutions.find(
 					(s) =>

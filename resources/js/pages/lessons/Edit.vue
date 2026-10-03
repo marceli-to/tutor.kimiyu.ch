@@ -13,7 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { words } from '@/lib/mistake';
 import { dashboard } from '@/routes';
 import { edit, show, update } from '@/routes/lessons';
-import type { CategoryId, Exercise, LessonContent } from '@/types';
+import type { CategoryId, Exercise, LessonContent, Mistake } from '@/types';
 
 const props = defineProps<{
 	lesson: {
@@ -145,22 +145,43 @@ const toleranceInputs = reactive<Record<string, string>>(
 );
 
 // Empty field: no tolerance; a decimal comma is fine
+function parseTolerance(value: string): number | null {
+	const input = value.trim();
+
+	return input === '' ? null : Number(input.replace(',', '.'));
+}
+
 function setTolerance(exercise: Exercise, value: string | null | undefined) {
-	const input = (value ?? '').trim();
-	const number = Number(input.replace(',', '.'));
+	const number = parseTolerance(value ?? '');
 
 	toleranceInputs[exercise.id] = value ?? '';
-	exercise.tolerance = input === '' || Number.isNaN(number) ? null : number;
+	exercise.tolerance =
+		number === null || Number.isNaN(number) ? null : number;
 }
 
 function addMistake() {
 	c.value.modules.find_the_mistake?.entries.push({
 		id: newId('f'),
 		sentence: '',
-		mistake_word: 0,
+		mistake_word: null,
 		correction: '',
 		explanation: '',
 	});
+}
+
+// The wrong word is an index: after an edit it follows its word if that occurs exactly once,
+// otherwise it has to be tapped again
+function setSentence(mistake: Mistake, sentence: string | null | undefined) {
+	const before =
+		mistake.mistake_word === null
+			? undefined
+			: words(mistake.sentence)[mistake.mistake_word];
+	const after = words(sentence ?? '');
+	const index = before === undefined ? -1 : after.indexOf(before);
+
+	mistake.sentence = sentence ?? '';
+	mistake.mistake_word =
+		index !== -1 && after.lastIndexOf(before!) === index ? index : null;
 }
 
 function addCard() {
@@ -174,6 +195,27 @@ function addCard() {
 const errorCount = computed(() => Object.keys(form.errors).length);
 
 function save() {
+	// A tolerance that is no number would be saved as none without a word
+	const invalid = Object.fromEntries(
+		(c.value.modules.exercises?.entries ?? []).flatMap((exercise, k) =>
+			Number.isNaN(parseTolerance(toleranceInputs[exercise.id] ?? ''))
+				? [
+						[
+							`content.modules.exercises.entries.${k}.tolerance`,
+							`Toleranz von Aufgabe ${k + 1} muss eine Zahl sein.`,
+						],
+					]
+				: [],
+		),
+	);
+
+	if (Object.keys(invalid).length > 0) {
+		form.clearErrors();
+		form.setError(invalid);
+
+		return;
+	}
+
 	form.put(update(props.lesson.id).url, { preserveScroll: true });
 }
 </script>
@@ -873,8 +915,9 @@ function save() {
 				class="space-y-3 rounded-xl border p-3"
 			>
 				<EditField
-					v-model="mistake.sentence"
+					:model-value="mistake.sentence"
 					:label="`Satz ${k + 1}`"
+					@update:model-value="setSentence(mistake, $event)"
 					:error="
 						err(`modules.find_the_mistake.entries.${k}.sentence`)
 					"
