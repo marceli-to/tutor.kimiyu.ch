@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * One API call (analysis, graphic, check, repair) with token usage and cost.
+ * One API call (analysis, graphic, check, repair, speech) with token usage or credits and cost.
  * Belongs to the account: if the lesson is deleted with the child, the entry stays with lesson_id = null.
  *
  * @property int $id
@@ -21,13 +21,14 @@ use Illuminate\Support\Carbon;
  * @property int $output_tokens
  * @property int $cache_read_tokens
  * @property int $cache_write_tokens
+ * @property int|null $credits ElevenLabs only
  * @property string $cost_usd
  * @property int|null $duration_ms
  * @property string|null $error
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'step', 'model', 'status', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens', 'cost_usd', 'duration_ms', 'error'])]
+#[Fillable(['user_id', 'step', 'model', 'status', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens', 'credits', 'cost_usd', 'duration_ms', 'error'])]
 class Generation extends Model
 {
 	/**

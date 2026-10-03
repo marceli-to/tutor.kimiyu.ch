@@ -47,6 +47,15 @@ return [
 			'report' => false,
 		],
 
+		// Spoken foreign words (ElevenLabs), served by SpeechClipController
+		'speech' => [
+			'driver' => 'local',
+			'root' => storage_path('app/private/speech'),
+			'serve' => false,
+			'throw' => true,
+			'report' => false,
+		],
+
 		'public' => [
 			'driver' => 'local',
 			'root' => storage_path('app/public'),

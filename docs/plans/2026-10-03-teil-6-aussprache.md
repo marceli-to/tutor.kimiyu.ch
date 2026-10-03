@@ -9,7 +9,7 @@
 **Check before starting:** the free plan has historically not allowed commercial use and required attribution. Fine for family use; check ElevenLabs' current terms before the app goes beyond that.
 
 **Architecture:**
-- **What is spoken:** exactly what has a speaker button today: `vocabulary` block entries (`foreign`) and flashcard fronts (`modules.flashcards.cards[].front`), only in a `languages` lesson with a `speechLang` (`Profile::speechLang()`).
+- **What is spoken:** exactly what has a speaker button today: `vocabulary` block entries (`foreign`) and flashcard fronts (`modules.flashcards.entries[].front`), only in a `languages` lesson with a `speechLang` (`Profile::speechLang()`).
 - **Spoken text** is computed in PHP (`App\Lessons\Speech\Texts::spokenText()`): the part before the first «(» or «/», trimmed («parlé (parler)» → «parlé»). This is today's rule from `SpeakButton.vue`. It moves to PHP because the clip is keyed by it; the Vue component keeps its copy only for the browser fallback.
 - **Clips are shared** across lessons and accounts: table `speech_clips`, unique `hash` = sha256 of `lang|voice_id|model|spoken text`. «le livre» is generated once. Changing voice or model in the config produces new clips, old ones stay valid for nothing and can be deleted by hand.
 - **Storage:** private disk `speech` (`storage/app/private/speech`, file `{hash}.mp3`). Served by `GET audio/{hash}.mp3` (`SpeechClipController`, throttled, `Cache-Control: public, max-age=31536000, immutable`). No signed URL: the files contain single words, nothing personal, and the hash isn't guessable. No `storage:link` needed (Hostpoint).
@@ -21,7 +21,7 @@
 - **After edits:** `UpdateLessonContent` dispatches `SpeakLesson` when the lesson has a `speechLang` (new or changed words get their clip; existing ones are skipped, so it is cheap).
 - **Existing lessons:** `php artisan lessons:speak {lesson?}` runs the action for one lesson or all `languages` lessons (e.g. lesson 11).
 - **Frontend:** `LessonView::page()` adds `speechClips`: a map from the original text (`entry.foreign`, `card.front`) to the clip URL. `SpeakButton` gets an optional `src`: if set, it plays the file with `new Audio(src)` (and shows the button even without a browser voice); otherwise it uses the browser voice as today. If playback fails (`play()` rejects or `error` event), it falls back to the browser voice.
-- **Costs:** each ElevenLabs call is logged in `generations` with step `speech`, model = ElevenLabs model id, a new nullable column `characters`, and `cost_usd` = characters × `config('speech.price_per_1000_characters') / 1000` (default 0 on the free plan). The Kosten page shows characters used this month next to the USD sums, so Marcel can compare with the remaining credits.
+- **Costs:** each ElevenLabs call is logged in `generations` with step `speech`, model = ElevenLabs model id, a new nullable column `credits`, and `cost_usd` = credits × `config('speech.price_per_1000_characters') / 1000` (default 0 on the free plan). The Kosten page shows credits used this month next to the USD sums, so Marcel can compare with the remaining credits.
 
 **ElevenLabs API** (checked against the docs 2026-10-03):
 - `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_64`, header `xi-api-key: {key}`, JSON body `{"text": "...", "model_id": "..."}`. The response is the MP3 bytes.
@@ -64,9 +64,9 @@ Steps:
 ### Task 2: Clips table, spoken text, storage
 
 **Files:**
-- New migration `create_speech_clips_table`: `id`, `hash` (unique), `lang`, `voice_id`, `model`, `text`, `characters`, `timestamps`.
-- New migration `add_characters_to_generations_table`: `characters` unsigned int nullable.
-- New model `App\Models\SpeechClip` (`path()` → `{hash}.mp3`, `url()` → route).
+- New migration `create_speech_clips_table`: `id`, `hash` (unique), `lang`, `voice_id`, `model`, `text`, `credits`, `timestamps`.
+- New migration `add_credits_to_generations_table`: `credits` unsigned int nullable (ElevenLabs bills credits, about one per character).
+- New model `App\Models\SpeechClip` (`path()` → `{hash}.mp3`; `url()` comes with the route in Task 4).
 - `config/filesystems.php`: disk `speech` (private, `storage/app/private/speech`, `serve` false).
 - New `app/Lessons/Speech/Texts.php`: `spokenText(string $text): string`, `texts(array $content): list<string>` (vocabulary entries + flashcard fronts, unique, original texts), `hash(string $spoken, string $lang, string $voiceId, string $model): string`.
 - Tests: `tests/Unit/Lessons/SpeechTextsTest.php` (spoken text rule with the examples from `SpeakButton.vue`; texts from a fixture lesson of the `languages` profile; hash changes with voice/model).
@@ -76,7 +76,7 @@ Steps: back up the DB, test both migrations on a copy, migrate. TDD `Texts`, com
 ### Task 3: `SpeakLesson` action and job
 
 **Files:**
-- New `app/Actions/Generation/SpeakLesson.php` `handle(Lesson $lesson): void`, as under Architecture. One `generations` row per API call (status `ok`/`failed`, `characters`, `cost_usd`, `duration_ms`, `error`).
+- New `app/Actions/Generation/SpeakLesson.php` `handle(Lesson $lesson): void`, as under Architecture. One `generations` row per API call (status `ok`/`failed`, `credits`, `cost_usd`, `duration_ms`, `error`).
 - New `app/Jobs/SpeakLesson.php` extends `LessonStep`, step `speech`. The action catches its own errors, so the chain always continues.
 - `GenerationPipeline::write()`: `SpeakLesson` after `CheckLesson`, only if the lesson has a `speechLang` and `config('speech.key')` is set.
 - `resources/js/components/lesson/GenerationStatus.vue`: step `speech` («Aussprache aufnehmen»).
@@ -113,10 +113,10 @@ Steps: implement, `npm run types:check`, `npm run check`, `npm run build`, check
 ### Task 6: Backfill command, edits, Kosten page
 
 **Files:**
-- New `app/Console/Commands/SpeakLessons.php` (`lessons:speak {lesson?}`): runs `SpeakLesson` synchronously, prints clips created, reused and characters used.
+- New `app/Console/Commands/SpeakLessons.php` (`lessons:speak {lesson?}`): runs `SpeakLesson` synchronously, prints clips created, reused, credits used and credits left.
 - `app/Actions/Lessons/UpdateLessonContent.php`: after saving, dispatch the `SpeakLesson` job for a language lesson (only if the key is set).
-- `app/Http/PageData/CostOverview.php` + `resources/js/pages/Costs.vue` (or the current Kosten page): characters per month for step `speech`, labelled «Aussprache (ElevenLabs): N Zeichen».
-- Tests: command (one lesson, all lessons); edit dispatches the job (`Bus::fake()`); cost props include the characters.
+- `app/Http/PageData/CostOverview.php` + `resources/js/pages/Costs.vue` (or the current Kosten page): credits per month for step `speech`, labelled «Aussprache (ElevenLabs): N Credits».
+- Tests: command (one lesson, all lessons); edit dispatches the job (`Bus::fake()`); cost props include the credits.
 
 Steps: TDD, full checks (`composer format:check`, tests, phpstan, `npm run types:check`, `npm run check`), commit. Run `php artisan lessons:speak 11` with the real key and check the credits used on the ElevenLabs dashboard against the Kosten page.
 
