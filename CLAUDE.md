@@ -20,7 +20,7 @@ Laravel 13 + Inertia 3 + Vue 3 + Tailwind 4 app that turns photos of textbook pa
 
 ## Checks before committing
 
-`composer format:check`, `php artisan test --compact`, `vendor/bin/phpstan analyse --memory-limit=1G`, `npm run types:check`, `npm run check`. Never commit `public/build`.
+`composer format:check`, `php artisan test --compact`, `vendor/bin/phpstan analyse --memory-limit=1G`, `npm run types:check`, `npm run check`. `public/build` is committed (Hostpoint has no Node): run `npm run build` and commit it with frontend changes.
 
 ## Pitfalls
 
