@@ -337,6 +337,7 @@ describe('pages', function () {
 					'outputTokens' => 15_000,
 					'avgUsd' => 0.5,
 					'totalUsd' => 1.05,
+					'credits' => 0,
 				])
 				->where('steps.1.step', 'modules')
 			);

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Lessons;
 
+use App\Actions\Generation\SpeakLesson;
 use App\Lessons\ClozeParser;
 use App\Lessons\ContentValidator;
 use App\Lessons\GraphicBlocks;
@@ -53,6 +54,12 @@ class UpdateLessonContent
 			'title' => $content['meta']['title'],
 			'content' => $content,
 		]);
+
+		// New or changed words get their clip; existing ones cost nothing. Not a LessonStep:
+		// that would set a step on a finished page.
+		if ($lesson->speaksWithElevenLabs()) {
+			dispatch(fn (SpeakLesson $speakLesson) => $speakLesson->handle($lesson->fresh() ?? $lesson));
+		}
 	}
 
 	/**

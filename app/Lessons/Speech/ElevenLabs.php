@@ -50,4 +50,23 @@ class ElevenLabs
 			credits: (int) ceil(mb_strlen($text) * $factor),
 		);
 	}
+
+	/**
+	 * Credits left this month; null if the account can't be read (key without «User: Read»).
+	 */
+	public function remainingCredits(): ?int
+	{
+		try {
+			$response = Http::withHeaders(['xi-api-key' => (string) config('speech.key')])
+				->timeout(15)
+				->get('https://api.elevenlabs.io/v1/user/subscription');
+		} catch (ConnectionException) {
+			return null;
+		}
+
+		$used = $response->json('character_count');
+		$limit = $response->json('character_limit');
+
+		return $response->successful() && is_int($used) && is_int($limit) ? $limit - $used : null;
+	}
 }

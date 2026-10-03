@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * What the lessons cost at the Claude API, from the log of API calls.
+ * What the lessons cost at the Claude API and ElevenLabs, from the log of API calls.
  */
 class CostOverview
 {
@@ -34,6 +34,8 @@ class CostOverview
 				'lessons' => $items->pluck('lesson_id')->filter()->unique()->count(),
 				'calls' => $items->count(),
 				'costUsd' => round((float) $items->sum('cost_usd'), 2),
+				// ElevenLabs bills credits (monthly quota), not dollars
+				'credits' => (int) $items->sum('credits'),
 			])
 			->values();
 
@@ -69,6 +71,7 @@ class CostOverview
 					'outputTokens' => (int) round($ok->avg('output_tokens') ?? 0),
 					'avgUsd' => round((float) ($ok->avg('cost_usd') ?? 0), 3),
 					'totalUsd' => round((float) $items->sum('cost_usd'), 2),
+					'credits' => (int) $items->sum('credits'),
 				];
 			})
 			->sortByDesc('totalUsd')

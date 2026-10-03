@@ -18,6 +18,7 @@ defineProps<{
 		lessons: number;
 		calls: number;
 		costUsd: number;
+		credits: number;
 	}[];
 	steps: {
 		step: string;
@@ -28,6 +29,7 @@ defineProps<{
 		outputTokens: number;
 		avgUsd: number;
 		totalUsd: number;
+		credits: number;
 	}[];
 	lessons: {
 		id: number | null;
@@ -61,7 +63,7 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
 	<div class="mx-auto w-full max-w-4xl space-y-8 p-4 md:p-6">
 		<Heading
 			title="Kosten"
-			description="Was die Lernseiten bei der Claude API gekostet haben. Enthält auch fehlgeschlagene Aufrufe."
+			description="Was die Lernseiten bei der Claude API gekostet haben. Enthält auch fehlgeschlagene Aufrufe. Die Aussprache (ElevenLabs) zählt in Credits."
 		/>
 
 		<p class="text-3xl font-semibold tabular-nums">
@@ -111,6 +113,12 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
 							</td>
 							<td class="px-4 py-2 text-right tabular-nums">
 								{{ usd(m.costUsd) }}
+								<span
+									v-if="m.credits"
+									class="block text-muted-foreground"
+									>Aussprache:
+									{{ number(m.credits) }} Credits</span
+								>
 							</td>
 						</tr>
 					</tbody>
@@ -193,6 +201,11 @@ const number = (value: number) => new Intl.NumberFormat('de-CH').format(value);
 							</td>
 							<td class="px-4 py-2 text-right tabular-nums">
 								{{ usd(s.totalUsd) }}
+								<span
+									v-if="s.credits"
+									class="block text-muted-foreground"
+									>{{ number(s.credits) }} Credits</span
+								>
 							</td>
 						</tr>
 					</tbody>
