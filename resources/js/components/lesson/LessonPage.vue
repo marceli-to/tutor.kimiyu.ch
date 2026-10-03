@@ -166,9 +166,7 @@ function toggleTheme() {
 			</section>
 
 			<section v-if="modules.exercises">
-				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">
-					Selbst rechnen
-				</h2>
+				<h2 class="mt-12 mb-3 text-[1.6rem] font-bold">Übungen</h2>
 				<p v-if="modules.exercises.instructions" class="mb-4">
 					<MathText :text="modules.exercises.instructions" />
 				</p>

@@ -468,7 +468,7 @@ class Prompts
 			'sorting' => "Sortierspiel ({$counts['terms']} Begriffe)",
 			'flashcards' => "Karteikarten ({$counts['flashcards']} Karten)",
 			'cloze' => "Lückentext ({$counts['gaps']} Lücken)",
-			'exercises' => "Aufgaben ({$counts['exercises']} Aufgaben)",
+			'exercises' => "Übungen (genau {$counts['exercises']} Aufgaben)",
 			'find_the_mistake' => "Fehler finden ({$counts['mistakes']} Sätze)",
 		];
 

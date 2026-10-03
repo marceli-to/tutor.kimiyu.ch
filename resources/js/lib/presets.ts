@@ -14,7 +14,13 @@ export type LessonSettings = {
 
 export type PresetKey = 'short' | 'normal' | 'exam';
 
-const ALL_MODULES: LessonModule[] = ['quiz', 'sorting', 'flashcards', 'cloze'];
+const ALL_MODULES: LessonModule[] = [
+	'quiz',
+	'sorting',
+	'flashcards',
+	'cloze',
+	'exercises',
+];
 
 // Presets in simple mode; they fill the fields of advanced mode
 export const PRESETS: {
@@ -30,7 +36,7 @@ export const PRESETS: {
 		settings: {
 			purpose: 'new',
 			scope: 'short',
-			modules: ['quiz', 'flashcards'],
+			modules: ['quiz', 'flashcards', 'exercises'],
 			graphics_mode: 'none',
 		},
 	},

@@ -760,7 +760,7 @@ function save() {
 		</section>
 
 		<section v-if="c.modules.exercises" class="space-y-4">
-			<h2 class="text-lg font-semibold">Aufgaben</h2>
+			<h2 class="text-lg font-semibold">Übungen</h2>
 			<p class="text-sm text-muted-foreground">
 				{{ texHint }} Die Lösung ohne Einheit; das Kind darf die Einheit
 				weglassen. Toleranz für gerundete Ergebnisse, z. B. 0,05.
@@ -847,7 +847,7 @@ function save() {
 				type="button"
 				variant="outline"
 				size="sm"
-				:disabled="c.modules.exercises.entries.length >= 8"
+				:disabled="c.modules.exercises.entries.length >= 20"
 				@click="addExercise"
 			>
 				<Plus class="size-4" aria-hidden="true" />

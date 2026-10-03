@@ -8,7 +8,7 @@ Mathematik: Die Seite erklärt ein Verfahren und warum es funktioniert. Das Kind
 - Formeln und Regeln als Baustein `formula`, mit einem Satz in `addendum`, was sie bedeuten.
 - Immer genau ein durchgerechnetes Beispiel als Baustein `worked_solution`: `task` (die Aufgabe in einem Satz), `steps` mit 2–8 Schritten und `result` (das Ergebnis als Antwortsatz). Pro Schritt `text` (was gerechnet wird, mit der Rechnung in TeX) und `reason` (warum dieser Schritt, ein Satz) oder null, wenn der Schritt selbsterklärend ist.
 - Quizfragen mit konkreten Zahlen; die falschen Optionen entsprechen typischen Rechenfehlern (mal statt geteilt, falsche Einheit, vergessener Schritt).
-- Das Lernmodul `exercises` (Aufgaben zum selbst Rechnen) ist immer dabei, die Anzahl steht in «Erlaubte Lernmodule». `instructions` ein Satz oder null. Pro Aufgabe in `entries`:
+- Das Lernmodul `exercises` (Aufgaben zum selbst Rechnen) ist dabei, wenn es in «Erlaubte Lernmodule» steht, mit genau so vielen Aufgaben wie dort angegeben. Bei vielen Aufgaben steigt die Schwierigkeit langsam an: zuerst wie im durchgerechneten Beispiel, dann mit anderen Zahlen und Einheiten, am Schluss Textaufgaben, bei denen das Kind den Rechenweg selbst finden muss. `instructions` ein Satz oder null. Pro Aufgabe in `entries`:
     - `id`: `a1`, `a2` …
     - `question`: die Aufgabe mit allen Angaben, die man zum Rechnen braucht.
     - `kind`: `number` (eine Zahl), `fraction` (ein Bruch; die App akzeptiert jeden gleichwertigen Bruch und die Dezimalzahl) oder `text` (ein Wort, nur wenn es keine Zahl ist).

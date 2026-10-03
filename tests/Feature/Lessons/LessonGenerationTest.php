@@ -690,7 +690,7 @@ describe('remembered settings', function () {
 				])
 				->where("lastSettings.{$this->child->id}|mathematik.scope", 'detailed')
 				// Old lessons without a list: all modules were allowed
-				->where("lastSettings.{$this->child->id}|mathematik.modules", ['quiz', 'sorting', 'flashcards', 'cloze'])
+				->where("lastSettings.{$this->child->id}|mathematik.modules", ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'])
 				->where("lastSettings.{$leo->id}|biologie.modules", ['sorting'])
 				->where("lastSettings.{$leo->id}|biologie.graphics_mode", 'custom')
 			);
@@ -728,7 +728,7 @@ describe('remembered settings', function () {
 				->where("lastByChild.{$leo->id}", [
 					'purpose' => 'new',
 					'scope' => 'normal',
-					'modules' => ['quiz', 'sorting', 'flashcards', 'cloze'],
+					'modules' => ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'],
 					'graphics_mode' => 'auto',
 				])
 			);
@@ -746,11 +746,28 @@ describe('remembered settings', function () {
 			);
 	});
 
+	it('allows the exercises in every stored choice, since they used to come with math anyway', function () {
+		$migration = require database_path('migrations/2026_10_03_100000_allow_exercises_in_lesson_modules.php');
+		$quiz = lessonFor($this->child, ['modules' => ['quiz', 'cloze']]);
+		$old = lessonFor($this->child, ['modules' => null]);
+		$both = lessonFor($this->child, ['modules' => ['quiz', 'exercises']]);
+
+		$migration->up();
+		expect($quiz->fresh()->modules)->toBe(['quiz', 'cloze', 'exercises'])
+			->and($old->fresh()->modules)->toBeNull()
+			->and($both->fresh()->modules)->toBe(['quiz', 'exercises']);
+
+		$migration->down();
+		expect($quiz->fresh()->modules)->toBe(['quiz', 'cloze'])
+			->and($both->fresh()->modules)->toBe(['quiz']);
+	});
+
 	it('passes the counts per scope for the labels', function () {
 		$this->actingAs($this->user)->get(route('lessons.create'))
 			->assertInertia(fn (Assert $page) => $page
 				->where('scopeInfo.short.quiz', 3)
 				->where('scopeInfo.short.sections', '1–2')
+				->where('scopeInfo.detailed.exercises', '20')
 				->has('scopeInfo', 3)
 			);
 	});
@@ -1701,7 +1718,7 @@ describe('subject profiles', function () {
 		$this->fake->push('page', ['page' => Arr::except(Prompts::page($math), 'try_it')]);
 		$this->fake->push('modules', ['modules' => $math['modules']]);
 
-		upload(['subject' => '', 'graphics_mode' => 'auto', 'modules' => ['quiz']]);
+		upload(['subject' => '', 'graphics_mode' => 'auto', 'modules' => ['quiz', 'exercises']]);
 
 		$lesson = Lesson::sole();
 		$page = $this->fake->requestsFor('page')[0];
@@ -1709,12 +1726,11 @@ describe('subject profiles', function () {
 		expect($lesson->status)->toBe(LessonStatus::Review)
 			->and($lesson->resolvedProfile())->toBe(Profile::Math)
 			->and($lesson->content['sections'][1]['blocks'][0]['type'])->toBe('worked_solution')
-			// The parents can't choose exercises: they come with the math profile
 			->and($lesson->content['modules']['exercises']['entries'])->toHaveCount(5)
 			->and($lesson->content['modules']['cloze'])->toBeNull()
 			->and($page->prompt)->toContain('Fachprofil: Mathematik')
 			->and(json_encode($page->schema))->toContain('"worked_solution"')->not->toContain('"columns"')
-			->and($modules->prompt)->toContain('Aufgaben (')
+			->and($modules->prompt)->toContain('Übungen (genau 12 Aufgaben)')
 			->and($modules->system)->toContain('solution_path');
 	});
 
@@ -1738,6 +1754,21 @@ describe('subject profiles', function () {
 			->and($modules->prompt)->toContain('Fehler finden (')
 			->and($modules->system)->toContain('mistake_word')->toContain('Ich hoffe, das du morgen kommst.')
 			->and(json_encode($modules->schema))->toContain('"case_sensitive"');
+	});
+
+	it('leaves out the exercises of a math page when the parents did not choose them', function () {
+		$math = LessonFactory::fixture('dreisatz');
+		$this->fake->push('analysis', analysis(['subject' => 'Mathematik', 'graphic_plans' => []]));
+		$this->fake->push('page', ['page' => Arr::except(Prompts::page($math), 'try_it')]);
+		$this->fake->push('modules', ['modules' => $math['modules']]);
+
+		upload(['subject' => '', 'graphics_mode' => 'auto', 'modules' => ['quiz', 'cloze']]);
+
+		$lesson = Lesson::sole();
+		expect($lesson->status)->toBe(LessonStatus::Review)
+			->and($lesson->content['modules']['exercises'])->toBeNull()
+			->and($lesson->content['modules']['cloze'])->not->toBeNull()
+			->and($this->fake->requestsFor('modules')[0]->prompt)->not->toContain('Übungen');
 	});
 
 	it('builds a geometry page with a figure from its own example', function () {

@@ -54,3 +54,18 @@ describe('displayTitle', function () {
 		expect(makeLesson()->displayTitle())->toBe('Neue Lernseite');
 	});
 });
+
+describe('generatedModules', function () {
+	it('fills the exercises only in math and geometry when the parents chose them', function (?string $profile, array $chosen, array $generated) {
+		$lesson = makeLesson(['profile' => $profile, 'modules' => $chosen]);
+
+		expect($lesson->generatedModules())->toBe($generated);
+	})->with([
+		'math with exercises' => ['math', ['quiz', 'exercises'], ['quiz', 'exercises']],
+		'math without' => ['math', ['quiz', 'cloze'], ['quiz', 'cloze']],
+		'geometry only exercises' => ['geometry', ['exercises'], ['exercises']],
+		'science ignores them' => ['science', ['quiz', 'exercises'], ['quiz']],
+		'german brings find the mistake' => ['german', ['quiz', 'exercises'], ['quiz', 'find_the_mistake']],
+		'nothing left falls back to the quiz' => ['science', ['exercises'], ['quiz']],
+	]);
+});

@@ -31,7 +31,7 @@ use Illuminate\Support\Str;
  * @property 'none'|'auto'|'custom' $graphics_mode No graphic, the AI decides, or as the parents wish
  * @property 'new'|'exam' $purpose New material or exam preparation
  * @property 'short'|'normal'|'detailed' $scope Scope of the page
- * @property list<'quiz'|'sorting'|'flashcards'|'cloze'>|null $modules Allowed learning modules, null for old lessons: all
+ * @property list<'quiz'|'sorting'|'flashcards'|'cloze'|'exercises'>|null $modules Allowed learning modules, null for old lessons: all
  * @property int|null $schema_version
  * @property array<string, mixed>|null $content
  * @property list<array{area: string, change: string}>|null $check_notes
@@ -59,7 +59,8 @@ class Lesson extends Model
 
 	public const SCOPES = ['short', 'normal', 'detailed'];
 
-	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze'];
+	// «exercises» only has an effect in math and geometry lessons (see Profile::modules())
+	public const MODULES = ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'];
 
 	/**
 	 * Like the database default, so unsaved lessons have it too.
@@ -100,7 +101,7 @@ class Lesson extends Model
 	/**
 	 * Allowed learning modules; old lessons without a list allow all.
 	 *
-	 * @return list<'quiz'|'sorting'|'flashcards'|'cloze'>
+	 * @return list<'quiz'|'sorting'|'flashcards'|'cloze'|'exercises'>
 	 */
 	public function allowedModules(): array
 	{
@@ -109,16 +110,19 @@ class Lesson extends Model
 
 	/**
 	 * Modules a generation fills: the profile's, within the parents' choice. The parents only choose
-	 * among MODULES; a module of the profile beyond that (exercises in math) always comes with it.
+	 * among MODULES; a module of the profile beyond that (find_the_mistake in german) always comes with it.
+	 * If the choice leaves nothing for the profile (only exercises in a biology lesson), the quiz.
 	 *
 	 * @return list<string>
 	 */
 	public function generatedModules(): array
 	{
-		return array_values(array_filter(
+		$modules = array_values(array_filter(
 			$this->resolvedProfile()->modules(),
 			fn (string $module) => ! in_array($module, self::MODULES, true) || in_array($module, $this->allowedModules(), true),
 		));
+
+		return $modules !== [] ? $modules : ['quiz'];
 	}
 
 	/**

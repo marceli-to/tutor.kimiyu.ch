@@ -334,6 +334,13 @@ describe('math', function () {
 		expect(ContentValidator::errors($content, strict: true))->toBe([]);
 	});
 
+	it('accepts 20 exercises', function () {
+		$content = lessonFixture('dreisatz');
+		$content['modules']['exercises']['entries'] = array_map(fn (int $i) => [...$content['modules']['exercises']['entries'][0], 'id' => "a$i"], range(1, 20));
+
+		expect(ContentValidator::errors($content, strict: true, profile: Profile::Math))->toBe([]);
+	});
+
 	it('counts exercises as a learning module', function () {
 		$content = lessonFixture('dreisatz');
 		$content['modules'] = [...$content['modules'], 'quiz' => null, 'cloze' => null];
@@ -362,6 +369,7 @@ describe('math', function () {
 		expect(ContentValidator::make($content)->errors()->keys())->toContain($key);
 	})->with([
 		'too few' => [fn (array $module) => [...$module, 'entries' => array_slice($module['entries'], 0, 2)], 'modules.exercises.entries'],
+		'more than 20' => [fn (array $module) => [...$module, 'entries' => array_map(fn (int $i) => [...$module['entries'][0], 'id' => "a$i"], range(1, 21))], 'modules.exercises.entries'],
 		'unknown kind' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['kind' => 'percent']]]), 'modules.exercises.entries.0.kind'],
 		'answer no number' => [fn (array $module) => array_replace_recursive($module, ['entries' => [0 => ['answer' => 'zehn']]]), 'modules.exercises.entries.0.answer'],
 		'answer no fraction' => [fn (array $module) => array_replace_recursive($module, ['entries' => [4 => ['answer' => '3/0']]]), 'modules.exercises.entries.4.answer'],

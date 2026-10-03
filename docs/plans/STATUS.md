@@ -4,9 +4,9 @@
 
 - **Datum:** 2026-10-03
 - **Branch:** `feature/neue-lernseite` (85 commits ahead of `main`, not merged, not deployed)
-- **Last commit:** «Fachprofil Deutsch: Fehler finden, Gross-/Kleinschreibung»
-- **Checks:** 724 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
-- **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-02*` (5 files, gitignored) can be deleted once everything works.
+- **Last commit:** «Mathematik: Übungen wählbar, bis 20 Aufgaben»
+- **Checks:** 734 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
+- **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (6 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
 
@@ -26,17 +26,17 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- Languages: `vocabulary`, `conjugation`, speech via browser, «almost» for missing accents (`AnswerResult`).
 	- Math: KaTeX (lazy-loaded), `worked_solution`, `exercises` module with Swiss number/fraction/unit checking (`ExerciseAnswer`).
 	- Geometry: `figure` block rendered by `FigureBlock.vue` (points, lines, angles; no areas).
+	- Übungen: `exercises` is a module the parents choose (`Lesson::MODULES`), ticked by default and in every preset, used only by math and geometry; 8 / 12 / 20 per scope (validator max 20). Migration `2026_10_03_100000` adds it to stored choices (they used to get exercises anyway). Only foreign modules chosen → quiz.
 	- German (Task 5): `find_the_mistake` module (tap the wrong word, write the correction; checked by `MistakeAnswer`, mirrored in `lib/mistake.ts`), `cloze.case_sensitive` (german schema only), fixture `das-dass`, editors in Edit.vue. German keeps all base blocks/modules; probe: modules (german) 3637 bytes OK.
 	- `php artisan lessons:check-schemas` probes every schema against the real API.
 - **Workflow:** `CLAUDE.md`, this file (loaded by a SessionStart hook in `.claude/settings.json`), `/handover` skill.
 
 ## Offen
 
-1. **Math «Übungen» (Marcel's request 2026-10-03):** a selectable module «Übungen» for math with ~20 exercises. Today `exercises` always comes with math, 3–8 per scope, validator max 8. Needs a decision (see the last session) before implementing; check schema/output size with the probe.
-2. **Teil 5, Task 6 – Docs:** mark Teil 5 implemented in the design doc, list per-profile blocks/modules and probe sizes.
-3. **Final review** of Teil 5 (code-reviewer subagent), fix findings.
-4. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
-5. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
+1. **Teil 5, Task 6 – Docs:** mark Teil 5 implemented in the design doc, list per-profile blocks/modules and probe sizes.
+2. **Final review** of Teil 5 (code-reviewer subagent), fix findings.
+3. **Teil 3a – Plan bestätigen** (design doc section «3a»): planning call, status `planned`, parents edit/confirm the plan before the expensive steps. No implementation plan written yet — write it first (with English keys, actions, page data).
+4. **Merge into `main`** after Marcel has tested; deploy (see `docs/deployment.md`).
 
 Known smaller follow-ups (not blocking): `check.md` doesn't verify figure coordinates against angles in the text; parents can't switch off `exercises` in math lessons; edit view can't re-add removed blocks; a worker killed mid-regeneration leaves the lesson locked (`regenerate-*` step).
 
@@ -49,12 +49,14 @@ Known smaller follow-ups (not blocking): `check.md` doesn't verify figure coordi
 - 2026-10-02: English keys and comments, tabs everywhere, PHP-CS-Fixer (`composer format`).
 - 2026-10-02: Slim controllers; actions with one `handle()`; page data in `app/Http/PageData/*::props()`; no trivial wrapper helpers.
 - 2026-10-02: Profiles: only blocks/modules of the lesson's profile are sent to the API; profile stored only when the parent picks it.
+- 2026-10-03: Math «Übungen» selectable, count by scope (8/12/20) instead of a fixed 20.
 - 2026-10-03: Project status lives in this file; updated after every completed task (`CLAUDE.md`).
 
 ## Für Marcel zu testen / zu tun
 
 - **Restart the queue worker** (`php artisan queue:restart`) — code changed a lot since the last restart.
 - **Browser check** (nothing has been seen in a browser yet): form in both modes, presets, drag & drop/paste/reorder, quality warning thresholds (`lib/imageQuality.ts`), graphics custom mode, edit view (hide graphic, remove block), Lernstand; profile pages from the fixtures (passé composé, Dreisatz, Winkel an Parallelen) in light and dark mode — `FigureBlock` especially.
+- **Übungen:** a detailed math lesson with 20 exercises — quality, increasing difficulty, cost of the modules and check steps.
 - **Real API runs:** one lesson per profile; check costs per step on `/kosten` against the old ~$1.05 per lesson.
 - **Deploy:** `deploy.sh` runs migrations; stop the queue during deploy (data migrations to English keys), restart it after; run `php artisan lessons:check-schemas` on the server once. Env vars for per-step models are now `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` (+ `LESSON_EFFORT_*`), optional.
 

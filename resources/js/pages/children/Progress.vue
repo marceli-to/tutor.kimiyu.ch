@@ -58,7 +58,7 @@ const moduleLabel: Record<string, string> = {
 	quiz: 'Quiz',
 	sorting: 'Sortieren',
 	cloze: 'Lückentext',
-	exercises: 'Aufgaben',
+	exercises: 'Übungen',
 	find_the_mistake: 'Fehler finden',
 };
 </script>

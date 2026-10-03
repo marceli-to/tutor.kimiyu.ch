@@ -143,7 +143,7 @@ class ContentValidator
 
 			'modules.exercises' => ['sometimes', 'nullable', 'array'],
 			'modules.exercises.instructions' => ['nullable', 'string', 'max:200'],
-			'modules.exercises.entries' => ['required_with:modules.exercises', 'array', 'min:3', 'max:8'],
+			'modules.exercises.entries' => ['required_with:modules.exercises', 'array', 'min:3', 'max:20'],
 			'modules.exercises.entries.*.id' => ['required', 'string', 'max:20'],
 			'modules.exercises.entries.*.question' => ['required', 'string', 'max:400'],
 			'modules.exercises.entries.*.kind' => ['required', Rule::in(ExerciseAnswer::KINDS)],

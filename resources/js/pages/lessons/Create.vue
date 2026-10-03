@@ -93,7 +93,7 @@ const form = useForm<{
 	graphics: [],
 	purpose: 'new',
 	scope: 'normal',
-	modules: ['quiz', 'sorting', 'flashcards', 'cloze'],
+	modules: ['quiz', 'sorting', 'flashcards', 'cloze', 'exercises'],
 	images: [],
 });
 

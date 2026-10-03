@@ -3,7 +3,12 @@ import InputError from '@/components/InputError.vue';
 
 export type Purpose = 'new' | 'exam';
 export type Scope = 'short' | 'normal' | 'detailed';
-export type LessonModule = 'quiz' | 'sorting' | 'flashcards' | 'cloze';
+export type LessonModule =
+	| 'quiz'
+	| 'sorting'
+	| 'flashcards'
+	| 'cloze'
+	| 'exercises';
 export type ScopeInfo = Record<
 	Scope,
 	{
@@ -12,6 +17,7 @@ export type ScopeInfo = Record<
 		flashcards: string;
 		terms: string;
 		gaps: string;
+		exercises: string;
 	}
 >;
 
@@ -56,7 +62,15 @@ const moduleLabels: Record<LessonModule, string> = {
 	sorting: 'Sortierspiel',
 	flashcards: 'Karteikarten',
 	cloze: 'Lückentext',
+	exercises: 'Übungen',
 };
+
+// Exercises need a word on when they apply; the count follows the scope
+function moduleHint(value: LessonModule): string | null {
+	return value === 'exercises'
+		? `Nur Mathematik und Geometrie, ${props.scopeInfo[scope.value].exercises} Aufgaben`
+		: null;
+}
 
 const allModules = Object.keys(moduleLabels) as LessonModule[];
 
@@ -178,8 +192,16 @@ function moduleError(): string | undefined {
 						)
 					"
 				/>
-				<span class="text-sm font-medium">
-					{{ moduleLabels[value] }}
+				<span class="grid gap-0.5">
+					<span class="text-sm font-medium">
+						{{ moduleLabels[value] }}
+					</span>
+					<span
+						v-if="moduleHint(value)"
+						class="text-sm text-muted-foreground"
+					>
+						{{ moduleHint(value) }}
+					</span>
 				</span>
 			</label>
 		</div>
