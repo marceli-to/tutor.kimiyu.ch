@@ -76,6 +76,14 @@ php artisan users:create
 
 Der Befehl fragt nach Name, E-Mail und Passwort (gleiche Regeln wie im Formular). Leer lassen erzeugt ein Passwort und zeigt es einmal an. Die E-Mail gilt als bestätigt.
 
+Konto ändern (Name, E-Mail, Passwort) oder mit einem anderen Konto verbinden:
+
+```bash
+php artisan users:update
+```
+
+Ein verbundenes Konto arbeitet mit den Kindern, Lernseiten und Kosten des anderen Kontos: es sieht alles, kann Lernseiten erstellen, bearbeiten und löschen, und seine API-Kosten laufen über das andere Konto. Bei «Sieht die Daten von» die E-Mail des anderen Kontos eingeben, «-» trennt die Verbindung wieder. Eigene Daten des verbundenen Kontos bleiben erhalten, sind aber unsichtbar, solange es verbunden ist.
+
 ## Konfiguration (.env auf dem Server)
 
 - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://tutor.kimiyu.ch`

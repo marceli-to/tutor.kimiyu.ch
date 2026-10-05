@@ -6,7 +6,7 @@
 - **Branch:** `main` (`feature/neue-lernseite` merged 2026-10-03, not deployed)
 - **Last commit:** «Teil 3a: Planen und Schreiben getrennt»
 - **Checks:** 811 Pest tests green, phpstan 0, `composer format:check`, `npm run types:check`, `npm run check`, `npm run build` clean; `php artisan lessons:check-schemas` all OK.
-- **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (7 files, gitignored) can be deleted once everything works.
+- **Local DB:** fully migrated (no pending migrations). Backups `database/database.sqlite.bak-2026-10-0*` (8 files, gitignored) can be deleted once everything works.
 
 ## Erledigt
 
@@ -31,7 +31,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- `php artisan lessons:check-schemas` probes every schema against the real API.
 	- Final review done (2026-10-03), fixed: «24 cm2» counts for «cm²» (units with ²/³), mixed numbers («1 1/2») in fraction exercises, `mistake_word` follows its word when the sentence is edited (else null, must be tapped again; new sentences start with null), prefill doesn't solve punctuation-only mistakes, no «fast richtig» in case-sensitive German gaps, tolerance that is no number blocks saving.
 	- KaTeX is never loaded during SSR (hydration mismatch, `lib/math.ts`).
-- **Konten:** `php artisan users:create` (asks for name, email and password or generates one, email verified; validated by Fortify's `CreateNewUser`).
+- **Konten:** `php artisan users:create` (asks for name, email and password or generates one, email verified; validated by Fortify's `CreateNewUser`). `php artisan users:update` changes name, email, password and links an account to an owner (`users.owner_id`, one level only): a linked account works on the owner's children, lessons and costs (`User::account_id`, used by `children()`, the policies, `StoreLessonRequest`, `CostOverview`).
 - **Workflow:** `CLAUDE.md`, this file (loaded by a SessionStart hook in `.claude/settings.json`), `/handover` skill.
 
 ## Offen
@@ -60,6 +60,7 @@ Known smaller follow-ups (not blocking): graphics mode and models per profile (d
 - 2026-10-03: Teil 3a: the existing analysis call becomes the planning call (adds title, key idea, sections); no extra photo read.
 - 2026-10-03: `public/build` stays in git (Hostpoint has no Node); merged `feature/neue-lernseite` into `main`.
 - 2026-10-03: Aussprache: ElevenLabs voice «Alice» (premade) with `eleven_v4`; the free plan can't use library voices via the API (native French voices need a paid plan).
+- 2026-10-05: Sharing data between accounts: linked account with full access (`owner_id`), not read-only.
 - 2026-10-03: Project status lives in this file; updated after every completed task (`CLAUDE.md`).
 
 ## Für Marcel zu testen / zu tun
@@ -71,6 +72,7 @@ Known smaller follow-ups (not blocking): graphics mode and models per profile (d
 - **Real API runs:** one lesson per profile; check costs per step on `/kosten` against the old ~$1.05 per lesson.
 - **Aussprache:** lesson 11 in the browser (word list and flashcards, phone via the child link): Alice reads; edit a word and save → the new word plays within a minute (queue worker running); Kosten page shows the credits. «parler à qn» reads «qn» literally (content, not code).
 - **Full test suite needs more memory:** `php artisan test` hits the 128 MB limit (`photo()` in `LessonGenerationTest`); `php -d memory_limit=1G vendor/bin/pest` passes (815).
+- **Linked account for the teacher friend:** after deploying, run `php artisan users:update` on the server and enter your email at «Sieht die Daten von». He can create lessons on your API keys.
 - **Deploy:** `deploy.sh` runs migrations; stop the queue during deploy (data migrations to English keys), restart it after; run `php artisan lessons:check-schemas` on the server once. Set `ELEVENLABS_API_KEY` on the server and run `php artisan lessons:speak` once. Env vars for per-step models are now `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` (+ `LESSON_EFFORT_*`), optional.
 
 ## Risiken und Stolpersteine

@@ -9,7 +9,7 @@ class LessonPolicy
 {
 	public function view(User $user, Lesson $lesson): bool
 	{
-		return $lesson->child->user_id === $user->id;
+		return $lesson->child->user_id === $user->account_id;
 	}
 
 	public function update(User $user, Lesson $lesson): bool

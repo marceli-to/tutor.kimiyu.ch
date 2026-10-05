@@ -9,7 +9,7 @@ class ChildPolicy
 {
 	public function update(User $user, Child $child): bool
 	{
-		return $child->user_id === $user->id;
+		return $child->user_id === $user->account_id;
 	}
 
 	public function delete(User $user, Child $child): bool

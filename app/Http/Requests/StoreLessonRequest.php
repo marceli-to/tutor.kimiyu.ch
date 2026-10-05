@@ -19,7 +19,7 @@ class StoreLessonRequest extends FormRequest
 			'child_id' => [
 				'required_without:child_name',
 				'nullable',
-				Rule::exists('children', 'id')->where('user_id', $this->user()->id),
+				Rule::exists('children', 'id')->where('user_id', $this->user()->account_id),
 			],
 			'child_name' => ['required_without:child_id', 'nullable', 'string', 'max:60'],
 			// Empty: the AI detects the subject in the analysis

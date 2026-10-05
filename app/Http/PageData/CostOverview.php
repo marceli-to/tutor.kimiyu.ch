@@ -21,7 +21,7 @@ class CostOverview
 	{
 		/** @var Collection<int, Generation> $generations */
 		$generations = Generation::query()
-			->where('user_id', $this->user->id)
+			->where('user_id', $this->user->account_id)
 			->with('lesson:id,title,topic,prompt,subject,child_id,deleted_at', 'lesson.child:id,name')
 			->latest()
 			->get();
