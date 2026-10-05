@@ -9,12 +9,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-#[Signature('users:create {name : Display name} {email : Login email}')]
-#[Description('Creates a verified account (registration is off); asks for the password or generates one')]
+#[Signature('users:create')]
+#[Description('Creates a verified account (registration is off); asks for name, email and password (or generates one)')]
 class CreateUser extends Command
 {
 	public function handle(CreateNewUser $createNewUser): int
 	{
+		$name = (string) $this->ask('Name');
+		$email = (string) $this->ask('E-Mail');
 		$password = (string) $this->secret('Passwort (leer lassen, um eines zu erzeugen)');
 		$generated = $password === '';
 
@@ -30,8 +32,8 @@ class CreateUser extends Command
 
 		try {
 			$user = $createNewUser->create([
-				'name' => (string) $this->argument('name'),
-				'email' => (string) $this->argument('email'),
+				'name' => $name,
+				'email' => $email,
 				'password' => $password,
 				'password_confirmation' => $confirmation,
 			]);

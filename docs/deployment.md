@@ -71,10 +71,10 @@ Hängt eine Lernseite bei «Wartet auf den Start», läuft der Cronjob nicht: Pf
 Die Registrierung ist aus. Ein Konto auf dem Server anlegen:
 
 ```bash
-php artisan users:create "Name" mail@beispiel.ch
+php artisan users:create
 ```
 
-Der Befehl fragt nach dem Passwort (gleiche Regeln wie im Formular). Leer lassen erzeugt ein Passwort und zeigt es einmal an. Die E-Mail gilt als bestätigt.
+Der Befehl fragt nach Name, E-Mail und Passwort (gleiche Regeln wie im Formular). Leer lassen erzeugt ein Passwort und zeigt es einmal an. Die E-Mail gilt als bestätigt.
 
 ## Konfiguration (.env auf dem Server)
 

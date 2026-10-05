@@ -31,7 +31,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- `php artisan lessons:check-schemas` probes every schema against the real API.
 	- Final review done (2026-10-03), fixed: «24 cm2» counts for «cm²» (units with ²/³), mixed numbers («1 1/2») in fraction exercises, `mistake_word` follows its word when the sentence is edited (else null, must be tapped again; new sentences start with null), prefill doesn't solve punctuation-only mistakes, no «fast richtig» in case-sensitive German gaps, tolerance that is no number blocks saving.
 	- KaTeX is never loaded during SSR (hydration mismatch, `lib/math.ts`).
-- **Konten:** `php artisan users:create {name} {email}` (asks for the password or generates one, email verified; validated by Fortify's `CreateNewUser`).
+- **Konten:** `php artisan users:create` (asks for name, email and password or generates one, email verified; validated by Fortify's `CreateNewUser`).
 - **Workflow:** `CLAUDE.md`, this file (loaded by a SessionStart hook in `.claude/settings.json`), `/handover` skill.
 
 ## Offen

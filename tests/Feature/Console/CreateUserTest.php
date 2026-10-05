@@ -4,7 +4,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 it('creates a verified user with the given password', function () {
-	$this->artisan('users:create', ['name' => 'Peter Muster', 'email' => 'peter@example.ch'])
+	$this->artisan('users:create')
+		->expectsQuestion('Name', 'Peter Muster')
+		->expectsQuestion('E-Mail', 'peter@example.ch')
 		->expectsQuestion('Passwort (leer lassen, um eines zu erzeugen)', 'Geheim-Passwort-42!')
 		->expectsQuestion('Passwort wiederholen', 'Geheim-Passwort-42!')
 		->expectsOutputToContain('peter@example.ch')
@@ -18,7 +20,9 @@ it('creates a verified user with the given password', function () {
 });
 
 it('generates a password when none is given and prints it', function () {
-	$this->artisan('users:create', ['name' => 'Peter Muster', 'email' => 'peter@example.ch'])
+	$this->artisan('users:create')
+		->expectsQuestion('Name', 'Peter Muster')
+		->expectsQuestion('E-Mail', 'peter@example.ch')
 		->expectsQuestion('Passwort (leer lassen, um eines zu erzeugen)', '')
 		->expectsOutputToContain('Passwort:')
 		->assertSuccessful();
@@ -29,7 +33,9 @@ it('generates a password when none is given and prints it', function () {
 it('refuses an email that is already taken', function () {
 	User::factory()->create(['email' => 'peter@example.ch']);
 
-	$this->artisan('users:create', ['name' => 'Peter Muster', 'email' => 'peter@example.ch'])
+	$this->artisan('users:create')
+		->expectsQuestion('Name', 'Peter Muster')
+		->expectsQuestion('E-Mail', 'peter@example.ch')
 		->expectsQuestion('Passwort (leer lassen, um eines zu erzeugen)', '')
 		->assertFailed();
 
@@ -37,7 +43,9 @@ it('refuses an email that is already taken', function () {
 });
 
 it('refuses passwords that do not match', function () {
-	$this->artisan('users:create', ['name' => 'Peter Muster', 'email' => 'peter@example.ch'])
+	$this->artisan('users:create')
+		->expectsQuestion('Name', 'Peter Muster')
+		->expectsQuestion('E-Mail', 'peter@example.ch')
 		->expectsQuestion('Passwort (leer lassen, um eines zu erzeugen)', 'Geheim-Passwort-42!')
 		->expectsQuestion('Passwort wiederholen', 'anders')
 		->assertFailed();
