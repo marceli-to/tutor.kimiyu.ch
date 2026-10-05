@@ -71,8 +71,10 @@ Hängt eine Lernseite bei «Wartet auf den Start», läuft der Cronjob nicht: Pf
 Die Registrierung ist aus. Ein Konto auf dem Server anlegen:
 
 ```bash
-php artisan tinker --execute 'App\Models\User::create(["name" => "Name", "email" => "mail@beispiel.ch", "password" => "…", "email_verified_at" => now()]);'
+php artisan users:create "Name" mail@beispiel.ch
 ```
+
+Der Befehl fragt nach dem Passwort (gleiche Regeln wie im Formular). Leer lassen erzeugt ein Passwort und zeigt es einmal an. Die E-Mail gilt als bestätigt.
 
 ## Konfiguration (.env auf dem Server)
 

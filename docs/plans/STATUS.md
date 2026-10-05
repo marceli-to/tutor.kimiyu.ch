@@ -31,6 +31,7 @@ Overall design: `docs/plans/2026-10-02-neue-lernseite-design.md`. Every part has
 	- `php artisan lessons:check-schemas` probes every schema against the real API.
 	- Final review done (2026-10-03), fixed: «24 cm2» counts for «cm²» (units with ²/³), mixed numbers («1 1/2») in fraction exercises, `mistake_word` follows its word when the sentence is edited (else null, must be tapped again; new sentences start with null), prefill doesn't solve punctuation-only mistakes, no «fast richtig» in case-sensitive German gaps, tolerance that is no number blocks saving.
 	- KaTeX is never loaded during SSR (hydration mismatch, `lib/math.ts`).
+- **Konten:** `php artisan users:create {name} {email}` (asks for the password or generates one, email verified; validated by Fortify's `CreateNewUser`).
 - **Workflow:** `CLAUDE.md`, this file (loaded by a SessionStart hook in `.claude/settings.json`), `/handover` skill.
 
 ## Offen
@@ -69,6 +70,7 @@ Known smaller follow-ups (not blocking): graphics mode and models per profile (d
 - **Übungen:** tested by Marcel 2026-10-03, works well. Layout fixes after his test (formulas in titles on Übersicht/Kosten/tab, space after a box): check again.
 - **Real API runs:** one lesson per profile; check costs per step on `/kosten` against the old ~$1.05 per lesson.
 - **Aussprache:** lesson 11 in the browser (word list and flashcards, phone via the child link): Alice reads; edit a word and save → the new word plays within a minute (queue worker running); Kosten page shows the credits. «parler à qn» reads «qn» literally (content, not code).
+- **Full test suite needs more memory:** `php artisan test` hits the 128 MB limit (`photo()` in `LessonGenerationTest`); `php -d memory_limit=1G vendor/bin/pest` passes (815).
 - **Deploy:** `deploy.sh` runs migrations; stop the queue during deploy (data migrations to English keys), restart it after; run `php artisan lessons:check-schemas` on the server once. Set `ELEVENLABS_API_KEY` on the server and run `php artisan lessons:speak` once. Env vars for per-step models are now `LESSON_MODEL_ANALYSIS|MODULES|CHECK|GRAPHIC` (+ `LESSON_EFFORT_*`), optional.
 
 ## Risiken und Stolpersteine
